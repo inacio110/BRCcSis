@@ -6159,7 +6159,23 @@
             }
         }
 
-        // Event delegation DESABILITADO - usando sistemas modulares
+        // Event delegation para botões de ação das cotações
+        // Event listener específico para histórico (sempre ativo)
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('[data-action="ver-historico"]');
+            if (target) {
+                const cotacaoId = target.dataset.cotacaoId;
+                if (cotacaoId) {
+                    console.log('📜 Botão histórico clicado para cotação:', cotacaoId);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    verHistoricoCotacao(cotacaoId);
+                    return;
+                }
+            }
+        });
+        
+        // Event delegation DESABILITADO para outras ações - usando sistemas modulares
         // Os event listeners agora são gerenciados pelos módulos específicos:
         // - AceitarNegarCotacoes.js para aceitar/negar
         // - ModalRespostaMelhorado.js para responder
@@ -6198,9 +6214,6 @@
                     break;
                 case 'finalizar-cotacao':
                     finalizarCotacao(cotacaoId);
-                    break;
-                case 'ver-historico':
-                    verHistoricoCotacao(cotacaoId);
                     break;
             }
         });
@@ -8787,34 +8800,130 @@
         }
         
         // Função para ver histórico da cotação
-        async function verHistoricoCotacao(cotacaoId) {
-            console.log('📜 Visualizando histórico da cotação:', cotacaoId);
-            
-            // Buscar dados da cotação
-            const cotacao = buscarCotacaoNosCarregados(cotacaoId);
-            if (!cotacao) {
-                mostrarMensagem('Cotação não encontrada', 'error');
-                return;
+        // Função global para ver histórico da cotação
+        window.verHistoricoCotacao = async function verHistoricoCotacao(cotacaoId) {
+            try {
+                console.log('📜 Visualizando histórico da cotação:', cotacaoId);
+                
+                // Validar ID
+                if (!cotacaoId) {
+                    console.error('❌ ID da cotação não fornecido');
+                    mostrarMensagem('ID da cotação não fornecido', 'error');
+                    return;
+                }
+                
+                // Mostrar indicador de carregamento
+                const loadingMsg = mostrarMensagem('Carregando histórico...', 'info');
+                
+                // Primeiro, tentar buscar dos dados já carregados no sistema
+                let cotacao = buscarCotacaoNosCarregados(cotacaoId);
+                
+                // Se não encontrou localmente, buscar na API
+                if (!cotacao) {
+                    console.log('🌐 Cotação não encontrada localmente, buscando na API...');
+                    try {
+                        const response = await fetch(`/api/v133/cotacoes/${cotacaoId}`, {
+                            credentials: 'same-origin'
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success && data.cotacao) {
+                                cotacao = data.cotacao;
+                            } else if (data.cotacao) {
+                                cotacao = data.cotacao;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erro ao buscar cotação na API:', error);
+                    }
+                }
+                
+                // Remover mensagem de loading
+                if (loadingMsg && loadingMsg.parentNode) {
+                    loadingMsg.parentNode.removeChild(loadingMsg);
+                }
+                
+                if (!cotacao) {
+                    mostrarMensagem('Cotação não encontrada. Verifique o ID.', 'error');
+                    return;
+                }
+                
+                // Buscar histórico completo da API
+                console.log('📜 Buscando histórico completo da API...');
+                try {
+                    const response = await fetch(`/api/v133/cotacoes/${cotacaoId}/historico`, {
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.historico) {
+                            cotacao.historico = data.historico;
+                            console.log('✅ Histórico carregado:', data.historico.length, 'registros');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar histórico:', error);
+                    // Continuar mesmo sem histórico da API
+                }
+                
+                // Abrir modal de histórico
+                mostrarModalHistorico(cotacao);
+            } catch (error) {
+                console.error('❌ Erro ao visualizar histórico:', error);
+                mostrarMensagem('Erro ao carregar histórico: ' + error.message, 'error');
             }
-            
-            // Abrir modal de histórico
-            mostrarModalHistorico(cotacao);
-        }
+        };
         
         // Função para mostrar modal de histórico
         function mostrarModalHistorico(cotacao) {
-            // Criar modal se não existir
-            let modal = document.getElementById('modal-historico');
-            if (!modal) {
-                modal = criarModalHistorico();
+            try {
+                console.log('📜 Mostrando modal de histórico para cotação:', cotacao.id);
+                
+                // Criar modal se não existir
+                let modal = document.getElementById('modal-historico');
+                if (!modal) {
+                    console.log('🔧 Criando modal de histórico...');
+                    modal = criarModalHistorico();
+                }
+                
+                if (!modal) {
+                    console.error('❌ Erro: Modal de histórico não foi criado');
+                    mostrarMensagem('Erro ao criar modal de histórico', 'error');
+                    return;
+                }
+                
+                // Preencher dados do histórico
+                preencherModalHistorico(modal, cotacao);
+                
+                // Mostrar modal com animação
+                modal.style.cssText = `
+                    display: block !important;
+                    position: fixed !important;
+                    z-index: 10000 !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    background-color: rgba(0,0,0,0.5) !important;
+                    opacity: 0;
+                `;
+                
+                // Animar abertura
+                requestAnimationFrame(() => {
+                    modal.style.transition = 'opacity 0.3s ease-in-out';
+                    modal.style.opacity = '1';
+                });
+                
+                // Bloquear scroll do body
+                document.body.style.overflow = 'hidden';
+                
+                console.log('✅ Modal de histórico exibido');
+            } catch (error) {
+                console.error('❌ Erro ao mostrar modal de histórico:', error);
+                mostrarMensagem('Erro ao abrir histórico: ' + error.message, 'error');
             }
-            
-            // Preencher dados do histórico
-            preencherModalHistorico(modal, cotacao);
-            
-            // Mostrar modal
-            modal.style.display = 'block';
-            document.body.style.overflow = 'hidden';
         }
         
         // Função para criar modal de histórico
@@ -8871,13 +8980,33 @@
                 </div>
             `;
             
-            // Inserir o modal antes dos scripts, não no final do body
-            const scriptsContainer = document.querySelector('script');
-            if (scriptsContainer) {
-                scriptsContainer.insertAdjacentHTML('beforebegin', modalHTML);
-            } else {
-                document.body.insertAdjacentHTML('beforeend', modalHTML);
-            }
+            // Inserir o modal no body de forma segura
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = modalHTML.trim();
+            const modalElement = tempDiv.firstElementChild;
+            
+            // Adicionar ao body
+            document.body.appendChild(modalElement);
+            
+            // Adicionar event listener para fechar ao clicar fora
+            modalElement.addEventListener('click', function(e) {
+                if (e.target === modalElement) {
+                    fecharModalHistorico();
+                }
+            });
+            
+            // Adicionar event listener para ESC
+            const escHandler = function(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('modal-historico');
+                    if (modal && window.getComputedStyle(modal).display !== 'none') {
+                        fecharModalHistorico();
+                    }
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+            
+            console.log('✅ Modal de histórico criado com sucesso!');
             return document.getElementById('modal-historico');
         }
         
@@ -8896,19 +9025,36 @@
             if (resumoContainer) {
                 resumoContainer.innerHTML = `
                     <div><strong>Cliente:</strong> ${cotacao.cliente_nome || 'N/A'}</div>
-                    <div><strong>Status Atual:</strong> ${getStatusDisplay(cotacao.status)}</div>
-                    <div><strong>Modalidade:</strong> ${cotacao.modalidade || 'N/A'}</div>
-                    <div><strong>Origem:</strong> ${cotacao.origem_cidade || cotacao.origem_endereco || 'N/A'}</div>
-                    <div><strong>Destino:</strong> ${cotacao.destino_cidade || cotacao.destino_endereco || 'N/A'}</div>
-                    <div><strong>Valor:</strong> ${cotacao.valor_frete || 'Não cotado'}</div>
+                    <div><strong>Status Atual:</strong> ${cotacao.status_display || (typeof getStatusDisplay === 'function' ? getStatusDisplay(cotacao.status) : cotacao.status) || 'N/A'}</div>
+                    <div><strong>Modalidade:</strong> ${getEmpresaDisplay(cotacao.empresa_transporte) || cotacao.modalidade || 'N/A'}</div>
+                    <div><strong>Origem:</strong> ${cotacao.origem_cidade || cotacao.origem_endereco || cotacao.porto_origem || 'N/A'}</div>
+                    <div><strong>Destino:</strong> ${cotacao.destino_cidade || cotacao.destino_endereco || cotacao.porto_destino || 'N/A'}</div>
+                    <div><strong>Valor:</strong> ${cotacao.cotacao_valor_frete ? 'R$ ' + formatarMoeda(cotacao.cotacao_valor_frete) : 'Não cotado'}</div>
                     <div><strong>Operador:</strong> ${cotacao.operador_nome || 'Não atribuído'}</div>
-                    <div><strong>Criada em:</strong> ${formatarDataHora(cotacao.data_criacao)}</div>
-                    <div><strong>Última Atualização:</strong> ${formatarDataHora(cotacao.data_atualizacao || cotacao.data_criacao)}</div>
+                    <div><strong>Criada em:</strong> ${formatarDataHora(cotacao.data_solicitacao || cotacao.created_at)}</div>
+                    <div><strong>Última Atualização:</strong> ${formatarDataHora(cotacao.updated_at || cotacao.data_solicitacao || cotacao.created_at)}</div>
                 `;
             }
             
-            // Gerar histórico simulado baseado no status atual
-            const historico = gerarHistoricoSimulado(cotacao);
+            // Usar histórico real se disponível, senão gerar simulado
+            let historico = cotacao.historico || [];
+            
+            // Se não há histórico real, gerar simulado baseado no status
+            if (!historico || historico.length === 0) {
+                console.log('⚠️ Histórico não disponível, gerando simulado...');
+                historico = gerarHistoricoSimulado(cotacao);
+            } else {
+                // Converter histórico da API para formato esperado
+                historico = historico.map(item => ({
+                    acao: item.acao || item.status_novo || 'Ação',
+                    descricao: item.observacoes || item.detalhes || 'Sem observações',
+                    usuario: item.usuario_nome || item.usuario || 'Sistema',
+                    data: item.timestamp || item.data || new Date().toISOString(),
+                    tipo: item.tipo || 'acao',
+                    icone: getIconeAcao(item.acao || item.status_novo),
+                    cor: getCorAcao(item.acao || item.status_novo)
+                }));
+            }
             
             // Preencher timeline
             const timelineContainer = document.getElementById('historico-timeline');
@@ -9070,6 +9216,50 @@
             return html;
         }
         
+        // Função auxiliar para obter ícone da ação
+        function getIconeAcao(acao) {
+            const icones = {
+                'CRIAR': '📝',
+                'ACEITAR': '✅',
+                'NEGAR': '❌',
+                'RESPONDER': '💰',
+                'APROVAR': '👍',
+                'RECUSAR': '👎',
+                'FINALIZAR': '🏁',
+                'REATRIBUIR': '🔄',
+                'solicitada': '📝',
+                'aceita_operador': '✅',
+                'cotacao_enviada': '💰',
+                'aceita_consultor': '👍',
+                'recusada_consultor': '👎',
+                'negada': '❌',
+                'finalizada': '🏁'
+            };
+            return icones[acao] || '📋';
+        }
+        
+        // Função auxiliar para obter cor da ação
+        function getCorAcao(acao) {
+            const cores = {
+                'CRIAR': '#3b82f6',
+                'ACEITAR': '#10b981',
+                'NEGAR': '#ef4444',
+                'RESPONDER': '#3b82f6',
+                'APROVAR': '#10b981',
+                'RECUSAR': '#ef4444',
+                'FINALIZAR': '#059669',
+                'REATRIBUIR': '#f59e0b',
+                'solicitada': '#3b82f6',
+                'aceita_operador': '#10b981',
+                'cotacao_enviada': '#3b82f6',
+                'aceita_consultor': '#10b981',
+                'recusada_consultor': '#ef4444',
+                'negada': '#ef4444',
+                'finalizada': '#059669'
+            };
+            return cores[acao] || '#6b7280';
+        }
+        
         // Função para calcular estatísticas do histórico
         function calcularEstatisticasHistorico(historico, cotacao) {
             const totalAcoes = historico.length;
@@ -9095,14 +9285,25 @@
             };
         }
         
-        // Função para fechar modal de histórico
-        function fecharModalHistorico() {
-            const modal = document.getElementById('modal-historico');
-            if (modal) {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
+        // Função global para fechar modal de histórico
+        window.fecharModalHistorico = function fecharModalHistorico() {
+            try {
+                const modal = document.getElementById('modal-historico');
+                if (modal) {
+                    // Animar fechamento
+                    modal.style.transition = 'opacity 0.3s ease-in-out';
+                    modal.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        modal.style.cssText = 'display: none !important;';
+                        // Restaurar scroll do body
+                        document.body.style.overflow = 'auto';
+                    }, 300);
+                }
+            } catch (error) {
+                console.error('Erro ao fechar modal de histórico:', error);
             }
-        }
+        };
         
         // Sistema de Filtros Avançados
         let filtrosAtivos = {};
@@ -10007,7 +10208,8 @@
 
 
         // Função para ver detalhes da cotação
-        async function verDetalhesCotacao(cotacaoId) {
+        // Função global para ver detalhes da cotação
+        window.verDetalhesCotacao = async function verDetalhesCotacao(cotacaoId) {
             try {
                 console.log('🔍 Carregando detalhes da cotação:', cotacaoId);
                 
