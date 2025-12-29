@@ -134,8 +134,8 @@ const API = {
     
     async aceitarCotacao(id, dados = {}) {
         try {
-            const response = await fetch(`${this.baseURL}/v133/cotacoes/${id}/aceitar`, {
-                method: 'PUT',
+            const response = await fetch(`${this.baseURL}/v133/cotacoes/${id}/aceitar-operador`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dados)
             });
@@ -143,64 +143,53 @@ const API = {
             if (response.ok) {
                 return await response.json();
             } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
             }
         } catch (error) {
-            console.warn('Endpoint aceitar não disponível, usando fallback:', error);
-            
-            // Fallback para desenvolvimento
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return {
-                success: true,
-                message: 'Cotação aceita com sucesso (simulado)',
-                cotacao: {
-                    id: id,
-                    status: 'aceita_operador',
-                    data_aceite: new Date().toISOString(),
-                    operador_responsavel: 'Operador Atual'
-                }
-            };
+            console.error('Erro ao aceitar cotação:', error);
+            throw error;
         }
     },
 
     async negarCotacao(id, motivo) {
         try {
-            const response = await fetch(`${this.baseURL}/v133/cotacoes/${id}/negar`, {
-                method: 'PUT',
+            const response = await fetch(`${this.baseURL}/v133/cotacoes/${id}/negar-operador`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ motivo })
+                body: JSON.stringify({ motivo: motivo || 'Cotação negada pelo operador' })
             });
             
             if (response.ok) {
                 return await response.json();
             } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
             }
         } catch (error) {
-            console.warn('Endpoint negar não disponível, usando fallback:', error);
-            
-            // Fallback para desenvolvimento
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return {
-                success: true,
-                message: 'Cotação negada com sucesso (simulado)',
-                cotacao: {
-                    id: id,
-                    status: 'negada',
-                    data_negacao: new Date().toISOString(),
-                    motivo_negacao: motivo
-                }
-            };
+            console.error('Erro ao negar cotação:', error);
+            throw error;
         }
     },
     
     async enviarCotacao(id, dados) {
-        const response = await fetch(`${this.baseURL}/v133/cotacoes/${id}/enviar`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dados)
-        });
-        return await response.json();
+        try {
+            const response = await fetch(`${this.baseURL}/v133/cotacoes/${id}/enviar-resposta`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+            
+            if (response.ok) {
+                return await response.json();
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+        } catch (error) {
+            console.error('Erro ao enviar cotação:', error);
+            throw error;
+        }
     },
     
     async finalizarCotacao(id) {
@@ -212,34 +201,8 @@ const API = {
     },
     
     async responderCotacao(id, dados) {
-        try {
-            const response = await fetch(`${this.baseURL}/v133/cotacoes/${id}/responder`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dados)
-            });
-            
-            if (response.ok) {
-                return await response.json();
-            } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-        } catch (error) {
-            console.warn('Endpoint responder não disponível, usando fallback:', error);
-            
-            // Fallback para desenvolvimento
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return {
-                success: true,
-                message: 'Resposta enviada com sucesso (simulado)',
-                cotacao: {
-                    id: id,
-                    status: 'cotacao_enviada',
-                    data_resposta: new Date().toISOString(),
-                    resposta: dados
-                }
-            };
-        }
+        // Alias para enviarCotacao - usar endpoint correto
+        return this.enviarCotacao(id, dados);
     },
     
     // ==================== ANALYTICS ====================
@@ -746,232 +709,78 @@ const API = {
     },
 
     // ==================== ACEITAR/NEGAR COTAÇÕES ====================
-
-    async aceitarCotacao(dados) {
-        try {
-            const response = await fetch('/api/cotacoes/aceitar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dados)
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('✅ Cotação aceita com sucesso:', data);
-                return data;
-            } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-        } catch (error) {
-            console.error('Erro ao aceitar cotação:', error);
-            
-            // Fallback para desenvolvimento
-            console.log('📝 Simulando aceitação de cotação:', dados);
-            
-            // Simular delay da API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            return {
-                success: true,
-                message: 'Cotação aceita com sucesso',
-                cotacao: {
-                    id: dados.cotacao_id,
-                    status: 'aceita_operador',
-                    operador_responsavel: 'Operador Atual',
-                    data_aceitacao: new Date().toISOString(),
-                    observacoes_aceitacao: dados.observacoes
-                }
-            };
-        }
-    },
-
-    async negarCotacao(dados) {
-        try {
-            const response = await fetch('/api/cotacoes/negar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dados)
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('✅ Cotação negada com sucesso:', data);
-                return data;
-            } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-        } catch (error) {
-            console.error('Erro ao negar cotação:', error);
-            
-            // Fallback para desenvolvimento
-            console.log('📝 Simulando negação de cotação:', dados);
-            
-            // Simular delay da API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            return {
-                success: true,
-                message: 'Cotação negada com sucesso',
-                cotacao: {
-                    id: dados.cotacao_id,
-                    status: 'negada',
-                    motivo_negacao: dados.motivo,
-                    observacoes_negacao: dados.observacoes,
-                    data_negacao: new Date().toISOString()
-                }
-            };
-        }
-    },
+    // NOTA: Estas funções são mantidas para compatibilidade, mas agora delegam para as versões v133
 
     async getCotacao(cotacaoId) {
-        try {
-            const response = await fetch(`/api/cotacoes/${cotacaoId}`);
-            
-            if (response.ok) {
-                const data = await response.json();
-                return data;
-            } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-        } catch (error) {
-            console.error('Erro ao buscar cotação:', error);
-            
-            // Fallback: buscar dos dados locais se disponíveis
-            if (window.cotacoesData && Array.isArray(window.cotacoesData)) {
-                const cotacao = window.cotacoesData.find(c => c.id == cotacaoId);
-                if (cotacao) {
-                    return {
-                        success: true,
-                        cotacao: cotacao
-                    };
-                }
-            }
-            
-            return {
-                success: false,
-                message: 'Cotação não encontrada'
-            };
-        }
+        // Usar endpoint v133 unificado
+        return this.getCotacaoById(cotacaoId);
     },
 
     // ==================== FINALIZAÇÃO DE COTAÇÕES ====================
 
     async aprovarCotacao(dados) {
         try {
-            const response = await fetch('/api/cotacoes/aprovar', {
+            const cotacaoId = dados.cotacao_id || dados.id;
+            const response = await fetch(`${this.baseURL}/v133/cotacoes/${cotacaoId}/aceitar-consultor`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dados)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ observacoes: dados.observacoes })
             });
-
+            
             if (response.ok) {
-                const data = await response.json();
-                console.log('✅ Cotação aprovada com sucesso:', data);
-                return data;
+                return await response.json();
             } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}`);
             }
         } catch (error) {
             console.error('Erro ao aprovar cotação:', error);
-            
-            // Fallback para desenvolvimento
-            console.log('📝 Simulando aprovação de cotação:', dados);
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            return {
-                success: true,
-                message: 'Cotação aprovada com sucesso',
-                cotacao: {
-                    id: dados.cotacao_id,
-                    status: 'aceita_consultor',
-                    data_aprovacao: new Date().toISOString(),
-                    observacoes_aprovacao: dados.observacoes
-                }
-            };
+            throw error;
         }
     },
 
     async recusarCotacao(dados) {
         try {
-            const response = await fetch('/api/cotacoes/recusar', {
+            const cotacaoId = dados.cotacao_id || dados.id;
+            const response = await fetch(`${this.baseURL}/v133/cotacoes/${cotacaoId}/negar-consultor`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dados)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ observacoes: dados.observacoes || dados.motivo })
             });
-
+            
             if (response.ok) {
-                const data = await response.json();
-                console.log('✅ Cotação recusada com sucesso:', data);
-                return data;
+                return await response.json();
             } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}`);
             }
         } catch (error) {
             console.error('Erro ao recusar cotação:', error);
-            
-            // Fallback para desenvolvimento
-            console.log('📝 Simulando recusa de cotação:', dados);
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            return {
-                success: true,
-                message: 'Cotação recusada com sucesso',
-                cotacao: {
-                    id: dados.cotacao_id,
-                    status: 'recusada_consultor',
-                    motivo_recusa: dados.motivo,
-                    observacoes_recusa: dados.observacoes,
-                    data_recusa: new Date().toISOString()
-                }
-            };
+            throw error;
         }
     },
 
     async finalizarCotacao(dados) {
         try {
-            const response = await fetch('/api/cotacoes/finalizar', {
+            const cotacaoId = dados.cotacao_id || dados.id;
+            const response = await fetch(`${this.baseURL}/cotacoes/${cotacaoId}/finalizar`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dados)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    acao: dados.acao || 'marcar_finalizada',
+                    observacoes: dados.observacoes
+                })
             });
-
+            
             if (response.ok) {
-                const data = await response.json();
-                console.log('✅ Cotação finalizada com sucesso:', data);
-                return data;
+                return await response.json();
             } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}`);
             }
         } catch (error) {
             console.error('Erro ao finalizar cotação:', error);
-            
-            // Fallback para desenvolvimento
-            console.log('📝 Simulando finalização de cotação:', dados);
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            return {
-                success: true,
-                message: 'Cotação finalizada com sucesso',
-                cotacao: {
-                    id: dados.cotacao_id,
-                    status: 'finalizada',
-                    data_finalizacao: new Date().toISOString(),
-                    observacoes_finalizacao: dados.observacoes
-                }
-            };
+            throw error;
         }
     },
 

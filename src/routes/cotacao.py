@@ -472,7 +472,8 @@ def aceitar_cotacao(cotacao_id):
                 'message': 'Você não pode aceitar esta cotação'
             }), 403
         
-        cotacao.aceitar(current_user)
+        # Usar método correto do modelo
+        cotacao.aceitar_por_operador(current_user.id)
         db.session.commit()
         
         # Registrar log de auditoria
@@ -530,11 +531,12 @@ def responder_cotacao(cotacao_id):
                 'message': 'Valor do frete e prazo devem ser números positivos'
             }), 400
         
-        cotacao.responder(
-            operador=current_user,
+        # Usar método correto do modelo
+        cotacao.enviar_cotacao(
             valor_frete=valor_frete,
             prazo_entrega=prazo_entrega,
-            observacoes=data.get('observacoes')
+            observacoes=data.get('observacoes'),
+            empresa_prestadora_id=data.get('empresa_prestadora_id')
         )
         db.session.commit()
         
@@ -576,17 +578,27 @@ def finalizar_cotacao(cotacao_id):
         
         acao = data.get('acao')  # 'aprovar', 'recusar', 'marcar_finalizada'
         
-        if acao == 'aprovar':
-            cotacao.finalizar(current_user, aprovada=True, observacoes=data.get('observacoes'))
-        elif acao == 'recusar':
-            cotacao.finalizar(current_user, aprovada=False, observacoes=data.get('observacoes'))
-        elif acao == 'marcar_finalizada':
-            cotacao.marcar_finalizada(current_user, observacoes=data.get('observacoes'))
+        # Verificar tipo de usuário para determinar ação correta
+        if current_user.tipo_usuario == TipoUsuario.CONSULTOR:
+            # Consultor aprova ou recusa
+            if acao == 'aprovar':
+                cotacao.aceitar_por_consultor(observacoes=data.get('observacoes'))
+            elif acao == 'recusar':
+                cotacao.negar_por_consultor(observacoes=data.get('observacoes'))
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Ação inválida para consultor. Use: aprovar ou recusar'
+                }), 400
         else:
-            return jsonify({
-                'success': False,
-                'message': 'Ação inválida. Use: aprovar, recusar ou marcar_finalizada'
-            }), 400
+            # Operador/Admin marca como finalizada
+            if acao == 'marcar_finalizada':
+                cotacao.marcar_finalizada(current_user, observacoes=data.get('observacoes'))
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Ação inválida. Use: marcar_finalizada'
+                }), 400
         
         db.session.commit()
         

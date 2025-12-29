@@ -145,7 +145,7 @@ class Cotacao(db.Model):
     def pode_ser_finalizada_por(self, usuario):
         """Verifica se a cotação pode ser finalizada pelo usuário"""
         from .usuario import TipoUsuario
-        return (self.status in [StatusCotacao.COTACAO_ENVIADA, StatusCotacao.APROVADA_CLIENTE, StatusCotacao.RECUSADA_CLIENTE] and 
+        return (self.status in [StatusCotacao.COTACAO_ENVIADA, StatusCotacao.ACEITA_CONSULTOR, StatusCotacao.NEGADA_CONSULTOR] and 
                 (self.operador_id == usuario.id or 
                  usuario.tipo_usuario in [TipoUsuario.ADMINISTRADOR, TipoUsuario.GERENTE]))
     
@@ -199,9 +199,9 @@ class Cotacao(db.Model):
         
         status_anterior = self.status
         if aprovada:
-            self.status = StatusCotacao.APROVADA_CLIENTE
+            self.status = StatusCotacao.ACEITA_CONSULTOR
         else:
-            self.status = StatusCotacao.RECUSADA_CLIENTE
+            self.status = StatusCotacao.NEGADA_CONSULTOR
         
         self.data_resposta_cliente = get_brasilia_time()
         
