@@ -70,6 +70,9 @@
                     <button id="tab-logs" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
                         <i class="fas fa-history mr-2"></i>Logs de Auditoria
                     </button>
+                    <button id="tab-cotacoes" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="fas fa-calculator mr-2"></i>Cotações
+                    </button>
                 </nav>
             </div>
         </div>
@@ -108,6 +111,53 @@
                             <!-- Usuários serão carregados aqui -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cotações Tab -->
+        <div id="content-cotacoes" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Gerenciar Cotações</h2>
+                        <p class="text-sm text-gray-600 mt-1">Ações administrativas para gerenciar cotações do sistema</p>
+                    </div>
+                </div>
+                
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-2xl mr-4 mt-1"></i>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-red-800 mb-2">⚠️ Deletar Todas as Cotações</h3>
+                            <p class="text-sm text-red-700 mb-4">
+                                Esta ação irá <strong>permanentemente deletar todas as cotações</strong> do sistema, incluindo:
+                            </p>
+                            <ul class="list-disc list-inside text-sm text-red-700 mb-4 space-y-1">
+                                <li>Todas as cotações criadas</li>
+                                <li>Todo o histórico de alterações</li>
+                                <li>Todas as notificações relacionadas</li>
+                            </ul>
+                            <p class="text-sm text-red-800 font-semibold mb-4">
+                                ⚠️ <strong>ATENÇÃO:</strong> Esta ação é irreversível! Certifique-se de fazer um backup antes de prosseguir.
+                            </p>
+                            <button id="btn-deletar-todas-cotacoes" class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold">
+                                <i class="fas fa-trash-alt mr-2"></i>Deletar Todas as Cotações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-blue-600 mr-3"></i>
+                        <div>
+                            <p class="text-sm text-blue-800">
+                                <strong>Estatísticas:</strong> 
+                                <span id="total-cotacoes">Carregando...</span> cotações no sistema
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -357,6 +407,8 @@
                     carregarUsuarios();
                 } else if (tabId === 'logs') {
                     carregarLogs();
+                } else if (tabId === 'cotacoes') {
+                    carregarEstatisticasCotacoes();
                 }
             });
         });
@@ -632,6 +684,68 @@
                 const errorDiv = document.getElementById('error-message-edit');
                 errorDiv.textContent = 'Erro de conexão. Tente novamente.';
                 errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Carregar estatísticas de cotações
+        async function carregarEstatisticasCotacoes() {
+            try {
+                const response = await fetch('/api/v133/cotacoes?per_page=1');
+                if (response.ok) {
+                    const data = await response.json();
+                    const total = data.total || 0;
+                    document.getElementById('total-cotacoes').textContent = total;
+                } else {
+                    document.getElementById('total-cotacoes').textContent = 'Erro ao carregar';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+                document.getElementById('total-cotacoes').textContent = 'Erro ao carregar';
+            }
+        }
+
+        // Deletar todas as cotações
+        document.getElementById('btn-deletar-todas-cotacoes').addEventListener('click', async function() {
+            const confirmacao = prompt(
+                '⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\n' +
+                'Todas as cotações e histórico serão permanentemente deletados.\n\n' +
+                'Digite "DELETAR TUDO" para confirmar:'
+            );
+            
+            if (confirmacao !== 'DELETAR TUDO') {
+                alert('Operação cancelada. A confirmação não correspondeu.');
+                return;
+            }
+            
+            if (!confirm('Tem CERTEZA ABSOLUTA que deseja deletar TODAS as cotações?\n\nEsta ação não pode ser desfeita!')) {
+                return;
+            }
+            
+            const btn = this;
+            const textoOriginal = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deletando...';
+            
+            try {
+                const response = await fetch('/api/v133/cotacoes/deletar-todas', {
+                    method: 'DELETE',
+                    credentials: 'same-origin'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alert(`✅ Sucesso!\n\n${result.cotacoes_deletadas} cotações deletadas\n${result.historico_deletado} registros de histórico deletados`);
+                    carregarEstatisticasCotacoes();
+                } else {
+                    alert(`❌ Erro: ${result.message || 'Erro ao deletar cotações'}`);
+                }
+            } catch (error) {
+                console.error('Erro ao deletar cotações:', error);
+                alert('❌ Erro de conexão. Verifique sua internet e tente novamente.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
             }
         });
 

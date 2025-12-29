@@ -911,6 +911,66 @@ def obter_historico_cotacao(cotacao_id):
             'message': f'Erro interno: {str(e)}'
         }), 500
 
+# ==================== ROTAS DE ADMINISTRAÇÃO ====================
+
+@cotacao_v133_bp.route("/cotacoes/deletar-todas", methods=["DELETE"])
+@login_required
+def deletar_todas_cotacoes():
+    """Deleta todas as cotações do sistema (apenas ADMIN)"""
+    try:
+        # Verificar se é administrador
+        if current_user.tipo_usuario != TipoUsuario.ADMINISTRADOR:
+            return jsonify({
+                'success': False,
+                'message': 'Acesso negado. Apenas administradores podem deletar todas as cotações.'
+            }), 403
+        
+        # Contar cotações antes de deletar
+        total_cotacoes = Cotacao.query.count()
+        total_historico = HistoricoCotacao.query.count()
+        
+        if total_cotacoes == 0:
+            return jsonify({
+                'success': True,
+                'message': 'Não há cotações para deletar.',
+                'cotacoes_deletadas': 0,
+                'historico_deletado': 0
+            }), 200
+        
+        # Deletar histórico primeiro (foreign key constraint)
+        HistoricoCotacao.query.delete()
+        
+        # Deletar todas as cotações
+        Cotacao.query.delete()
+        
+        db.session.commit()
+        
+        # Registrar log de auditoria
+        from src.models.usuario import LogAuditoria
+        LogAuditoria.registrar_acao(
+            usuario_id=current_user.id,
+            acao='DELETAR_TODAS',
+            recurso='COTACAO',
+            detalhes=f'Todas as cotações foram deletadas pelo administrador {current_user.nome_completo}. Total: {total_cotacoes} cotações e {total_historico} registros de histórico.'
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': f'Todas as cotações foram deletadas com sucesso.',
+            'cotacoes_deletadas': total_cotacoes,
+            'historico_deletado': total_historico
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        print(f"Erro ao deletar todas as cotações: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao deletar cotações: {str(e)}'
+        }), 500
+
 # ==================== ENDPOINT TEMPORÁRIO PARA TESTES ====================
 
 @cotacao_v133_bp.route("/cotacoes/test", methods=["GET"])

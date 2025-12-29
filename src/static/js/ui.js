@@ -55,10 +55,20 @@ const UI = {
         document.getElementById('btn-solicitar-cotacao')?.addEventListener('click', (e) => {
             e.preventDefault();
             // Abrir modal de cotação diretamente
-            if (typeof abrirModalCotacao === 'function') {
+            if (typeof window.abrirModalCotacao === 'function') {
+                window.abrirModalCotacao();
+            } else if (typeof abrirModalCotacao === 'function') {
                 abrirModalCotacao();
             } else {
-                console.error('Função abrirModalCotacao não encontrada');
+                console.warn('Função abrirModalCotacao não encontrada ainda. Aguardando carregamento...');
+                // Tentar novamente após um delay
+                setTimeout(() => {
+                    if (typeof window.abrirModalCotacao === 'function') {
+                        window.abrirModalCotacao();
+                    } else {
+                        console.error('Função abrirModalCotacao ainda não disponível após delay');
+                    }
+                }, 500);
             }
         });
         

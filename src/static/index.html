@@ -116,7 +116,7 @@
             100% { transform: rotate(360deg); }
         }
         .modal {
-            display: none;
+            display: none !important;
             position: fixed;
             z-index: 1000;
             left: 0;
@@ -128,7 +128,7 @@
             padding: 20px 0;
         }
         .modal.show {
-            display: flex;
+            display: flex !important;
             align-items: flex-start;
             justify-content: center;
             min-height: 100vh;
@@ -5272,6 +5272,9 @@
 
         // Função para mostrar/ocultar botão de cotação baseado nas permissões
         async function configurarBotaoCotacao() {
+            // Aguardar um pouco para garantir que o DOM está pronto
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             const btnSolicitarCotacao = document.getElementById('btn-solicitar-cotacao');
             console.log('Configurando botão de cotação...', btnSolicitarCotacao);
             
@@ -5279,8 +5282,42 @@
                 // Sempre mostrar o botão por enquanto para debug
                 btnSolicitarCotacao.style.display = 'flex';
                 
-                // Event listener será configurado pelo UI.js
-                console.log('Botão de cotação configurado - event listener será adicionado pelo UI.js');
+                // Remover event listeners anteriores para evitar duplicação
+                const newBtn = btnSolicitarCotacao.cloneNode(true);
+                btnSolicitarCotacao.parentNode.replaceChild(newBtn, btnSolicitarCotacao);
+                
+                // Adicionar event listener diretamente com múltiplas tentativas
+                newBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔘 Botão Solicitar Cotação clicado - abrindo modal');
+                    
+                    // Tentar abrir modal imediatamente
+                    try {
+                        abrirModalCotacao();
+                    } catch (error) {
+                        console.error('Erro ao abrir modal:', error);
+                        // Tentar novamente após um pequeno delay
+                        setTimeout(() => {
+                            try {
+                                abrirModalCotacao();
+                            } catch (error2) {
+                                console.error('Erro na segunda tentativa:', error2);
+                                alert('Erro ao abrir modal. Recarregue a página.');
+                            }
+                        }, 100);
+                    }
+                });
+                
+                // Também adicionar onclick como fallback
+                newBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔘 Botão clicado (onclick fallback)');
+                    abrirModalCotacao();
+                };
+                
+                console.log('✅ Event listener do botão Solicitar Cotação configurado');
                 
                 // Verificar permissões em background
                 const temPermissao = await verificarPermissoesCotacao();
@@ -5288,30 +5325,87 @@
                 
                 if (!temPermissao) {
                     console.log('Usuário sem permissão, ocultando botão');
-                    btnSolicitarCotacao.style.display = 'none';
+                    newBtn.style.display = 'none';
                 }
             } else {
-                console.log('Botão não encontrado!');
+                console.log('Botão não encontrado! Tentando novamente em 500ms...');
+                // Tentar novamente após 500ms
+                setTimeout(() => {
+                    configurarBotaoCotacao();
+                }, 500);
             }
         }
 
-        // Função para abrir modal de cotação
-        function abrirModalCotacao() {
-            console.log('Função abrirModalCotacao chamada');
-            const modal = document.getElementById('modal-cotacao');
-            console.log('Modal encontrado:', modal);
-            
-            if (modal) {
-                console.log('Adicionando classe show ao modal');
+        // Função para abrir modal de cotação (global para acesso de outros scripts)
+        window.abrirModalCotacao = function abrirModalCotacao() {
+            try {
+                console.log('🔓 Função abrirModalCotacao chamada');
+                const modal = document.getElementById('modal-cotacao');
+                console.log('📦 Modal encontrado:', modal);
+                
+                if (!modal) {
+                    console.error('❌ ERRO: Modal não encontrado!');
+                    mostrarMensagem('Erro: Modal de cotação não encontrado. Recarregue a página.', 'error');
+                    return;
+                }
+                
+                // Forçar exibição do modal com múltiplas estratégias
+                console.log('✅ Forçando exibição do modal...');
+                
+                // 1. Remover qualquer display: none inline
+                modal.style.removeProperty('display');
+                
+                // 2. Adicionar classe show
                 modal.classList.add('show');
-                // Não bloquear scroll do body para permitir scroll do modal
-                // document.body.style.overflow = 'hidden';
-                console.log('Modal deve estar visível agora');
+                
+                // 3. Forçar display flex usando inline styles (maior prioridade que CSS)
+                // Remover todos os estilos inline primeiro
+                modal.removeAttribute('style');
+                
+                // Aplicar estilos inline diretamente (inline styles têm maior prioridade que !important em classes)
+                modal.style.cssText = `
+                    display: flex !important;
+                    position: fixed !important;
+                    z-index: 10000 !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    background-color: rgba(0,0,0,0.5) !important;
+                    align-items: flex-start !important;
+                    justify-content: center !important;
+                    overflow-y: auto !important;
+                    padding: 20px 0 !important;
+                    visibility: visible !important;
+                    opacity: 0;
+                `;
+                
+                // 4. Animar abertura
+                modal.style.opacity = '0';
+                requestAnimationFrame(() => {
+                    modal.style.transition = 'opacity 0.3s ease-in-out';
+                    modal.style.opacity = '1';
+                });
+                
+                // 5. Bloquear scroll do body
+                document.body.style.overflow = 'hidden';
+                
+                // 6. Garantir que o modal está no topo
+                modal.style.zIndex = '10000';
+                
+                console.log('✅ Modal deve estar visível agora');
+                console.log('📊 Estado do modal:', {
+                    display: window.getComputedStyle(modal).display,
+                    visibility: window.getComputedStyle(modal).visibility,
+                    opacity: window.getComputedStyle(modal).opacity,
+                    zIndex: window.getComputedStyle(modal).zIndex
+                });
                 
                 // Limpar formulário antes de abrir
                 const form = document.getElementById('form-cotacao');
                 if (form) {
                     form.reset();
+                    console.log('✅ Formulário limpo');
                 }
                 
                 // Garantir que rodoviário seja selecionado por padrão
@@ -5319,9 +5413,9 @@
                     const rodoviarioInput = document.querySelector('input[name="empresa_transporte"][value="brcargo_rodoviario"]');
                     if (rodoviarioInput) {
                         rodoviarioInput.checked = true;
-                        console.log('Rodoviário selecionado por padrão');
+                        console.log('✅ Rodoviário selecionado por padrão');
                         // Disparar evento change para aplicar as regras
-                        rodoviarioInput.dispatchEvent(new Event('change'));
+                        rodoviarioInput.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                     
                     // Inicializar campos baseado na modalidade selecionada
@@ -5329,23 +5423,126 @@
                         inicializarCamposPorModalidade();
                     }
                 }, 100);
-            } else {
-                console.log('ERRO: Modal não encontrado!');
+                
+                // Verificar se o modal está realmente visível após 200ms
+                setTimeout(() => {
+                    const computedStyle = window.getComputedStyle(modal);
+                    const rect = modal.getBoundingClientRect();
+                    console.log('🔍 Verificação do modal:', {
+                        display: computedStyle.display,
+                        visibility: computedStyle.visibility,
+                        opacity: computedStyle.opacity,
+                        zIndex: computedStyle.zIndex,
+                        width: rect.width,
+                        height: rect.height,
+                        top: rect.top,
+                        left: rect.left
+                    });
+                    
+                    if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden' || rect.width === 0) {
+                        console.error('❌ Modal ainda não está visível! Forçando novamente com método alternativo...');
+                        // Método alternativo: remover classe modal e aplicar estilos diretamente
+                        modal.className = '';
+                        modal.style.cssText = `
+                            display: flex !important;
+                            position: fixed !important;
+                            z-index: 10000 !important;
+                            left: 0 !important;
+                            top: 0 !important;
+                            width: 100% !important;
+                            height: 100% !important;
+                            background-color: rgba(0,0,0,0.5) !important;
+                            align-items: flex-start !important;
+                            justify-content: center !important;
+                            overflow-y: auto !important;
+                            padding: 20px 0 !important;
+                            visibility: visible !important;
+                            opacity: 1 !important;
+                        `;
+                    } else {
+                        console.log('✅ Modal confirmado como visível');
+                    }
+                }, 200);
+                
+            } catch (error) {
+                console.error('❌ Erro ao abrir modal:', error);
+                console.error('Stack trace:', error.stack);
+                mostrarMensagem('Erro ao abrir modal de cotação: ' + error.message, 'error');
             }
         }
 
+        // Função de teste global para debug (chame no console: testarModalCotacao())
+        window.testarModalCotacao = function() {
+            console.log('🧪 Testando modal de cotação...');
+            const modal = document.getElementById('modal-cotacao');
+            if (!modal) {
+                console.error('❌ Modal não encontrado!');
+                alert('Modal não encontrado! Verifique o HTML.');
+                return false;
+            }
+            console.log('✅ Modal encontrado');
+            console.log('📊 Estado atual:', {
+                classes: modal.className,
+                display: window.getComputedStyle(modal).display,
+                visibility: window.getComputedStyle(modal).visibility,
+                zIndex: window.getComputedStyle(modal).zIndex,
+                rect: modal.getBoundingClientRect()
+            });
+            
+            // Tentar abrir
+            console.log('🔓 Chamando abrirModalCotacao()...');
+            abrirModalCotacao();
+            
+            // Verificar após 500ms
+            setTimeout(() => {
+                const computed = window.getComputedStyle(modal);
+                const rect = modal.getBoundingClientRect();
+                console.log('📊 Estado após abertura:', {
+                    display: computed.display,
+                    visibility: computed.visibility,
+                    opacity: computed.opacity,
+                    width: rect.width,
+                    height: rect.height,
+                    top: rect.top,
+                    left: rect.left
+                });
+                
+                if (computed.display !== 'none' && rect.width > 0 && rect.height > 0) {
+                    console.log('✅ Modal está visível!');
+                    alert('Modal está visível! Verifique na tela.');
+                    return true;
+                } else {
+                    console.error('❌ Modal ainda não está visível!');
+                    alert('Modal não está visível. Verifique o console para detalhes.');
+                    return false;
+                }
+            }, 500);
+        };
+        
         // Função para fechar modal de cotação
         function fecharModalCotacao() {
-            const modal = document.getElementById('modal-cotacao');
-            if (modal) {
-                modal.classList.remove('show');
-                // Restaurar scroll do body se necessário
-                // document.body.style.overflow = 'auto';
-                // Limpar formulário
-                const form = document.getElementById('form-cotacao');
-                if (form) {
-                    form.reset();
+            try {
+                const modal = document.getElementById('modal-cotacao');
+                if (modal) {
+                    // Animar fechamento
+                    modal.style.transition = 'opacity 0.3s ease-in-out';
+                    modal.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        modal.classList.remove('show');
+                        modal.style.display = 'none';
+                        // Restaurar scroll do body
+                        document.body.style.overflow = 'auto';
+                    }, 300);
+                    
+                    // Limpar formulário
+                    const form = document.getElementById('form-cotacao');
+                    if (form) {
+                        form.reset();
+                    }
                 }
+            } catch (error) {
+                console.error('Erro ao fechar modal:', error);
             }
         }
 
@@ -10827,16 +11024,6 @@
             container.appendChild(document.createTextNode(mensagem));
             notification.appendChild(container);
             
-            // Adicionar ícone baseado no tipo
-            const icon = document.createElement('i');
-            icon.className = `fas ${
-                tipo === 'success' ? 'fa-check-circle' :
-                tipo === 'error' ? 'fa-exclamation-triangle' :
-                'fa-info-circle'
-            } mr-2`;
-            
-            notification.insertBefore(icon, notification.firstChild);
-            
             document.body.appendChild(notification);
             
             // Animação de entrada
@@ -10870,8 +11057,10 @@
             atualizarHorario();
             configurarAtualizacaoAba();
             
-            // Configurar sistema de cotações
-            configurarBotaoCotacao();
+            // Configurar sistema de cotações - com delay para garantir que tudo está carregado
+            setTimeout(() => {
+                configurarBotaoCotacao();
+            }, 300);
             
             // Event listeners para modal de cotação
             const fecharModalBtn = document.getElementById('fechar-modal-cotacao');
