@@ -12,7 +12,6 @@ from src.routes.empresa import empresa_bp
 from src.routes.user import user_bp
 from src.routes.seed import seed_bp
 from src.routes.auth import auth_bp
-from src.routes.cotacao import cotacao_bp
 from src.routes.cotacao_v133 import cotacao_v133_bp
 from src.routes.dashboard_v133 import dashboard_v133_bp
 
@@ -56,7 +55,6 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(empresa_bp, url_prefix='/api')
 app.register_blueprint(seed_bp, url_prefix='/api')
-app.register_blueprint(cotacao_bp, url_prefix='/api')
 app.register_blueprint(cotacao_v133_bp, url_prefix='/api/v133')
 app.register_blueprint(dashboard_v133_bp, url_prefix='/api/v133')
 

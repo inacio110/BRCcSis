@@ -1020,3 +1020,91 @@ def obter_operadores_teste():
             'message': f'Erro interno: {str(e)}'
         }), 500
 
+
+@cotacao_v133_bp.route("/operadores", methods=["GET"])
+@login_required
+def obter_operadores():
+    """Obtém lista de operadores disponíveis"""
+    try:
+        operadores = Usuario.query.filter(
+            or_(
+                Usuario.tipo_usuario == TipoUsuario.OPERADOR,
+                Usuario.tipo_usuario == TipoUsuario.ADMINISTRADOR,
+                Usuario.tipo_usuario == TipoUsuario.GERENTE
+            ),
+            Usuario.ativo == True
+        ).all()
+        
+        return jsonify({
+            'success': True,
+            'operadores': [{
+                'id': op.id,
+                'nome': op.nome_completo,
+                'departamento': 'Operações',
+                'status': 'online'
+            } for op in operadores]
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Erro interno: {str(e)}'
+        }), 500
+
+@cotacao_v133_bp.route("/empresas-prestadoras", methods=["GET"])
+@login_required
+def obter_empresas_prestadoras():
+    """Obtém lista de empresas prestadoras disponíveis"""
+    from src.models.empresa import Empresa
+    try:
+        empresas = Empresa.query.filter(Empresa.etiqueta != 'ENCERRADO').all()
+        
+        return jsonify({
+            'success': True,
+            'empresas': [{
+                'id': emp.id,
+                'nome': emp.nome_fantasia or emp.razao_social,
+                'cnpj': emp.cnpj,
+                'status': 'Ativa'
+            } for emp in empresas]
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Erro interno: {str(e)}'
+        }), 500
+
+@cotacao_v133_bp.route("/cotacoes/<int:cotacao_id>/reatribuir", methods=["POST"])
+@login_required
+def reatribuir_cotacao(cotacao_id):
+    """Reatribui a cotação para outro operador"""
+    try:
+        if current_user.tipo_usuario not in [TipoUsuario.ADMINISTRADOR, TipoUsuario.GERENTE]:
+            return jsonify({
+                'success': False,
+                'message': 'Apenas administradores e gerentes podem reatribuir cotações'
+            }), 403
+            
+        data = request.get_json()
+        novo_operador_id = data.get('operador_id')
+        
+        if not novo_operador_id:
+            return jsonify({'success': False, 'message': 'ID do novo operador é obrigatório'}), 400
+            
+        cotacao = Cotacao.query.get_or_404(cotacao_id)
+        novo_operador = Usuario.query.get_or_404(novo_operador_id)
+        
+        cotacao.reatribuir(current_user, novo_operador)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Cotação reatribuída com sucesso',
+            'cotacao': cotacao.to_dict()
+        }), 200
+        
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500

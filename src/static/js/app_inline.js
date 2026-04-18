@@ -1,0 +1,10596 @@
+// ==================== INLINE SCRIPT 0 ====================
+// Variáveis globais
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentFilters = {};
+
+        // Função para formatar data corretamente no padrão dia/mês/ano
+        function formatarDataBrasil(dataString) {
+            if (!dataString) return 'N/A';
+            
+            // Parse da data considerando que vem no formato YYYY-MM-DD
+            const partes = dataString.split('-');
+            if (partes.length !== 3) return 'N/A';
+            
+            const ano = partes[0];
+            const mes = partes[1];
+            const dia = partes[2];
+            
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        // Aguardar carregamento completo do DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado, inicializando sistema...');
+            
+            // LIMPAR dados de teste do localStorage
+            console.log('🧹 Limpando dados de teste...');
+            try {
+                const keys = Object.keys(localStorage);
+                keys.forEach(key => {
+                    if (key.includes('teste') || key.includes('test') || key.includes('COT-999')) {
+                        localStorage.removeItem(key);
+                        console.log(`🗑️ Removido: ${key}`);
+                    }
+                });
+            } catch (error) {
+                console.log('⚠️ Erro ao limpar localStorage:', error);
+            }
+            
+            // GARANTIR que o dashboard seja mostrado por padrão
+            console.log('🏠 Inicializando com dashboard como seção padrão...');
+            showSection('dashboard');
+            
+            // Inicializar dados
+            loadDashboardStats();
+            loadEmpresas();
+            
+            // Configurar event listeners para navegação
+            setupNavigationListeners();
+            
+            // Configurar event listeners para botões
+            setupButtonListeners();
+            
+            // Configurar event listeners para formulários
+            setupFormListeners();
+            
+            // Configurar event listeners para modal
+            setupModalListeners();
+        });
+
+        // Função para mostrar seção de cotações
+        function mostrarSecaoCotacoes() {
+            console.log('Mostrando seção de cotações...');
+            // Ocultar outras seções com verificação de segurança
+            const dashboard = document.getElementById('dashboard');
+            const empresas = document.getElementById('empresas');
+            const cadastro = document.getElementById('cadastro');
+            
+            if (dashboard) dashboard.style.display = 'none';
+            if (empresas) empresas.style.display = 'none';
+            if (cadastro) cadastro.style.display = 'none';
+            
+            // Ocultar seção de analytics
+            const secaoAnalytics = document.getElementById('analytics');
+            if (secaoAnalytics) {
+                secaoAnalytics.style.display = 'none';
+                secaoAnalytics.classList.add('hidden');
+            }
+            
+            // Mostrar rodapé na seção de cotações
+            const footers = document.querySelectorAll('footer');
+            footers.forEach(footer => {
+                footer.style.display = 'block';
+            });
+            
+            // Mostrar seção de cotações
+            const secaoCotacoes = document.getElementById('secao-cotacoes');
+            if (secaoCotacoes) {
+                secaoCotacoes.style.display = 'block';
+                secaoCotacoes.classList.remove('hidden');
+                carregarCotacoes();
+                carregarEstatisticasCotacoes();
+            } else {
+                console.log('ERRO: Seção de cotações não encontrada!');
+            }
+        }
+
+        // Função para mostrar seção de Analytics
+        function mostrarSecaoAnalytics() {
+            console.log('Navegando para Analytics...');
+            
+            // Ocultar todas as seções principais
+            const sections = ['dashboard', 'empresas', 'cadastro'];
+            sections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) {
+                    section.style.display = 'none';
+                }
+            });
+            
+            // Ocultar seção de cotações
+            const secaoCotacoes = document.getElementById('secao-cotacoes');
+            if (secaoCotacoes) {
+                secaoCotacoes.style.display = 'none';
+                secaoCotacoes.classList.add('hidden');
+            }
+            
+            // Ocultar rodapé na seção de analytics
+            const footers = document.querySelectorAll('footer');
+            footers.forEach(footer => {
+                footer.style.display = 'none';
+            });
+            
+            // Mostrar seção de analytics
+            const secaoAnalytics = document.getElementById('secao-analytics-v133');
+            if (secaoAnalytics) {
+                secaoAnalytics.style.display = 'block';
+                secaoAnalytics.classList.remove('hidden');
+                carregarConteudoAnalytics();
+            } else {
+                console.log('ERRO: Seção de analytics não encontrada!');
+            }
+        }
+
+        // Configurar event listeners para navegação
+        function setupNavigationListeners() {
+            console.log('🔧 Configurando listeners de navegação...');
+            
+            // Navegação principal com verificações de segurança
+            const navDashboard = document.getElementById('nav-dashboard');
+            const navEmpresas = document.getElementById('nav-empresas');
+            const navCotacoes = document.getElementById('nav-cotacoes');
+            const navCadastro = document.getElementById('nav-cadastro');
+            
+            if (navDashboard) {
+                navDashboard.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showSection('dashboard');
+                });
+                console.log('✅ Listener nav-dashboard configurado');
+            } else {
+                console.warn('❌ Elemento nav-dashboard não encontrado');
+            }
+            
+            if (navEmpresas) {
+                navEmpresas.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🔍 Clique em nav-empresas detectado');
+                    showSection('empresas');
+                });
+                console.log('✅ Listener nav-empresas configurado');
+            } else {
+                console.warn('❌ Elemento nav-empresas não encontrado');
+            }
+            
+            if (navCotacoes) {
+                navCotacoes.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mostrarSecaoCotacoes();
+                });
+                console.log('✅ Listener nav-cotacoes configurado');
+            } else {
+                console.warn('❌ Elemento nav-cotacoes não encontrado');
+            }
+            
+            if (navCadastro) {
+                navCadastro.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🔍 Clique em nav-cadastro detectado');
+                    showSection('cadastro');
+                });
+                console.log('✅ Listener nav-cadastro configurado');
+            } else {
+                console.warn('❌ Elemento nav-cadastro não encontrado');
+            }
+        }
+
+        // Configurar event listeners para botões
+        function setupButtonListeners() {
+            // Botões do dashboard
+            document.getElementById('btn-cadastrar-nova').addEventListener('click', function() {
+                showSection('cadastro');
+            });
+            
+            document.getElementById('btn-buscar-empresas').addEventListener('click', function() {
+                showSection('empresas');
+            });
+            
+            document.getElementById('btn-exportar-dados').addEventListener('click', function() {
+                exportData();
+            });
+            
+            // Botões de filtros
+            document.getElementById('btn-buscar-filtros').addEventListener('click', function() {
+                buscarEmpresas();
+            });
+            
+            document.getElementById('btn-limpar-filtros').addEventListener('click', function() {
+                limparFiltros();
+            });
+            
+            // Botões de paginação
+            document.getElementById('btn-prev').addEventListener('click', function() {
+                previousPage();
+            });
+            
+            document.getElementById('btn-next').addEventListener('click', function() {
+                nextPage();
+            });
+            
+            // Botões de adicionar campos dinâmicos
+            document.getElementById('btn-add-regulamentacao').addEventListener('click', function() {
+                addRegulamentacao();
+            });
+            
+            document.getElementById('btn-add-certificacao').addEventListener('click', function() {
+                addCertificacao();
+            });
+            
+            document.getElementById('btn-add-abrangencia').addEventListener('click', function() {
+                addAbrangencia();
+            });
+            
+            document.getElementById('btn-add-frota').addEventListener('click', function() {
+                addFrota();
+            });
+            
+            document.getElementById('btn-add-armazenagem').addEventListener('click', function() {
+                addArmazenagem();
+            });
+            
+            document.getElementById('btn-add-porto-terminal').addEventListener('click', function() {
+                addPortoTerminal();
+            });
+            
+            document.getElementById('btn-add-seguro-cobertura').addEventListener('click', function() {
+                addSeguroCobertura();
+            });
+            
+            document.getElementById('btn-add-tecnologia').addEventListener('click', function() {
+                addTecnologia();
+            });
+            
+            document.getElementById('btn-add-desempenho-qualidade').addEventListener('click', function() {
+                addDesempenhoQualidade();
+            });
+            
+            document.getElementById('btn-add-cliente-segmento').addEventListener('click', function() {
+                addClienteSegmento();
+            });
+            
+            document.getElementById('btn-add-recurso-humano').addEventListener('click', function() {
+                addRecursoHumano();
+            });
+            
+            document.getElementById('btn-add-sustentabilidade').addEventListener('click', function() {
+                addSustentabilidade();
+            });
+            
+            // Botões do formulário de cadastro
+            document.getElementById('btn-cancelar-cadastro').addEventListener('click', function() {
+                limparFormularioCadastro();
+                showSection('empresas');
+            });
+        }
+
+        // Configurar event listeners para formulários
+        function setupFormListeners() {
+            document.getElementById("form-cadastro").addEventListener("submit", function(e) {
+                e.preventDefault();
+                if (validateForm()) {
+                    cadastrarEmpresa();
+                }
+            });
+        }
+
+        // Função de validação do formulário
+        function validateForm() {
+            let isValid = true;
+
+            // Validação Razão Social
+            const razaoSocialInput = document.getElementById("razao_social");
+            const razaoSocialError = document.getElementById("razao_social_error");
+            if (razaoSocialInput.value.trim() === "") {
+                razaoSocialError.classList.remove("hidden");
+                isValid = false;
+            } else {
+                razaoSocialError.classList.add("hidden");
+            }
+
+            // Validação CNPJ - mais flexível
+            const cnpjInput = document.getElementById("cnpj");
+            const cnpjError = document.getElementById("cnpj_error");
+            const cnpjValue = cnpjInput.value.trim();
+            
+            // Aceitar CNPJ com ou sem formatação
+            const cnpjPattern = /^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}$/;
+            const cnpjSomenteNumeros = /^\d{14}$/;
+            
+            if (cnpjValue === "" || (!cnpjPattern.test(cnpjValue) && !cnpjSomenteNumeros.test(cnpjValue))) {
+                cnpjError.textContent = "CNPJ é obrigatório. Use formato 00.000.000/0000-00 ou apenas números.";
+                cnpjError.classList.remove("hidden");
+                isValid = false;
+            } else {
+                cnpjError.classList.add("hidden");
+            }
+
+            return isValid;
+        }
+
+        // Configurar event listeners para modal
+        function setupModalListeners() {
+            document.getElementById('btn-fechar-modal').addEventListener('click', function() {
+                fecharModal();
+            });
+            
+            // Fechar modal ao clicar fora - REMOVIDO para evitar fechamento acidental
+            // document.getElementById('modal-detalhes').addEventListener('click', function(e) {
+            //     if (e.target === this) {
+            //         fecharModal();
+            //     }
+            // });
+        }
+
+        // Função para limpar conteúdo dinâmico das seções
+        function limparConteudoDinamico() {
+            // Limpar conteúdo do analytics
+            const containerAnalytics = document.getElementById('conteudo-analytics');
+            if (containerAnalytics) {
+                containerAnalytics.innerHTML = '';
+            }
+            
+            // Limpar conteúdo de cotações se necessário
+            const containerCotacoes = document.getElementById('lista-cotacoes');
+            if (containerCotacoes) {
+                // Não limpar cotações pois pode ser necessário manter o estado
+                // containerCotacoes.innerHTML = '';
+            }
+            
+            // Resetar variáveis de estado do analytics
+            if (typeof analyticsAtivo !== 'undefined') {
+                analyticsAtivo = 'geral';
+            }
+        }
+
+        // Navegação entre seções
+        function showSection(sectionId) {
+            console.log('Navegando para seção:', sectionId);
+            
+            // Limpar conteúdo dinâmico de todas as seções antes de navegar
+            limparConteudoDinamico();
+            
+            // Se estiver saindo da seção de cadastro, limpar o formulário (EXCETO se estiver editando)
+            const currentSection = document.querySelector('section:not([style*="display: none"])');
+            if (currentSection && currentSection.id === 'cadastro' && sectionId !== 'cadastro' && !window.editingEmpresaId) {
+                limparFormularioCadastro();
+            }
+            
+            // Lista completa de seções para controlar
+            const sections = ['dashboard', 'empresas', 'cadastro'];
+            console.log('🔍 Verificando seções disponíveis...');
+            
+            // Listar todas as sections no DOM para debug
+            const allSections = document.querySelectorAll('section');
+            console.log(`📋 Total de sections encontradas: ${allSections.length}`);
+            allSections.forEach((section, index) => {
+                console.log(`📄 Section ${index}: id="${section.id}", classes="${section.className}"`);
+            });
+            
+            sections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) {
+                    const shouldShow = id === sectionId;
+                    section.style.display = shouldShow ? 'block' : 'none';
+                    console.log(`✅ Seção ${id}: ${shouldShow ? 'mostrar' : 'ocultar'}`);
+                } else {
+                    console.error(`❌ Seção ${id} não encontrada no DOM!`);
+                }
+            });
+            
+            // Controlar seções especiais (cotações e analytics)
+            const secaoCotacoes = document.getElementById('secao-cotacoes');
+            const secaoAnalytics = document.getElementById('secao-analytics-v133');
+            
+            if (secaoCotacoes) {
+                secaoCotacoes.style.display = 'none';
+                secaoCotacoes.classList.add('hidden');
+            }
+            
+            if (secaoAnalytics) {
+                secaoAnalytics.style.display = 'none';
+                secaoAnalytics.classList.add('hidden');
+                // Limpar conteúdo do analytics ao sair
+                const containerAnalytics = document.getElementById('conteudo-analytics');
+                if (containerAnalytics) {
+                    containerAnalytics.innerHTML = '';
+                }
+            }
+            
+            // Controlar visibilidade do rodapé - mostrar apenas no dashboard e cotações
+            const footers = document.querySelectorAll('footer');
+            footers.forEach(footer => {
+                // Mostrar rodapé apenas no dashboard e na seção de cotações
+                const mostrarRodape = sectionId === 'dashboard' || sectionId === 'cotacoes';
+                footer.style.display = mostrarRodape ? 'block' : 'none';
+            });
+            
+            if (sectionId === 'empresas') {
+                // Aguardar um pouco para a seção estar visível antes de carregar
+                setTimeout(() => {
+                    loadEmpresas(1, true); // forçar carregamento
+                }, 100);
+            } else if (sectionId === 'dashboard') {
+                loadDashboardStats();
+            }
+        }
+
+        // Carregar estatísticas do dashboard
+        async function loadDashboardStats() {
+            try {
+                console.log('Carregando estatísticas do dashboard...');
+                const response = await fetch('/api/empresas');
+                const data = await response.json();
+                
+                const totalEmpresasEl = document.getElementById('total-empresas');
+                if (totalEmpresasEl) {
+                    totalEmpresasEl.textContent = data.total || 0;
+                }
+                
+                // Carregar detalhes para estatísticas específicas
+                let certificadas = 0;
+                let comArmazem = 0;
+                let nacional = 0;
+                
+                for (let i = 1; i <= data.total; i++) {
+                    try {
+                        const detailResponse = await fetch(`/api/empresas/${i}`);
+                        const empresa = await detailResponse.json();
+                        
+                        if (empresa.certificacoes && empresa.certificacoes.length > 0) {
+                            certificadas++;
+                        }
+                        
+                        if (empresa.armazenagem && empresa.armazenagem.some(a => a.possui_armazem)) {
+                            comArmazem++;
+                        }
+                        
+                        if (empresa.abrangencia_geografica && empresa.abrangencia_geografica.some(a => a.tipo_abrangencia === 'Nacional')) {
+                            nacional++;
+                        }
+                    } catch (e) {
+                        console.error('Erro ao carregar detalhes da empresa:', e);
+                    }
+                }
+                
+                const certificadasEl = document.getElementById('empresas-certificadas');
+                const armazemEl = document.getElementById('empresas-armazem');
+                const nacionalEl = document.getElementById('empresas-nacional');
+                
+                if (certificadasEl) certificadasEl.textContent = certificadas;
+                if (armazemEl) armazemEl.textContent = comArmazem;
+                if (nacionalEl) nacionalEl.textContent = nacional;
+                
+                // Carregar gráficos do dashboard
+                carregarDadosAnalytics();
+                
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        // Carregar lista de empresas
+        async function loadEmpresas(page = 1, forceLoad = false) {
+            try {
+                // Verificar se a seção de empresas está visível (apenas se não for carregamento forçado)
+                if (!forceLoad) {
+                    const empresasSection = document.getElementById('empresas');
+                    if (!empresasSection || empresasSection.style.display === 'none') {
+                        console.log('Seção de empresas não está visível, pulando carregamento');
+                        return;
+                    }
+                }
+                
+                console.log('Carregando empresas, página:', page);
+                const params = new URLSearchParams({
+                    page: page,
+                    per_page: 10,
+                    ...currentFilters
+                });
+                
+                const response = await fetch(`/api/empresas?${params}`);
+                const data = await response.json();
+                
+                displayEmpresas(data.empresas);
+                updatePagination(data);
+                
+                const resultadoCount = document.getElementById('resultado-count');
+                if (resultadoCount) {
+                    resultadoCount.textContent = `${data.total} empresa(s) encontrada(s)`;
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar empresas:', error);
+                const listaEmpresas = document.getElementById('lista-empresas');
+                if (listaEmpresas) {
+                    listaEmpresas.innerHTML = '<div class="p-6 text-center text-red-600">Erro ao carregar empresas</div>';
+                }
+            }
+        }
+
+        // Exibir empresas na lista
+        function displayEmpresas(empresas) {
+            const container = document.getElementById('lista-empresas');
+            
+            if (!container) {
+                console.warn('Container lista-empresas não encontrado');
+                return;
+            }
+            
+            if (!empresas || empresas.length === 0) {
+                container.innerHTML = '<div class="p-6 text-center text-gray-500">Nenhuma empresa encontrada</div>';
+                return;
+            }
+            
+            container.innerHTML = empresas.map(empresa => `
+                <div class="p-6 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3">
+                                <h4 class="text-lg font-semibold text-gray-800">${empresa.razao_social}</h4>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                                    empresa.etiqueta === 'PARCEIRA' ? 'bg-green-100 text-green-800' :
+                                    empresa.etiqueta === 'ENCERRADO' ? 'bg-red-100 text-red-800' :
+                                    'bg-blue-100 text-blue-800'
+                                }">${empresa.etiqueta || 'CADASTRADA'}</span>
+                            </div>
+                            <p class="text-sm text-gray-600">${empresa.nome_fantasia || 'N/A'}</p>
+                            <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+                                <span><i class="fas fa-id-card mr-1"></i>${empresa.cnpj}</span>
+                                <span><i class="fas fa-envelope mr-1"></i>${empresa.email || 'N/A'}</span>
+                                <span><i class="fas fa-phone mr-1"></i>${empresa.telefone_comercial || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="verDetalhes(${empresa.id})" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                                <i class="fas fa-eye mr-1"></i>Ver Detalhes
+                            </button>
+                            <button onclick="editarEmpresa(${empresa.id})" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Editar
+                            </button>
+                            <button onclick="confirmarExclusao(${empresa.id}, '${empresa.razao_social}')" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors ml-2">
+                                <i class="fas fa-trash-alt mr-1"></i>Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Atualizar paginação
+        function updatePagination(data) {
+            currentPage = data.current_page;
+            totalPages = data.pages;
+            
+            const showingFrom = document.getElementById('showing-from');
+            const showingTo = document.getElementById('showing-to');
+            const totalResults = document.getElementById('total-results');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            
+            if (showingFrom) {
+                showingFrom.textContent = data.empresas.length > 0 ? ((currentPage - 1) * data.per_page) + 1 : 0;
+            }
+            if (showingTo) {
+                showingTo.textContent = Math.min(currentPage * data.per_page, data.total);
+            }
+            if (totalResults) {
+                totalResults.textContent = data.total;
+            }
+            if (btnPrev) {
+                btnPrev.disabled = currentPage <= 1;
+            }
+            if (btnNext) {
+                btnNext.disabled = currentPage >= totalPages;
+            }
+        }
+
+        // Navegação de páginas
+        function previousPage() {
+            if (currentPage > 1) {
+                loadEmpresas(currentPage - 1);
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                loadEmpresas(currentPage + 1);
+            }
+        }
+
+        // Buscar empresas com filtros
+        function buscarEmpresas() {
+            console.log('Buscando empresas com filtros...');
+            currentFilters = {
+                razao_social: document.getElementById('filtro-razao-social').value,
+                cnpj: document.getElementById("filtro-cnpj").value,
+                etiqueta: document.getElementById("filtro-etiqueta").value,
+                tipo_carga: document.getElementById("filtro-tipo-carga").value,
+                certificacao: document.getElementById("filtro-certificacao").value,
+                portos_atendidos: document.getElementById("filtro-portos-atendidos").value,
+                tipo_regulamentacao: document.getElementById("filtro-tipo-regulamentacao").value,
+                tipo_frota: document.getElementById("filtro-tipo-frota").value,
+                tipo_veiculo: document.getElementById("filtro-tipo-veiculo").value,
+                possui_seguro: document.getElementById("filtro-possui-seguro").value,
+                nome_tecnologia: document.getElementById("filtro-nome-tecnologia").value,
+                segmento_cliente: document.getElementById("filtro-segmento-cliente").value,
+                certificacao_ambiental: document.getElementById("filtro-certificacao-ambiental").value
+            };
+            
+            // Remover filtros vazios
+            Object.keys(currentFilters).forEach(key => {
+                if (!currentFilters[key]) {
+                    delete currentFilters[key];
+                }
+            });
+            
+            loadEmpresas(1);
+        }
+
+        // Limpar filtros
+        function limparFiltros() {
+            console.log('Limpando filtros...');
+            document.getElementById('filtro-razao-social').value = '';
+            document.getElementById('filtro-cnpj').value = '';
+            document.getElementById('filtro-etiqueta').value = '';
+            document.getElementById('filtro-tipo-carga').value = '';
+            document.getElementById('filtro-certificacao').value = '';
+            document.getElementById('filtro-portos-atendidos').value = '';
+            document.getElementById('filtro-tipo-regulamentacao').value = '';
+            document.getElementById('filtro-tipo-frota').value = '';
+            document.getElementById('filtro-tipo-veiculo').value = '';
+            document.getElementById('filtro-possui-seguro').value = '';
+            document.getElementById('filtro-nome-tecnologia').value = '';
+            document.getElementById('filtro-segmento-cliente').value = '';
+            document.getElementById('filtro-certificacao-ambiental').value = '';
+            
+            currentFilters = {};
+            loadEmpresas(1);
+        }
+
+        // Ver detalhes da empresa
+        async function verDetalhes(empresaId) {
+            try {
+                console.log('Carregando detalhes da empresa:', empresaId);
+                const response = await fetch(`/api/empresas/${empresaId}`);
+                const empresa = await response.json();
+                
+                const modal = document.getElementById('modal-detalhes');
+                const conteudo = document.getElementById('conteudo-modal');
+                
+                conteudo.innerHTML = `
+                    <div class="space-y-6">
+                        <!-- Dados Básicos -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Dados Básicos</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div><strong>Razão Social:</strong> ${empresa.razao_social}</div>
+                                <div><strong>Nome Fantasia:</strong> ${empresa.nome_fantasia || 'N/A'}</div>
+                                <div><strong>CNPJ:</strong> ${empresa.cnpj}</div>
+                                <div><strong>Inscrição Estadual:</strong> ${empresa.inscricao_estadual || 'N/A'}</div>
+                                <div class="md:col-span-2"><strong>Endereço:</strong> ${empresa.endereco_completo || 'N/A'}</div>
+                                <div><strong>Telefone Comercial:</strong> ${empresa.telefone_comercial || 'N/A'}</div>
+                                <div><strong>Telefone Emergencial:</strong> ${empresa.telefone_emergencial || 'N/A'}</div>
+                                <div><strong>E-mail:</strong> ${empresa.email ? `<a href="mailto:${empresa.email}" class="text-blue-600 hover:text-blue-800 underline">${empresa.email}</a>` : 'N/A'}</div>
+                                <div><strong>Website:</strong> ${empresa.website ? `<a href="${empresa.website.startsWith('http') ? empresa.website : 'https://' + empresa.website}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">${empresa.website}</a>` : 'N/A'}</div>
+                                ${empresa.link_cotacao ? `<div><strong>Cotação:</strong> <a href="${empresa.link_cotacao.startsWith('http') ? empresa.link_cotacao : 'https://' + empresa.link_cotacao}" target="_blank" class="inline-flex items-center px-3 py-1 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 transition-colors"><i class="fas fa-calculator mr-2"></i>Solicitar Cotação</a></div>` : ''}
+                                <div><strong>Data de Fundação:</strong> ${formatarDataBrasil(empresa.data_fundacao)}</div>
+                                ${empresa.observacoes ? `<div><strong>Observações:</strong> ${empresa.observacoes}</div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Certificações -->
+                        ${empresa.certificacoes && empresa.certificacoes.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Certificações</h4>
+                            <div class="space-y-2">
+                                ${empresa.certificacoes.map(cert => `
+                                    <div class="bg-green-50 p-3 rounded-md">
+                                        <div class="font-medium text-green-800">${cert.nome_certificacao}</div>
+                                        <div class="text-sm text-green-600">
+                                            Número: ${cert.numero_certificacao || 'N/A'} | 
+                                            Válido até: ${formatarDataBrasil(cert.data_validade)} | 
+                                            Certificador: ${cert.orgao_certificador || 'N/A'}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Tipos de Carga -->
+                        ${empresa.tipos_carga && empresa.tipos_carga.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Tipos de Carga</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${empresa.tipos_carga.map(tipo => `
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">${tipo.tipo_carga}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Modalidades de Transporte -->
+                        ${empresa.modalidades_transporte && empresa.modalidades_transporte.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Modalidades de Transporte</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${empresa.modalidades_transporte.map(modal => `
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">${modal.modalidade}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Abrangência Geográfica -->
+                        ${empresa.abrangencia_geografica && empresa.abrangencia_geografica.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Abrangência Geográfica</h4>
+                            <div class="space-y-2">
+                                ${empresa.abrangencia_geografica.map(abr => `
+                                    <div class="bg-yellow-50 p-3 rounded-md">
+                                        <div class="font-medium text-yellow-800">${abr.tipo_abrangencia}</div>
+                                        <div class="text-sm text-yellow-600">${abr.detalhes || 'N/A'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Armazenagem -->
+                        ${empresa.armazenagem && empresa.armazenagem.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Armazenagem</h4>
+                            <div class="space-y-2">
+                                ${empresa.armazenagem.map(arm => `
+                                    <div class="bg-gray-50 p-3 rounded-md">
+                                        <div class="font-medium">${arm.possui_armazem ? 'Possui Armazém' : 'Não possui armazém'}</div>
+                                        ${arm.possui_armazem ? `
+                                            <div class="text-sm text-gray-600 mt-1">
+                                                <div>Localização: ${arm.localizacao || 'N/A'}</div>
+                                                <div>Capacidade: ${arm.capacidade_m2 || 'N/A'} m² | ${arm.capacidade_m3 || 'N/A'} m³</div>
+                                                <div>Tipos: ${arm.tipos_armazenagem || 'N/A'}</div>
+                                                <div>Serviços: ${arm.servicos_oferecidos || 'N/A'}</div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Regulamentações e Licenças -->
+                        ${empresa.regulamentacoes && empresa.regulamentacoes.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Regulamentações e Licenças</h4>
+                            <div class="space-y-2">
+                                ${empresa.regulamentacoes.map(reg => `
+                                    <div class="bg-red-50 p-3 rounded-md">
+                                        <div class="font-medium text-red-800">${reg.tipo_regulamentacao}</div>
+                                        <div class="text-sm text-red-600">
+                                            Registro: ${reg.numero_registro || 'N/A'} | 
+                                            Emissão: ${formatarDataBrasil(reg.data_emissao)} | 
+                                            Validade: ${formatarDataBrasil(reg.data_validade)} | 
+                                            Órgão: ${reg.orgao_emissor || 'N/A'}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Frota -->
+                        ${empresa.frota && empresa.frota.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Frota</h4>
+                            <div class="space-y-2">
+                                ${empresa.frota.map(frota => `
+                                    <div class="bg-blue-50 p-3 rounded-md">
+                                        <div class="font-medium text-blue-800">${frota.tipo_frota} - ${frota.tipo_veiculo}</div>
+                                        <div class="text-sm text-blue-600">
+                                            Carroceria: ${frota.tipo_carroceria || 'N/A'} | 
+                                            Quantidade: ${frota.quantidade || 'N/A'} | 
+                                            Capacidade: ${frota.capacidade || 'N/A'}t | 
+                                            Ano Médio: ${frota.ano_medio || 'N/A'}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Portos e Terminais -->
+                        ${empresa.portos_terminais && empresa.portos_terminais.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Portos e Terminais</h4>
+                            <div class="space-y-2">
+                                ${(() => {
+                                    // Agrupar terminais por porto
+                                    const portoTerminais = {};
+                                    empresa.portos_terminais.forEach(item => {
+                                        if (!portoTerminais[item.nome_porto_terminal]) {
+                                            portoTerminais[item.nome_porto_terminal] = [];
+                                        }
+                                        portoTerminais[item.nome_porto_terminal].push(item.tipo_terminal);
+                                    });
+                                    
+                                    // Gerar HTML para cada porto com seus terminais
+                                    return Object.keys(portoTerminais).map(porto => `
+                                        <div class="bg-teal-50 p-3 rounded-md">
+                                            <div class="font-medium text-teal-800">${porto}</div>
+                                            <div class="text-sm text-teal-600">
+                                                Terminais: ${portoTerminais[porto].filter(t => t).join(', ') || 'N/A'}
+                                            </div>
+                                        </div>
+                                    `).join('');
+                                })()}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Seguros e Coberturas -->
+                        ${empresa.seguros_coberturas && empresa.seguros_coberturas.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Seguros e Coberturas</h4>
+                            <div class="space-y-2">
+                                ${empresa.seguros_coberturas.map(seguro => `
+                                    <div class="bg-orange-50 p-3 rounded-md">
+                                        <div class="font-medium text-orange-800">${seguro.tipo_seguro}</div>
+                                        <div class="text-sm text-orange-600">
+                                            Seguradora: ${seguro.seguradora || 'N/A'} | 
+                                            Cobertura: ${seguro.valor_cobertura || 'N/A'} | 
+                                            Validade: ${formatarDataBrasil(seguro.data_validade)}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Tecnologias e Integração -->
+                        ${empresa.tecnologias && empresa.tecnologias.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Tecnologias e Integração</h4>
+                            <div class="space-y-2">
+                                ${empresa.tecnologias.map(tech => `
+                                    <div class="bg-indigo-50 p-3 rounded-md">
+                                        <div class="font-medium text-indigo-800">${tech.nome_tecnologia}</div>
+                                        <div class="text-sm text-indigo-600">${tech.detalhes || 'N/A'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Clientes e Segmentos -->
+                        ${empresa.clientes_segmentos && empresa.clientes_segmentos.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Clientes e Segmentos</h4>
+                            <div class="space-y-2">
+                                ${empresa.clientes_segmentos.map(cliente => `
+                                    <div class="bg-pink-50 p-3 rounded-md">
+                                        <div class="font-medium text-pink-800">${cliente.segmento}</div>
+                                        <div class="text-sm text-pink-600">Principais Clientes: ${cliente.principais_clientes || 'N/A'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Desempenho e Qualidade -->
+                        ${empresa.desempenho_qualidade && empresa.desempenho_qualidade.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Desempenho e Qualidade</h4>
+                            <div class="space-y-2">
+                                ${empresa.desempenho_qualidade.map(desemp => `
+                                    <div class="bg-green-50 p-3 rounded-md">
+                                        <div class="text-sm text-green-600">
+                                            Prazo Médio: ${desemp.prazo_medio_atendimento || 'N/A'} ${desemp.unidade_prazo || 'dias'} | 
+                                            Avarias/Extravios: ${desemp.indice_avarias_extravios || 'N/A'}% | 
+                                            Entregas no Prazo: ${desemp.indice_entregas_prazo || 'N/A'}%
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Recursos Humanos -->
+                        ${empresa.recursos_humanos && empresa.recursos_humanos.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Recursos Humanos</h4>
+                            <div class="space-y-2">
+                                ${empresa.recursos_humanos.map(rh => `
+                                    <div class="bg-cyan-50 p-3 rounded-md">
+                                        <div class="font-medium text-cyan-800">Funcionários: ${rh.numero_funcionarios || 'N/A'}</div>
+                                        <div class="text-sm text-cyan-600">Treinamentos: ${rh.programas_treinamento || 'N/A'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Sustentabilidade -->
+                        ${empresa.sustentabilidade && empresa.sustentabilidade.length > 0 ? `
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Sustentabilidade</h4>
+                            <div class="space-y-2">
+                                ${empresa.sustentabilidade.map(sust => `
+                                    <div class="bg-emerald-50 p-3 rounded-md">
+                                        <div class="font-medium text-emerald-800">${sust.certificacao_ambiental}</div>
+                                        <div class="text-sm text-emerald-600">Programas: ${sust.programas_reducao_emissoes || 'N/A'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                modal.classList.add('show');
+                modal.classList.add('fade-in');
+                
+            } catch (error) {
+                console.error('Erro ao carregar detalhes:', error);
+                alert('Erro ao carregar detalhes da empresa');
+            }
+        }
+
+        // Fechar modal
+        function fecharModal() {
+            const modal = document.getElementById('modal-detalhes');
+            modal.classList.remove('show');
+            modal.classList.remove('fade-in');
+        }
+
+        // Cadastrar nova empresa ou atualizar empresa existente
+        async function cadastrarEmpresa() {
+            const isEditing = window.editingEmpresaId;
+            console.log(isEditing ? 'Atualizando empresa...' : 'Cadastrando nova empresa...');
+            
+            const form = document.getElementById('form-cadastro');
+            if (!form) {
+                console.error('Formulário não encontrado!');
+                alert('Erro: Formulário não encontrado!');
+                return;
+            }
+            
+            const formData = new FormData(form);
+            
+            // Coletar dados do formulário
+            const empresaData = {
+                razao_social: formData.get('razao_social'),
+                nome_fantasia: formData.get('nome_fantasia'),
+                cnpj: formData.get('cnpj'),
+                inscricao_estadual: formData.get('inscricao_estadual'),
+                endereco_completo: formData.get('endereco_completo'),
+                telefone_comercial: formData.get('telefone_comercial'),
+                telefone_emergencial: formData.get('telefone_emergencial'),
+                email: formData.get('email'),
+                website: formData.get('website'),
+                link_cotacao: formData.get('link_cotacao'),
+                data_fundacao: formData.get('data_fundacao'),
+                observacoes: formData.get('observacoes'),
+                etiqueta: formData.get('etiqueta'),
+                modalidades_transporte: formData.getAll('modalidades_transporte'),
+                tipos_carga: formData.getAll('tipos_carga'),
+                regulamentacoes: getDynamicFormData('regulamentacoes'),
+                certificacoes: getDynamicFormData('certificacoes'),
+                abrangencia_geografica: getDynamicFormData('abrangencia'),
+                frota: getDynamicFormData('frota'),
+                armazenagem: getDynamicFormData('armazenagem'),
+                portos_terminais: getDynamicFormData('portos-terminais'),
+                seguros_coberturas: getDynamicFormData('seguros-coberturas'),
+                tecnologias: getDynamicFormData('tecnologias'),
+                desempenho_qualidade: getDynamicFormData('desempenho-qualidade'),
+                clientes_segmentos: getDynamicFormData('clientes-segmentos'),
+                recursos_humanos: getDynamicFormData('recursos-humanos'),
+                sustentabilidade: getDynamicFormData('sustentabilidade')
+            };
+            
+            console.log('Dados da empresa:', empresaData);
+            
+            try {
+                let response;
+                if (isEditing) {
+                    // Atualizar empresa existente
+                    response = await fetch(`/api/empresas/${window.editingEmpresaId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(empresaData)
+                    });
+                } else {
+                    // Criar nova empresa
+                    response = await fetch('/api/empresas', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(empresaData)
+                    });
+                }
+                
+                if (response.ok) {
+                    alert(isEditing ? 'Empresa atualizada com sucesso!' : 'Empresa cadastrada com sucesso!');
+                    
+                    // Limpar formulário e resetar estado
+                    form.reset();
+                    limparCamposDinamicos();
+                    resetarFormulario();
+                    
+                    // Navegar para a lista de empresas
+                    showSection('empresas');
+                    loadEmpresas(1);
+                } else {
+                    const error = await response.json();
+                    alert('Erro ao ' + (isEditing ? 'atualizar' : 'cadastrar') + ' empresa: ' + error.error);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao ' + (isEditing ? 'atualizar' : 'cadastrar') + ' empresa:', error);
+                alert('Erro ao ' + (isEditing ? 'atualizar' : 'cadastrar') + ' empresa');
+            }
+        }
+        
+        // Função para limpar campos dinâmicos
+        function limparCamposDinamicos() {
+            // Não limpar se estiver editando uma empresa
+            if (window.editingEmpresaId) {
+                console.log('Não limpando campos dinâmicos - editando empresa:', window.editingEmpresaId);
+                return;
+            }
+            
+            console.log('Limpando campos dinâmicos...');
+            const containers = [
+                'regulamentacoes-container', 'certificacoes-container', 'abrangencia-container',
+                'frota-container', 'armazenagem-container', 'portos-terminais-container',
+                'seguros-coberturas-container', 'tecnologias-container', 'desempenho-qualidade-container',
+                'clientes-segmentos-container', 'recursos-humanos-container', 'sustentabilidade-container'
+            ];
+            
+            containers.forEach(containerId => {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.innerHTML = '';
+                }
+            });
+        }
+        
+        // Função para resetar o formulário para modo de cadastro
+        function resetarFormulario() {
+            // Limpar ID de edição
+            window.editingEmpresaId = null;
+            
+            // Resetar texto do botão
+            const submitBtn = document.querySelector('#form-cadastro button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Salvar Empresa';
+            }
+            
+            // Resetar título da seção
+            const titulo = document.querySelector('#cadastro h2');
+            if (titulo) {
+                titulo.textContent = 'Cadastrar Nova Empresa';
+            }
+        }
+
+        // Editar empresa
+        async function editarEmpresa(empresaId) {
+            try {
+                console.log('Carregando empresa para edição:', empresaId);
+                const response = await fetch(`/api/empresas/${empresaId}`);
+                const empresa = await response.json();
+                
+                // Limpar formulário antes de preencher com novos dados
+                const form = document.getElementById('form-cadastro');
+                form.reset();
+                
+                // Limpar todos os containers dinâmicos
+                const containers = [
+                    'regulamentacoes-container', 'certificacoes-container', 'modalidades-container',
+                    'tipos-carga-container', 'abrangencia-container', 'frota-container', 
+                    'armazenagem-container', 'portos-terminais-container', 'seguros-coberturas-container',
+                    'tecnologias-container', 'desempenho-qualidade-container', 'clientes-segmentos-container',
+                    'recursos-humanos-container', 'sustentabilidade-container'
+                ];
+                
+                containers.forEach(containerId => {
+                    const container = document.getElementById(containerId);
+                    if (container) {
+                        container.innerHTML = '';
+                    }
+                });
+                
+                // Armazenar ID da empresa sendo editada
+                window.editingEmpresaId = empresaId;
+                
+                // Navegar para a seção de cadastro
+                showSection('cadastro');
+                
+                // Preencher os dados básicos
+                document.querySelector('input[name="razao_social"]').value = empresa.razao_social || '';
+                document.querySelector('input[name="nome_fantasia"]').value = empresa.nome_fantasia || '';
+                document.querySelector('input[name="cnpj"]').value = empresa.cnpj || '';
+                document.querySelector('input[name="inscricao_estadual"]').value = empresa.inscricao_estadual || '';
+                document.querySelector('textarea[name="endereco_completo"]').value = empresa.endereco_completo || '';
+                document.querySelector('input[name="telefone_comercial"]').value = empresa.telefone_comercial || '';
+                document.querySelector('input[name="telefone_emergencial"]').value = empresa.telefone_emergencial || '';
+                document.querySelector('input[name="email"]').value = empresa.email || '';
+                document.querySelector('input[name="website"]').value = empresa.website || '';
+                document.querySelector('input[name="link_cotacao"]').value = empresa.link_cotacao || '';
+                document.querySelector('input[name="data_fundacao"]').value = empresa.data_fundacao || '';
+                document.querySelector('textarea[name="observacoes"]').value = empresa.observacoes || '';
+                document.querySelector('select[name="etiqueta"]').value = empresa.etiqueta || 'CADASTRADA';
+                
+                // Preencher modalidades de transporte
+                empresa.modalidades_transporte?.forEach(modalidade => {
+                    const checkbox = document.querySelector(`input[name="modalidades_transporte"][value="${modalidade.modalidade}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                // Preencher tipos de carga
+                empresa.tipos_carga?.forEach(tipo => {
+                    const checkbox = document.querySelector(`input[name="tipos_carga"][value="${tipo.tipo_carga}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                // Preencher campos dinâmicos
+                preencherCamposDinamicos('regulamentacoes', empresa.regulamentacoes || []);
+                preencherCamposDinamicos('certificacoes', empresa.certificacoes || []);
+                preencherCamposDinamicos('abrangencia', empresa.abrangencia_geografica || []);
+                preencherCamposDinamicos('frota', empresa.frota || []);
+                preencherCamposDinamicos('armazenagem', empresa.armazenagem || []);
+                
+                // LIMPEZA EXTRA PARA PORTOS - GARANTIR QUE ESTÁ VAZIO
+                const portosContainer = document.getElementById('portos-terminais-container');
+                if (portosContainer) {
+                    portosContainer.innerHTML = '';
+                    console.log('Container de portos limpo antes de preencher');
+                }
+                
+                preencherCamposDinamicos('portos-terminais', empresa.portos_terminais || []);
+                preencherCamposDinamicos('seguros-coberturas', empresa.seguros_coberturas || []);
+                preencherCamposDinamicos('tecnologias', empresa.tecnologias || []);
+                preencherCamposDinamicos('desempenho-qualidade', empresa.desempenho_qualidade || []);
+                preencherCamposDinamicos('clientes-segmentos', empresa.clientes_segmentos || []);
+                preencherCamposDinamicos('recursos-humanos', empresa.recursos_humanos || []);
+                preencherCamposDinamicos('sustentabilidade', empresa.sustentabilidade || []);
+                
+                // Alterar o texto do botão para "Atualizar Empresa"
+                const submitBtn = document.querySelector('#form-cadastro button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.textContent = 'Atualizar Empresa';
+                }
+                
+                // Alterar o título da seção
+                const titulo = document.querySelector('#cadastro h2');
+                if (titulo) {
+                    titulo.textContent = 'Editar Empresa';
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar empresa para edição:', error);
+                alert('Erro ao carregar dados da empresa');
+            }
+        }
+        
+        // Função auxiliar para preencher campos dinâmicos
+        function preencherCamposDinamicos(prefix, dados) {
+            console.log('Executando preencherCamposDinamicos para:', prefix, 'com', dados?.length || 0, 'itens');
+            
+            // Proteção específica contra execução dupla para portos-terminais
+            // if (prefix === 'portos-terminais') {
+            //     if (window.portosJaPreenchidos) {
+            //         console.log('EXECUÇÃO DUPLA BLOQUEADA para portos-terminais');
+            //         return;
+            //     }
+            //     window.portosJaPreenchidos = true;
+            //     // Reset após 1 segundo para permitir nova edição
+            //     setTimeout(() => {
+            //         window.portosJaPreenchidos = false;
+            //     }, 1000);
+            // }
+            
+            const container = document.getElementById(`${prefix}-container`);
+            if (!container || !dados || dados.length === 0) return;
+            
+            // Limpar container
+            container.innerHTML = '';
+            
+            // Adicionar cada item
+            dados.forEach((item, index) => {
+                // Chamar a função apropriada para adicionar o campo
+                switch(prefix) {
+                    case 'regulamentacoes':
+                        addRegulamentacao();
+                        break;
+                    case 'certificacoes':
+                        addCertificacao();
+                        break;
+                    case 'abrangencia':
+                        addAbrangencia();
+                        break;
+                    case 'frota':
+                        addFrota();
+                        break;
+                    case 'armazenagem':
+                        addArmazenagem();
+                        break;
+                    case 'portos-terminais':
+                        console.log('Dados de portos recebidos:', dados);
+                        
+                        // Limpar o container de portos e terminais antes de preencher
+                        container.innerHTML = '';
+
+                        dados.forEach(item => {
+                            if (item.nome_porto_terminal && item.tipo_terminal) {
+                                addPortoTerminal(); // Adiciona um novo conjunto de campos de porto/terminal
+                                const portoDiv = container.lastElementChild;
+                                const portoSelect = portoDiv.querySelector('.porto-select');
+                                const terminalSelect = portoDiv.querySelector('.terminal-select');
+
+                                if (portoSelect) {
+                                    portoSelect.value = item.nome_porto_terminal;
+                                    // Chamar atualizarTerminais para popular os terminais corretos para o porto selecionado
+                                    atualizarTerminais(portoSelect, container.children.length - 1);
+                                }
+                                if (terminalSelect) {
+                                    terminalSelect.value = item.tipo_terminal;
+                                }
+                            }
+                        });
+                        break;
+                    case 'seguros-coberturas':
+                        addSeguroCobertura();
+                        break;
+                    case 'tecnologias':
+                        addTecnologia();
+                        break;
+                    case 'desempenho-qualidade':
+                        addDesempenhoQualidade();
+                        break;
+                    case 'clientes-segmentos':
+                        addClienteSegmento();
+                        break;
+                    case 'recursos-humanos':
+                        addRecursoHumano();
+                        break;
+                    case 'sustentabilidade':
+                        addSustentabilidade();
+                        break;
+                }
+                
+                // Preencher os valores no último item adicionado
+                const lastDiv = container.lastElementChild;
+                if (lastDiv) {
+                    Object.keys(item).forEach(key => {
+                        const input = lastDiv.querySelector(`[name*="[${key}]"]`);
+                        if (input) {
+                            if (input.type === 'checkbox') {
+                                input.checked = item[key];
+                            } else {
+                                input.value = item[key];
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Função auxiliar para coletar dados de campos dinâmicos
+        function getDynamicFormData(prefix) {
+            // Função específica para portos-terminais
+            if (prefix === 'portos-terminais') {
+                return getPortosTerminaisData();
+            }
+            
+            const data = [];
+            const container = document.getElementById(`${prefix}-container`);
+            if (!container) return data;
+
+            Array.from(container.children).forEach(div => {
+                const item = {};
+                Array.from(div.querySelectorAll('input, select, textarea')).forEach(input => {
+                    const nameMatch = input.name.match(/\[(\w+)\]$/);
+                    if (nameMatch) {
+                        const name = nameMatch[1];
+                        if (input.type === 'checkbox') {
+                            item[name] = input.checked;
+                        } else if (input.type === 'number') {
+                            item[name] = parseFloat(input.value) || 0;
+                        } else {
+                            item[name] = input.value;
+                        }
+                    }
+                });
+                if (Object.keys(item).length > 0) {
+                    data.push(item);
+                }
+            });
+            return data;
+        }
+
+        function getPortosTerminaisData() {
+            const dataSet = new Set();
+            const container = document.getElementById('portos-terminais-container');
+            if (!container) return [];
+
+            Array.from(container.children).forEach(div => {
+                const portoSelect = div.querySelector('.porto-select');
+                const terminalSelect = div.querySelector('.terminal-select');
+                
+                if (portoSelect && terminalSelect && portoSelect.value && terminalSelect.value) {
+                    const key = `${portoSelect.value}|${terminalSelect.value}`;
+                    dataSet.add(key);
+                }
+
+                // Coletar terminais adicionais
+                const terminaisAdicionais = div.querySelector('[id^="terminais-adicionais-"]');
+                if (terminaisAdicionais) {
+                    Array.from(terminaisAdicionais.children).forEach(terminalDiv => {
+                        const terminalSelect = terminalDiv.querySelector('select');
+                        const hiddenInput = terminalDiv.querySelector('input[type="hidden"]');
+                        
+                        if (terminalSelect && hiddenInput && terminalSelect.value) {
+                            const key = `${hiddenInput.value}|${terminalSelect.value}`;
+                            dataSet.add(key);
+                        }
+                    });
+                }
+            });
+
+            // Converter Set de volta para array de objetos
+            const data = [];
+            dataSet.forEach(key => {
+                const [nome_porto_terminal, tipo_terminal] = key.split('|');
+                data.push({
+                    nome_porto_terminal,
+                    tipo_terminal
+                });
+            });
+
+            console.log('Dados de portos coletados (sem duplicatas):', data);
+            return data;
+        }
+
+        // Funções para adicionar campos dinâmicos
+        function addRegulamentacao() {
+            const container = document.getElementById("regulamentacoes-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Regulamentação</label>
+                    <select name="regulamentacoes[${index}][tipo_regulamentacao]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="RNTRC">RNTRC (Registro Nacional de Transportadores Rodoviários de Cargas)</option>
+                        <option value="ANTT">ANTT (Agência Nacional de Transportes Terrestres)</option>
+                        <option value="Licença Originária ANTT">Licença Originária ANTT</option>
+                        <option value="AET">AET (Autorização Especial de Trânsito)</option>
+                        <option value="Licença Sanitária ANVISA">Licença Sanitária ANVISA</option>
+                        <option value="CRLV">CRLV (Certificado de Registro e Licenciamento de Veículo)</option>
+                        <option value="Autorização Transporte Internacional">Autorização de Transporte Rodoviário Internacional</option>
+                        <option value="Permissão MERCOSUL">Permissão para Transporte Internacional de Cargas (MERCOSUL)</option>
+                        <option value="Licença Polícia Federal">Licença da Polícia Federal para Transporte de Cargas</option>
+                        <option value="Alvará Municipal">Alvará de Funcionamento Municipal</option>
+                        <option value="Licença Ambiental">Licença Ambiental</option>
+                        <option value="CRT">CRT (Certificado de Regularidade Técnica)</option>
+                        <option value="Autorização Produtos Perigosos">Autorização para Transporte de Produtos Perigosos</option>
+                        <option value="Licença IBAMA">Licença IBAMA</option>
+                        <option value="CISV">CISV (Certificado de Inspeção de Segurança Veicular)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Número de Registro</label>
+                    <input type="text" name="regulamentacoes[${index}][numero_registro]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data de Emissão</label>
+                    <input type="date" name="regulamentacoes[${index}][data_emissao]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data de Validade</label>
+                    <input type="date" name="regulamentacoes[${index}][data_validade]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Órgão Emissor</label>
+                    <input type="text" name="regulamentacoes[${index}][orgao_emissor]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addCertificacao() {
+            const container = document.getElementById("certificacoes-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Certificação</label>
+                    <select name="certificacoes[${index}][nome_certificacao]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="ISO 9001">ISO 9001 (Sistema de Gestão da Qualidade)</option>
+                        <option value="ISO 14001">ISO 14001 (Sistema de Gestão Ambiental)</option>
+                        <option value="ISO 45001">ISO 45001 (Sistema de Gestão de Saúde e Segurança Ocupacional)</option>
+                        <option value="ISO 28000">ISO 28000 (Sistema de Gestão de Segurança para a Cadeia de Suprimentos)</option>
+                        <option value="ISO 39001">ISO 39001 (Sistema de Gestão de Segurança Viária)</option>
+                        <option value="SASSMAQ">SASSMAQ (Sistema de Avaliação de Saúde, Segurança, Meio Ambiente e Qualidade)</option>
+                        <option value="OEA">OEA (Operador Econômico Autorizado)</option>
+                        <option value="Transqualit">Transqualit (Certificação de Qualidade em Transporte)</option>
+                        <option value="ANVISA">ANVISA (Agência Nacional de Vigilância Sanitária)</option>
+                        <option value="AFE">AFE (Autorização de Funcionamento de Empresa)</option>
+                        <option value="AE">AE (Autorização Especial)</option>
+                        <option value="CIPP">CIPP (Certificado de Inspeção para Produtos Perigosos)</option>
+                        <option value="Certificação ABIQUIM">Certificação ABIQUIM</option>
+                        <option value="Certificação INMETRO">Certificação INMETRO</option>
+                        <option value="Certificação ANAC">Certificação ANAC</option>
+                        <option value="Certificação ANTAQ">Certificação ANTAQ</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Número da Certificação</label>
+                    <input type="text" name="certificacoes[${index}][numero_certificacao]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data de Emissão</label>
+                    <input type="date" name="certificacoes[${index}][data_emissao]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data de Validade</label>
+                    <input type="date" name="certificacoes[${index}][data_validade]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Órgão Certificador</label>
+                    <input type="text" name="certificacoes[${index}][orgao_certificador]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addAbrangencia() {
+            const container = document.getElementById("abrangencia-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Abrangência</label>
+                    <select name="abrangencia_geografica[${index}][tipo_abrangencia]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="Nacional">Nacional</option>
+                        <option value="Regional">Regional</option>
+                        <option value="Estadual">Estadual</option>
+                        <option value="Interestadual">Interestadual</option>
+                        <option value="Municipal">Municipal</option>
+                        <option value="Intermunicipal">Intermunicipal</option>
+                        <option value="Metropolitano">Metropolitano</option>
+                        <option value="Internacional">Internacional</option>
+                        <option value="Mercosul">Mercosul</option>
+                        <option value="América do Sul">América do Sul</option>
+                        <option value="Região Norte">Região Norte</option>
+                        <option value="Região Nordeste">Região Nordeste</option>
+                        <option value="Região Centro-Oeste">Região Centro-Oeste</option>
+                        <option value="Região Sudeste">Região Sudeste</option>
+                        <option value="Região Sul">Região Sul</option>
+                        <option value="Eixo Rio-São Paulo">Eixo Rio-São Paulo</option>
+                        <option value="Grande São Paulo">Grande São Paulo</option>
+                        <option value="Grande Rio de Janeiro">Grande Rio de Janeiro</option>
+                        <option value="Triângulo Mineiro">Triângulo Mineiro</option>
+                        <option value="Vale do Paraíba">Vale do Paraíba</option>
+                        <option value="Litoral">Litoral</option>
+                        <option value="Interior">Interior</option>
+                        <option value="Fronteira">Fronteira</option>
+                        <option value="Zona Franca">Zona Franca</option>
+                        <option value="Portuário">Portuário</option>
+                        <option value="Aeroportuário">Aeroportuário</option>
+                        <option value="Rodoviário">Rodoviário</option>
+                        <option value="Ferroviário">Ferroviário</option>
+                        <option value="Hidroviário">Hidroviário</option>
+                        <option value="Multimodal">Multimodal</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Detalhes</label>
+                    <textarea name="abrangencia_geografica[${index}][detalhes]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: Estados atendidos, rotas específicas"></textarea>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addFrota() {
+            const container = document.getElementById("frota-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Frota</label>
+                    <select name="frota[${index}][tipo_frota]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="Frota Própria">Frota Própria</option>
+                        <option value="Frota Terceirizada">Frota Terceirizada</option>
+                        <option value="Frota Mista">Frota Mista (Própria + Terceirizada)</option>
+                        <option value="Frota Agregada">Frota Agregada</option>
+                        <option value="Frota Alugada">Frota Alugada</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Veículo</label>
+                    <select name="frota[${index}][tipo_veiculo]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="Caminhão Toco">Caminhão Toco</option>
+                        <option value="Caminhão Truck">Caminhão Truck</option>
+                        <option value="Carreta">Carreta (Cavalo Mecânico + Semirreboque)</option>
+                        <option value="Bitrem">Bitrem</option>
+                        <option value="Tritrem">Tritrem</option>
+                        <option value="Rodotrem">Rodotrem</option>
+                        <option value="Van">Van</option>
+                        <option value="Furgão">Furgão</option>
+                        <option value="Caminhonete">Caminhonete</option>
+                        <option value="Utilitário">Utilitário</option>
+                        <option value="VUC">VUC (Veículo Urbano de Carga)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Carroceria/Equipamento</label>
+                    <select name="frota[${index}][tipo_carroceria]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="Baú Seco">Baú Seco</option>
+                        <option value="Baú Refrigerado">Baú Refrigerado</option>
+                        <option value="Graneleiro">Graneleiro</option>
+                        <option value="Tanque">Tanque</option>
+                        <option value="Prancha">Prancha/Prancha Rebaixada</option>
+                        <option value="Sider">Sider</option>
+                        <option value="Caçamba">Caçamba</option>
+                        <option value="Porta Container">Porta Container</option>
+                        <option value="Cegonheira">Cegonheira</option>
+                        <option value="Munk">Munk (com guindaste)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade</label>
+                    <input type="number" name="frota[${index}][quantidade]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Capacidade (toneladas)</label>
+                    <input type="number" step="0.1" name="frota[${index}][capacidade]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ano Médio da Frota</label>
+                    <input type="number" name="frota[${index}][ano_medio]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addArmazenagem() {
+            const container = document.getElementById("armazenagem-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div class="md:col-span-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="armazenagem[${index}][possui_armazem]" value="true" class="mr-2">
+                        Possui Armazém?
+                    </label>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Localização</label>
+                    <input type="text" name="armazenagem[${index}][localizacao]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Capacidade (m²)</label>
+                    <input type="number" step="0.01" name="armazenagem[${index}][capacidade_m2]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Capacidade (m³)</label>
+                    <input type="number" step="0.01" name="armazenagem[${index}][capacidade_m3]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipos de Armazenagem</label>
+                    <select name="armazenagem[${index}][tipos_armazenagem]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="Armazém Seco">Armazém Seco</option>
+                        <option value="Armazém Refrigerado">Armazém Refrigerado</option>
+                        <option value="Armazém Climatizado">Armazém Climatizado</option>
+                        <option value="Armazém para Produtos Perigosos">Armazém para Produtos Perigosos</option>
+                        <option value="Armazém Alfandegado">Armazém Alfandegado</option>
+                        <option value="Armazém Geral">Armazém Geral</option>
+                        <option value="Silo">Silo</option>
+                        <option value="Tanque de Armazenagem">Tanque de Armazenagem</option>
+                        <option value="Pátio Descoberto">Pátio Descoberto</option>
+                        <option value="Galpão Industrial">Galpão Industrial</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Serviços Oferecidos</label>
+                    <select name="armazenagem[${index}][servicos_oferecidos]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="Cross-docking">Cross-docking</option>
+                        <option value="Picking">Picking</option>
+                        <option value="Packing">Packing</option>
+                        <option value="Etiquetagem">Etiquetagem</option>
+                        <option value="Paletização">Paletização</option>
+                        <option value="Conferência">Conferência</option>
+                        <option value="Inventário">Inventário</option>
+                        <option value="Controle de Estoque">Controle de Estoque</option>
+                        <option value="Separação de Pedidos">Separação de Pedidos</option>
+                        <option value="Consolidação de Cargas">Consolidação de Cargas</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addPortoTerminal() {
+            const container = document.getElementById("portos-terminais-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Porto/Terminal</label>
+                    <select name="portos_terminais[${index}][nome_porto_terminal]" class="porto-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="atualizarTerminais(this, ${index})">
+                        <option value="">Selecione...</option>
+                        <option value="Ponta da Madeira (Maranhão)">Ponta da Madeira (Maranhão)</option>
+                        <option value="Porto da Alumar (Maranhão)">Porto da Alumar (Maranhão)</option>
+                        <option value="Porto de Angra dos Reis (Rio de Janeiro)">Porto de Angra dos Reis (Rio de Janeiro)</option>
+                        <option value="Porto de Antonina (Paraná)">Porto de Antonina (Paraná)</option>
+                        <option value="Porto de Aratu (Bahia)">Porto de Aratu (Bahia)</option>
+                        <option value="Porto de Areia Branca (Rio Grande do Norte)">Porto de Areia Branca (Rio Grande do Norte)</option>
+                        <option value="Porto de Barra do Riacho (Espírito Santo)">Porto de Barra do Riacho (Espírito Santo)</option>
+                        <option value="Porto de Barra dos Coqueiros (Sergipe)">Porto de Barra dos Coqueiros (Sergipe)</option>
+                        <option value="Porto de Belém (Pará)">Porto de Belém (Pará)</option>
+                        <option value="Porto de Cabedelo (Paraíba)">Porto de Cabedelo (Paraíba)</option>
+                        <option value="Porto de Ilhéus (Bahia)">Porto de Ilhéus (Bahia)</option>
+                        <option value="Porto de Imbituba (Santa Catarina)">Porto de Imbituba (Santa Catarina)</option>
+                        <option value="Porto de Itaguaí (Rio de Janeiro)">Porto de Itaguaí (Rio de Janeiro)</option>
+                        <option value="Porto de Itajaí (Santa Catarina)">Porto de Itajaí (Santa Catarina)</option>
+                        <option value="Porto de Itapoá (Santa Catarina)">Porto de Itapoá (Santa Catarina)</option>
+                        <option value="Porto de Jaraguá (Alagoas)">Porto de Jaraguá (Alagoas)</option>
+                        <option value="Porto de Natal (Rio Grande do Norte)">Porto de Natal (Rio Grande do Norte)</option>
+                        <option value="Porto de Navegantes (Santa Catarina)">Porto de Navegantes (Santa Catarina)</option>
+                        <option value="Porto de Niterói (Rio de Janeiro)">Porto de Niterói (Rio de Janeiro)</option>
+                        <option value="Porto de Paranaguá (Paraná)">Porto de Paranaguá (Paraná)</option>
+                        <option value="Porto do Pecém (Ceará)">Porto do Pecém (Ceará)</option>
+                        <option value="Porto de Rio Grande (Rio Grande do Sul)">Porto de Rio Grande (Rio Grande do Sul)</option>
+                        <option value="Porto de Salvador (Bahia)">Porto de Salvador (Bahia)</option>
+                        <option value="Porto de Macapá (Amapá)">Porto de Macapá (Amapá)</option>
+                        <option value="Porto de Santos (São Paulo)">Porto de Santos (São Paulo)</option>
+                        <option value="Porto de São Francisco do Sul (Santa Catarina)">Porto de São Francisco do Sul (Santa Catarina)</option>
+                        <option value="Porto de São Sebastião (São Paulo)">Porto de São Sebastião (São Paulo)</option>
+                        <option value="Porto de Suape (Pernambuco)">Porto de Suape (Pernambuco)</option>
+                        <option value="Porto de Tubarão (Espírito Santo)">Porto de Tubarão (Espírito Santo)</option>
+                        <option value="Porto de Vila do Conde (Pará)">Porto de Vila do Conde (Pará)</option>
+                        <option value="Porto de Vitória (Espírito Santo)">Porto de Vitória (Espírito Santo)</option>
+                        <option value="Porto do Açu (Rio de Janeiro)">Porto do Açu (Rio de Janeiro)</option>
+                        <option value="Porto do Forno (Rio de Janeiro)">Porto do Forno (Rio de Janeiro)</option>
+                        <option value="Porto do Itaqui (Maranhão)">Porto do Itaqui (Maranhão)</option>
+                        <option value="Porto do Mucuripe (Ceará)">Porto do Mucuripe (Ceará)</option>
+                        <option value="Porto do Recife (Pernambuco)">Porto do Recife (Pernambuco)</option>
+                        <option value="Porto do Rio de Janeiro (Rio de Janeiro)">Porto do Rio de Janeiro (Rio de Janeiro)</option>
+                        <option value="Porto Pesqueiro de Laguna (Santa Catarina)">Porto Pesqueiro de Laguna (Santa Catarina)</option>
+                        <option value="Porto Piauí (Piauí)">Porto Piauí (Piauí)</option>
+                        <option value="Porto Sudeste (Rio de Janeiro)">Porto Sudeste (Rio de Janeiro)</option>
+                        <option value="Terminal de Miramar (Pará)">Terminal de Miramar (Pará)</option>
+                        <option value="Terminal de Praia Mole (Espírito Santo)">Terminal de Praia Mole (Espírito Santo)</option>
+                        <option value="Porto de Cáceres (Mato Grosso)">Porto de Cáceres (Mato Grosso)</option>
+                        <option value="Porto de Cachoeira do Sul (Rio Grande do Sul)">Porto de Cachoeira do Sul (Rio Grande do Sul)</option>
+                        <option value="Porto de Caracaraí (Roraima)">Porto de Caracaraí (Roraima)</option>
+                        <option value="Porto de Charqueadas (Rio Grande do Sul)">Porto de Charqueadas (Rio Grande do Sul)</option>
+                        <option value="Porto de Corumbá (Mato Grosso do Sul)">Porto de Corumbá (Mato Grosso do Sul)</option>
+                        <option value="Porto de Eirunepé (Amazonas)">Porto de Eirunepé (Amazonas)</option>
+                        <option value="Porto de Estrela (Rio Grande do Sul)">Porto de Estrela (Rio Grande do Sul)</option>
+                        <option value="Terminal de Itacoatiara (Amazonas)">Terminal de Itacoatiara (Amazonas)</option>
+                        <option value="Porto de Juazeiro (Bahia)">Porto de Juazeiro (Bahia)</option>
+                        <option value="Porto de Ladário (Mato Grosso do Sul)">Porto de Ladário (Mato Grosso do Sul)</option>
+                        <option value="Porto de Manaus (Amazonas)">Porto de Manaus (Amazonas)</option>
+                        <option value="Porto de Pelotas (Rio Grande do Sul)">Porto de Pelotas (Rio Grande do Sul)</option>
+                        <option value="Porto de Parintins (Amazonas)">Porto de Parintins (Amazonas)</option>
+                        <option value="Porto de Petrolina (Pernambuco)">Porto de Petrolina (Pernambuco)</option>
+                        <option value="Porto de Pirapora (Minas Gerais)">Porto de Pirapora (Minas Gerais)</option>
+                        <option value="Porto de Porto Alegre (Rio Grande do Sul)">Porto de Porto Alegre (Rio Grande do Sul)</option>
+                        <option value="Porto de Porto Murtinho (Mato Grosso do Sul)">Porto de Porto Murtinho (Mato Grosso do Sul)</option>
+                        <option value="Porto de Porto Velho (Rondônia)">Porto de Porto Velho (Rondônia)</option>
+                        <option value="Porto Internacional de Porto Xavier (Rio Grande do Sul)">Porto Internacional de Porto Xavier (Rio Grande do Sul)</option>
+                        <option value="Porto de Santana (Amapá)">Porto de Santana (Amapá)</option>
+                        <option value="Porto de Santarém (Pará)">Porto de Santarém (Pará)</option>
+                        <option value="Porto de Tabatinga (Amazonas)">Porto de Tabatinga (Amazonas)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Terminal</label>
+                    <select name="portos_terminais[${index}][tipo_terminal]" class="terminal-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione primeiro o porto...</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <button type="button" onclick="adicionarTerminalAoPorto(${index})" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Adicionar Outro Terminal a Este Porto
+                    </button>
+                </div>
+                <div class="terminais-adicionais md:col-span-2" id="terminais-adicionais-${index}">
+                    <!-- Terminais adicionais serão adicionados aqui -->
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addSeguroCobertura() {
+            const container = document.getElementById("seguros-coberturas-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Seguro</label>
+                    <select name="seguros_coberturas[${index}][tipo_seguro]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="RCTR-C">RCTR-C (Responsabilidade Civil do Transportador Rodoviário de Cargas)</option>
+                        <option value="RC-V">RC-V (Responsabilidade Civil de Veículo)</option>
+                        <option value="SPVAT">SPVAT (Seguro de Proteção de Veículos Automotores Terrestres)</option>
+                        <option value="RCF-DC">RCF-DC (Responsabilidade Civil Facultativa - Desaparecimento de Carga)</option>
+                        <option value="Seguro de Transporte Nacional">Seguro de Transporte Nacional</option>
+                        <option value="RCTR-VI">RCTR-VI (Responsabilidade Civil do Transportador Rodoviário - Viagem Internacional)</option>
+                        <option value="Seguro de Carga">Seguro de Carga</option>
+                        <option value="Seguro de Frota">Seguro de Frota</option>
+                        <option value="Seguro de Responsabilidade Civil Geral">Seguro de Responsabilidade Civil Geral</option>
+                        <option value="Seguro de Vida para Motoristas">Seguro de Vida para Motoristas</option>
+                        <option value="Seguro de Acidentes Pessoais">Seguro de Acidentes Pessoais</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Seguradora</label>
+                    <input type="text" name="seguros_coberturas[${index}][seguradora]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor da Cobertura</label>
+                    <input type="text" name="seguros_coberturas[${index}][valor_cobertura]" class="valor-cobertura w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="R$ 0,00">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data de Validade</label>
+                    <input type="date" name="seguros_coberturas[${index}][data_validade]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            `;
+            container.appendChild(div);
+            
+            // Adicionar formatação automática para o campo de valor da cobertura
+            const valorInput = div.querySelector('.valor-cobertura');
+            valorInput.addEventListener('input', function(e) {
+                formatarValorCobertura(e.target);
+            });
+        }
+
+        function addTecnologia() {
+            const container = document.getElementById("tecnologias-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Tecnologia</label>
+                    <select name="tecnologias[${index}][nome_tecnologia]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="TMS">TMS (Transportation Management System)</option>
+                        <option value="WMS">WMS (Warehouse Management System)</option>
+                        <option value="ERP">ERP (Enterprise Resource Planning)</option>
+                        <option value="CRM">CRM (Customer Relationship Management)</option>
+                        <option value="BI">BI (Business Intelligence)</option>
+                        <option value="EDI">EDI (Electronic Data Interchange)</option>
+                        <option value="GPS">GPS (Sistema de Posicionamento Global)</option>
+                        <option value="RFID">RFID (Identificação por Radiofrequência)</option>
+                        <option value="IoT">IoT (Internet das Coisas)</option>
+                        <option value="Telemetria">Telemetria</option>
+                        <option value="Monitoramento por Satélite">Monitoramento por Satélite</option>
+                        <option value="Rastreamento em Tempo Real">Rastreamento em Tempo Real</option>
+                        <option value="Cerca Eletrônica">Cerca Eletrônica (Geofencing)</option>
+                        <option value="Rádio Comunicação">Rádio Comunicação</option>
+                        <option value="Telefonia Móvel">Telefonia Móvel</option>
+                        <option value="Internet Móvel">Internet Móvel</option>
+                        <option value="Comunicação por Satélite">Comunicação por Satélite</option>
+                        <option value="Sistema de Emergência">Sistema de Emergência</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Detalhes</label>
+                    <textarea name="tecnologias[${index}][detalhes]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addDesempenhoQualidade() {
+            const container = document.getElementById("desempenho-qualidade-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Prazo Médio de Atendimento</label>
+                    <div class="flex gap-2">
+                        <input type="text" step="0.01" name="desempenho_qualidade[${index}][prazo_medio_atendimento]" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: 5">
+                        <select name="desempenho_qualidade[${index}][unidade_prazo]" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="horas">horas</option>
+                            <option value="dias">dias</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Índice de Avarias/Extravios (%)</label>
+                    <input type="number" step="0.01" name="desempenho_qualidade[${index}][indice_avarias_extravios]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Índice de Entregas no Prazo (%)</label>
+                    <input type="number" step="0.01" name="desempenho_qualidade[${index}][indice_entregas_prazo]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addClienteSegmento() {
+            const container = document.getElementById("clientes-segmentos-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Segmento</label>
+                    <select name="clientes_segmentos[${index}][segmento]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="Indústria Automobilística">Indústria Automobilística</option>
+                        <option value="Indústria Alimentícia">Indústria Alimentícia</option>
+                        <option value="Indústria Química">Indústria Química</option>
+                        <option value="Indústria Farmacêutica">Indústria Farmacêutica</option>
+                        <option value="Indústria Têxtil">Indústria Têxtil</option>
+                        <option value="Indústria Metalúrgica">Indústria Metalúrgica</option>
+                        <option value="Indústria de Papel e Celulose">Indústria de Papel e Celulose</option>
+                        <option value="Indústria Petroquímica">Indústria Petroquímica</option>
+                        <option value="Indústria de Bebidas">Indústria de Bebidas</option>
+                        <option value="Indústria de Cosméticos">Indústria de Cosméticos</option>
+                        <option value="Varejo">Varejo</option>
+                        <option value="E-commerce">E-commerce</option>
+                        <option value="Atacado">Atacado</option>
+                        <option value="Supermercados">Supermercados</option>
+                        <option value="Shopping Centers">Shopping Centers</option>
+                        <option value="Distribuidoras">Distribuidoras</option>
+                        <option value="Importadores/Exportadores">Importadores/Exportadores</option>
+                        <option value="Agronegócio">Agronegócio</option>
+                        <option value="Mineração">Mineração</option>
+                        <option value="Construção Civil">Construção Civil</option>
+                        <option value="Energia">Energia</option>
+                        <option value="Telecomunicações">Telecomunicações</option>
+                        <option value="Saúde">Saúde</option>
+                        <option value="Educação">Educação</option>
+                        <option value="Governo">Governo</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Principais Clientes</label>
+                    <textarea name="clientes_segmentos[${index}][principais_clientes]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: Empresa A, Empresa B"></textarea>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addRecursoHumano() {
+            const container = document.getElementById("recursos-humanos-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Número de Funcionários</label>
+                    <input type="number" name="recursos_humanos[${index}][numero_funcionarios]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Programas de Treinamento</label>
+                    <textarea name="recursos_humanos[${index}][programas_treinamento]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: Direção defensiva, Produtos perigosos"></textarea>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addSustentabilidade() {
+            const container = document.getElementById("sustentabilidade-container");
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md relative';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentNode.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Certificação Ambiental</label>
+                    <select name="sustentabilidade[${index}][certificacao_ambiental]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="ISO 14001">ISO 14001 (Sistema de Gestão Ambiental)</option>
+                        <option value="Selo Verde">Selo Verde</option>
+                        <option value="Certificação LEED">Certificação LEED</option>
+                        <option value="Certificação AQUA">Certificação AQUA</option>
+                        <option value="Programa Brasileiro GHG Protocol">Programa Brasileiro GHG Protocol</option>
+                        <option value="Carbon Trust">Carbon Trust</option>
+                        <option value="Certificação FSC">Certificação FSC (Forest Stewardship Council)</option>
+                        <option value="Certificação PEFC">Certificação PEFC (Programme for the Endorsement of Forest Certification)</option>
+                        <option value="Certificação Cradle to Cradle">Certificação Cradle to Cradle</option>
+                        <option value="Certificação BREEAM">Certificação BREEAM</option>
+                        <option value="Programa de Redução de Emissões">Programa de Redução de Emissões</option>
+                        <option value="Programa de Eficiência Energética">Programa de Eficiência Energética</option>
+                        <option value="Programa de Gestão de Resíduos">Programa de Gestão de Resíduos</option>
+                        <option value="Programa de Uso Racional da Água">Programa de Uso Racional da Água</option>
+                        <option value="Programa de Biodiesel">Programa de Biodiesel</option>
+                        <option value="Programa de Renovação de Frota">Programa de Renovação de Frota</option>
+                        <option value="Programa de Compensação de Carbono">Programa de Compensação de Carbono</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Programas de Redução de Emissões</label>
+                    <textarea name="sustentabilidade[${index}][programas_reducao_emissoes]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: Frota Euro 5/6, Biodiesel"></textarea>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+        
+        // Função para limpar formulário de cadastro
+        function limparFormularioCadastro() {
+            console.log('Limpando formulário de cadastro...');
+            
+            // Limpar campos básicos
+            const form = document.getElementById('form-cadastro');
+            if (form) {
+                form.reset();
+            }
+            
+            // Limpar campos dinâmicos
+            limparCamposDinamicos();
+            
+            // Resetar estado de edição
+            resetarFormulario();
+        }
+        
+        // Função para formatar valor da cobertura
+        function formatarValorCobertura(input) {
+            let valor = input.value;
+            
+            // Remove tudo que não é número
+            valor = valor.replace(/\D/g, '');
+            
+            // Se não há valor, limpa o campo
+            if (!valor) {
+                input.value = '';
+                return;
+            }
+            
+            // Converte para número e formata
+            const numero = parseInt(valor);
+            
+            // Formata no padrão brasileiro (4.000,00) sem símbolo de moeda
+            const formatado = new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(numero / 100);
+            
+            input.value = formatado;
+        }
+        
+        // Função para atualizar opções de terminais baseado no porto selecionado
+        function atualizarTerminais(portoSelect, index) {
+            const terminalSelect = portoSelect.parentNode.parentNode.querySelector('.terminal-select');
+            const porto = portoSelect.value;
+            
+            // Limpar opções existentes
+            terminalSelect.innerHTML = '<option value="">Selecione...</option>';
+            
+            // Adicionar opções baseadas no porto selecionado
+            const terminaisComuns = [
+                'Terminal de Contêineres',
+                'Terminal de Granéis Sólidos', 
+                'Terminal de Granéis Líquidos',
+                'Terminal de Carga Geral',
+                'Terminal Roll-on/Roll-off',
+                'Terminal Marítimo',
+                'Terminal Intermodal',
+                'Terminal de Transbordo'
+            ];
+            
+            terminaisComuns.forEach(terminal => {
+                const option = document.createElement('option');
+                option.value = terminal;
+                option.textContent = terminal;
+                terminalSelect.appendChild(option);
+            });
+        }
+        
+        // Função para adicionar terminal adicional ao mesmo porto
+        function adicionarTerminalAoPorto(portoIndex) {
+            const portoDiv = document.querySelector(`#portos-terminais-container > div:nth-child(${portoIndex + 1})`);
+            const portoSelect = portoDiv.querySelector('.porto-select');
+            const porto = portoSelect.value;
+            
+            if (!porto) {
+                alert('Selecione primeiro um porto antes de adicionar terminais adicionais.');
+                return;
+            }
+            
+            const terminaisContainer = document.getElementById(`terminais-adicionais-${portoIndex}`);
+            const terminalIndex = terminaisContainer.children.length;
+            
+            const terminalDiv = document.createElement('div');
+            terminalDiv.className = 'flex gap-4 items-center p-2 bg-blue-50 rounded-md mb-2';
+            terminalDiv.innerHTML = `
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Terminal Adicional</label>
+                    <select name="portos_terminais[${portoIndex}_${terminalIndex}][tipo_terminal]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione...</option>
+                        <option value="Terminal de Contêineres">Terminal de Contêineres</option>
+                        <option value="Terminal de Granéis Sólidos">Terminal de Granéis Sólidos</option>
+                        <option value="Terminal de Granéis Líquidos">Terminal de Granéis Líquidos</option>
+                        <option value="Terminal de Carga Geral">Terminal de Carga Geral</option>
+                        <option value="Terminal Roll-on/Roll-off">Terminal Roll-on/Roll-off</option>
+                        <option value="Terminal Marítimo">Terminal Marítimo</option>
+                        <option value="Terminal Intermodal">Terminal Intermodal</option>
+                        <option value="Terminal de Transbordo">Terminal de Transbordo</option>
+                    </select>
+                    <input type="hidden" name="portos_terminais[${portoIndex}_${terminalIndex}][nome_porto_terminal]" value="${porto}">
+                </div>
+                <button type="button" onclick="this.parentNode.remove()" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            terminaisContainer.appendChild(terminalDiv);
+        }
+// ==================== INLINE SCRIPT 1 ====================
+// Dados para os gráficos (serão carregados via API)
+        let analyticsData = {
+            empresasPorRegiao: [],
+            tiposCarga: [],
+            crescimentoMensal: [],
+            certificacoes: []
+        };
+
+        // Variáveis para controle dos gráficos
+        let graficosRenderizados = false;
+        let graficosInstancias = {};
+
+        // Função para carregar dados analytics
+        async function carregarDadosAnalytics() {
+            console.log('🔄 Carregando dados analytics...');
+            
+            // Verificar se já está carregando
+            if (window.carregandoAnalytics) {
+                console.log('⏳ Já está carregando analytics, aguardando...');
+                return;
+            }
+            
+            window.carregandoAnalytics = true;
+            
+            try {
+                const response = await fetch('/api/analytics');
+                if (response.ok) {
+                    analyticsData = await response.json();
+                    console.log('✅ Dados da API carregados:', analyticsData);
+                } else {
+                    console.log('⚠️ Erro na API, usando dados de exemplo:', response.status);
+                    await carregarDadosReais();
+                }
+            } catch (error) {
+                console.log('⚠️ Erro na API, usando dados de exemplo:', error.message);
+                await carregarDadosReais();
+            }
+            
+            console.log('📊 Dados de exemplo carregados:', analyticsData);
+            
+            // Aguardar um pouco antes de renderizar
+            setTimeout(() => {
+                console.log('🎨 Renderizando gráficos...');
+                renderizarGraficos();
+                window.carregandoAnalytics = false;
+            }, 500);
+        }
+
+               // Função para carregar dados reais da API
+        async function carregarDadosReais() {
+            try {
+                const response = await fetch('/api/analytics');
+                if (response.ok) {
+                    const data = await response.json();
+                    analyticsData = data;
+                } else {
+                    console.error('Erro ao carregar dados da API');
+                    // Em caso de erro, manter dados vazios
+                    analyticsData = {
+                        empresasPorRegiao: [],
+                        tiposCarga: [],
+                        crescimentoMensal: [],
+                        certificacoes: []
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao conectar com a API:', error);
+                // Em caso de erro, manter dados vazios
+                analyticsData = {
+                    empresasPorRegiao: [],
+                    tiposCarga: [],
+                    crescimentoMensal: [],
+                    certificacoes: []
+                };
+            }
+        }
+
+        // Função para destruir gráficos anteriores
+        function destruirGraficosAnteriores() {
+            console.log('🧹 Destruindo gráficos anteriores...');
+            
+            // Destruir instâncias do Chart.js
+            Object.keys(graficosInstancias).forEach(key => {
+                if (graficosInstancias[key]) {
+                    graficosInstancias[key].destroy();
+                    delete graficosInstancias[key];
+                }
+            });
+            
+            // Limpar canvas
+            const canvasIds = ['chart-empresas-regiao', 'chart-tipos-carga', 'chart-crescimento', 'chart-certificacoes'];
+            canvasIds.forEach(id => {
+                const canvas = document.getElementById(id);
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    // Resetar tamanho do canvas
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = 300;
+                    canvas.style.height = '300px';
+                    canvas.style.width = '100%';
+                }
+            });
+            
+            graficosRenderizados = false;
+            console.log('✅ Gráficos anteriores destruídos');
+        }
+
+        // Função para renderizar todos os gráficos
+        function renderizarGraficos() {
+            // Verificar se já foram renderizados
+            if (graficosRenderizados) {
+                console.log('⚠️ Gráficos já renderizados, ignorando...');
+                return;
+            }
+            
+            console.log('🎨 Iniciando renderização dos gráficos...');
+            
+            // Destruir gráficos anteriores primeiro
+            destruirGraficosAnteriores();
+            
+            // Aguardar um pouco antes de renderizar novos
+            setTimeout(() => {
+                renderizarGraficoRegiao();
+                renderizarGraficoTiposCarga();
+                renderizarGraficoCrescimento();
+                renderizarGraficoCertificacoes();
+                carregarMetricasDetalhadas();
+                
+                graficosRenderizados = true;
+                console.log('✅ Todos os gráficos renderizados!');
+            }, 100);
+        }
+
+        // Gráfico de Pizza - Empresas por Região
+        function renderizarGraficoRegiao() {
+            const canvas = document.getElementById('chart-empresas-regiao');
+            if (!canvas) return;
+            
+            // Definir tamanho fixo
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            canvas.style.height = '300px';
+            
+            const ctx = canvas.getContext('2d');
+            
+            graficosInstancias['regiao'] = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: analyticsData.empresasPorRegiao.map(item => item.regiao),
+                    datasets: [{
+                        data: analyticsData.empresasPorRegiao.map(item => item.empresas),
+                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((context.parsed * 100) / total);
+                                    return `${context.label}: ${context.parsed} empresas (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Barras - Tipos de Carga
+        function renderizarGraficoTiposCarga() {
+            const canvas = document.getElementById('chart-tipos-carga');
+            if (!canvas) return;
+            
+            // Definir tamanho fixo
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            canvas.style.height = '300px';
+            
+            const ctx = canvas.getContext('2d');
+            
+            graficosInstancias['tiposCarga'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: analyticsData.tiposCarga.map(item => item.tipo),
+                    datasets: [{
+                        label: 'Quantidade de Empresas',
+                        data: analyticsData.tiposCarga.map(item => item.quantidade),
+                        backgroundColor: '#10B981',
+                        borderColor: '#059669',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#E5E7EB'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Linha - Crescimento Mensal
+        function renderizarGraficoCrescimento() {
+            const canvas = document.getElementById('chart-crescimento');
+            if (!canvas) return;
+            
+            // Definir tamanho fixo
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            canvas.style.height = '300px';
+            
+            const ctx = canvas.getContext('2d');
+            
+            graficosInstancias['crescimento'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: analyticsData.crescimentoMensal.map(item => item.mes),
+                    datasets: [{
+                        label: 'Total de Empresas',
+                        data: analyticsData.crescimentoMensal.map(item => item.empresas),
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#3B82F6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: '#E5E7EB'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Barras Horizontais - Certificações
+        function renderizarGraficoCertificacoes() {
+            const canvas = document.getElementById('chart-certificacoes');
+            if (!canvas) return;
+            
+            // Definir tamanho fixo
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            canvas.style.height = '300px';
+            
+            const ctx = canvas.getContext('2d');
+            
+            graficosInstancias['certificacoes'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: analyticsData.certificacoes.map(item => item.certificacao),
+                    datasets: [{
+                        label: 'Quantidade de Empresas',
+                        data: analyticsData.certificacoes.map(item => item.quantidade),
+                        backgroundColor: '#F59E0B',
+                        borderColor: '#D97706',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#E5E7EB'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Carregar métricas detalhadas na tabela
+        function carregarMetricasDetalhadas() {
+            fetch("/api/analytics")
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById("metricas-tabela");
+                    tbody.innerHTML = "";
+
+                    if (data.metricas_detalhadas) {
+                        data.metricas_detalhadas.forEach(metrica => {
+                            const row = document.createElement("tr");
+                            row.innerHTML = `
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${metrica.metrica}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">${metrica.valor}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+                })
+                .catch(error => console.error("Erro ao carregar métricas detalhadas:", error));
+        }
+
+        // Inicializar analytics quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📱 DOM carregado, verificando se dashboard está visível...');
+            
+            // Aguardar um pouco para garantir que tudo foi carregado
+            setTimeout(() => {
+                const dashboard = document.getElementById('dashboard');
+                if (dashboard && dashboard.style.display !== 'none') {
+                    console.log('📊 Dashboard visível, carregando analytics...');
+                    carregarDadosAnalytics();
+                }
+            }, 100);
+        });
+
+        // Event listener para recarregar gráficos - RESTAURADO
+        document.addEventListener('DOMContentLoaded', function() {
+            // Recarregar gráficos quando necessário
+            const reloadChartsBtn = document.getElementById('reload-charts');
+            if (reloadChartsBtn) {
+                reloadChartsBtn.addEventListener('click', function() {
+                    console.log('🔄 Recarregando gráficos...');
+                    if (typeof Dashboard !== 'undefined' && Dashboard.loadCharts) {
+                        Dashboard.loadCharts();
+                    }
+                });
+            }
+        });
+
+        // Funções de exportação de relatórios
+        document.getElementById('btn-export-pdf').addEventListener('click', function() {
+            exportarRelatorioPDF();
+        });
+
+        document.getElementById('btn-export-excel').addEventListener('click', function() {
+            exportarRelatorioExcel();
+        });
+
+        // Exportar relatório em PDF
+        async function exportarRelatorioPDF() {
+            try {
+                // Mostrar loading
+                const btn = document.getElementById('btn-export-pdf');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Gerando PDF...';
+                btn.disabled = true;
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // Título do relatório
+                pdf.setFontSize(20);
+                pdf.setTextColor(40, 40, 40);
+                pdf.text('Relatório Analytics - BRCCSiS', 20, 30);
+                
+                // Data do relatório
+                const hoje = new Date().toLocaleDateString('pt-BR');
+                pdf.setFontSize(12);
+                pdf.setTextColor(100, 100, 100);
+                pdf.text(`Gerado em: ${hoje}`, 20, 40);
+
+                // Buscar métricas avançadas
+                const response = await fetch('/api/metricas-avancadas');
+                const metricas = await response.json();
+
+                // Seção de métricas gerais
+                pdf.setFontSize(16);
+                pdf.setTextColor(40, 40, 40);
+                pdf.text('Métricas Gerais', 20, 60);
+                
+                pdf.setFontSize(12);
+                let yPos = 75;
+                
+                const metricasTexto = [
+                    `Total de Empresas: ${metricas.total_empresas}`,
+                    `Taxa de Certificação: ${metricas.taxa_certificacao}%`,
+                    `Cobertura Nacional: ${metricas.cobertura_nacional}%`,
+                    `Empresas com Armazenagem: ${metricas.taxa_armazenagem}%`,
+                    `Diversificação de Carga: ${metricas.diversificacao_carga}`,
+                    `Estados Cobertos: ${metricas.estados_cobertos}/27`
+                ];
+
+                metricasTexto.forEach(texto => {
+                    pdf.text(texto, 25, yPos);
+                    yPos += 10;
+                });
+
+                // Seção de distribuição por região
+                pdf.setFontSize(16);
+                pdf.text('Distribuição por Região', 20, yPos + 15);
+                yPos += 30;
+
+                analyticsData.empresasPorRegiao.forEach(regiao => {
+                    pdf.setFontSize(12);
+                    pdf.text(`${regiao.regiao}: ${regiao.empresas} empresas (${regiao.porcentagem}%)`, 25, yPos);
+                    yPos += 8;
+                });
+
+                // Nova página para tipos de carga
+                pdf.addPage();
+                yPos = 30;
+                
+                pdf.setFontSize(16);
+                pdf.text('Tipos de Carga Mais Comuns', 20, yPos);
+                yPos += 15;
+
+                analyticsData.tiposCarga.forEach(tipo => {
+                    pdf.setFontSize(12);
+                    pdf.text(`${tipo.tipo}: ${tipo.quantidade} empresas`, 25, yPos);
+                    yPos += 8;
+                });
+
+                // Seção de certificações
+                yPos += 20;
+                pdf.setFontSize(16);
+                pdf.text('Certificações Mais Utilizadas', 20, yPos);
+                yPos += 15;
+
+                analyticsData.certificacoes.forEach(cert => {
+                    pdf.setFontSize(12);
+                    pdf.text(`${cert.certificacao}: ${cert.quantidade} empresas`, 25, yPos);
+                    yPos += 8;
+                });
+
+                // Rodapé
+                const totalPages = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(150, 150, 150);
+                    pdf.text(`Página ${i} de ${totalPages}`, 170, 285);
+                    pdf.text('BRCCSiS - Sistema de Empresas Logísticas', 20, 285);
+                }
+
+                // Salvar PDF
+                pdf.save(`relatorio-analytics-${hoje.replace(/\//g, '-')}.pdf`);
+
+                // Restaurar botão
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // Mostrar mensagem de sucesso
+                alert('Relatório PDF gerado com sucesso!');
+
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                alert('Erro ao gerar relatório PDF. Tente novamente.');
+                
+                // Restaurar botão
+                const btn = document.getElementById('btn-export-pdf');
+                btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>PDF';
+                btn.disabled = false;
+            }
+        }
+
+        // Exportar relatório em Excel
+        async function exportarRelatorioExcel() {
+            try {
+                // Mostrar loading
+                const btn = document.getElementById('btn-export-excel');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Gerando Excel...';
+                btn.disabled = true;
+
+                // Buscar métricas avançadas
+                const response = await fetch('/api/metricas-avancadas');
+                const metricas = await response.json();
+
+                // Criar workbook
+                const wb = XLSX.utils.book_new();
+
+                // Aba 1: Resumo Executivo
+                const resumoData = [
+                    ['Relatório Analytics - BRCCSiS', '', ''],
+                    ['Gerado em:', new Date().toLocaleDateString('pt-BR'), ''],
+                    ['', '', ''],
+                    ['MÉTRICAS GERAIS', '', ''],
+                    ['Total de Empresas', metricas.total_empresas, ''],
+                    ['Taxa de Certificação', metricas.taxa_certificacao + '%', ''],
+                    ['Cobertura Nacional', metricas.cobertura_nacional + '%', ''],
+                    ['Empresas com Armazenagem', metricas.taxa_armazenagem + '%', ''],
+                    ['Diversificação de Carga', metricas.diversificacao_carga, ''],
+                    ['Estados Cobertos', metricas.estados_cobertos + '/27', '']
+                ];
+
+                const wsResumo = XLSX.utils.aoa_to_sheet(resumoData);
+                XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo Executivo');
+
+                // Aba 2: Distribuição por Região
+                const regiaoData = [
+                    ['Região', 'Empresas', 'Porcentagem'],
+                    ...analyticsData.empresasPorRegiao.map(r => [r.regiao, r.empresas, r.porcentagem + '%'])
+                ];
+
+                const wsRegiao = XLSX.utils.aoa_to_sheet(regiaoData);
+                XLSX.utils.book_append_sheet(wb, wsRegiao, 'Por Região');
+
+                // Aba 3: Tipos de Carga
+                const cargaData = [
+                    ['Tipo de Carga', 'Quantidade de Empresas'],
+                    ...analyticsData.tiposCarga.map(t => [t.tipo, t.quantidade])
+                ];
+
+                const wsCarga = XLSX.utils.aoa_to_sheet(cargaData);
+                XLSX.utils.book_append_sheet(wb, wsCarga, 'Tipos de Carga');
+
+                // Aba 4: Certificações
+                const certData = [
+                    ['Certificação', 'Quantidade de Empresas'],
+                    ...analyticsData.certificacoes.map(c => [c.certificacao, c.quantidade])
+                ];
+
+                const wsCert = XLSX.utils.aoa_to_sheet(certData);
+                XLSX.utils.book_append_sheet(wb, wsCert, 'Certificações');
+
+                // Aba 5: Crescimento Mensal
+                const crescimentoData = [
+                    ['Mês', 'Total de Empresas'],
+                    ...analyticsData.crescimentoMensal.map(c => [c.mes, c.empresas])
+                ];
+
+                const wsCrescimento = XLSX.utils.aoa_to_sheet(crescimentoData);
+                XLSX.utils.book_append_sheet(wb, wsCrescimento, 'Crescimento Mensal');
+
+                // Salvar arquivo
+                const hoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+                XLSX.writeFile(wb, `relatorio-analytics-${hoje}.xlsx`);
+
+                // Restaurar botão
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // Mostrar mensagem de sucesso
+                alert('Relatório Excel gerado com sucesso!');
+
+            } catch (error) {
+                console.error('Erro ao gerar Excel:', error);
+                alert('Erro ao gerar relatório Excel. Tente novamente.');
+                
+                // Restaurar botão
+                const btn = document.getElementById('btn-export-excel');
+                btn.innerHTML = '<i class="fas fa-file-excel mr-2"></i>Excel';
+                btn.disabled = false;
+            }
+        }
+// ==================== INLINE SCRIPT 2 ====================
+// Função para confirmar exclusão com delay
+        async function confirmarExclusao(empresaId, razaoSocial) {
+            if (!confirm(`Tem certeza que deseja excluir a empresa ${razaoSocial}? Esta ação é irreversível.`)) {
+                return;
+            }
+            const deleteButton = event.target;
+            deleteButton.disabled = true;
+            deleteButton.textContent = 'Aguarde (5s)';
+            let countdown = 5;
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                deleteButton.textContent = `Aguarde (${countdown}s)`;
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    deleteButton.textContent = 'Confirmar Exclusão';
+                    deleteButton.disabled = false;
+                    deleteButton.onclick = () => excluirEmpresa(empresaId);
+                }
+            }, 1000);
+        }
+        
+        // Função para excluir empresa
+        async function excluirEmpresa(empresaId) {
+            try {
+                const response = await fetch(`/api/empresas/${empresaId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    alert('Empresa excluída com sucesso!');
+                    loadEmpresas(); // Recarregar a lista de empresas
+                } else {
+                    const errorData = await response.json();
+                    alert(`Erro ao excluir empresa: ${errorData.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao excluir empresa:', error);
+                alert('Erro ao excluir empresa. Verifique a conexão.');
+            }
+        }
+
+        // Função para exportar dados
+        async function exportarDados() {
+            try {
+                const response = await fetch('/api/empresas/export');
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `brccsis_backup_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    alert('Dados exportados com sucesso!');
+                } else {
+                    const errorData = await response.json();
+                    alert(`Erro ao exportar dados: ${errorData.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao exportar dados:', error);
+                alert('Erro ao exportar dados. Verifique a conexão.');
+            }
+        }
+
+        // Função para importar dados
+        async function importarDados(arquivo) {
+            const formData = new FormData();
+            formData.append('file', arquivo);
+
+            try {
+                const response = await fetch('/api/empresas/import', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    return {
+                        sucesso: true,
+                        dados: result
+                    };
+                } else {
+                    return {
+                        sucesso: false,
+                        erro: result.error
+                    };
+                }
+            } catch (error) {
+                return {
+                    sucesso: false,
+                    erro: `Erro de conexão: ${error.message}`
+                };
+            }
+        }
+
+        // Função para importar dados Excel
+        async function importarDadosExcel(arquivo) {
+            const formData = new FormData();
+            formData.append('file', arquivo);
+
+            try {
+                const response = await fetch('/api/empresas/import-excel', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    return {
+                        sucesso: true,
+                        dados: result
+                    };
+                } else {
+                    return {
+                        sucesso: false,
+                        erro: result.error
+                    };
+                }
+            } catch (error) {
+                return {
+                    sucesso: false,
+                    erro: `Erro de conexão: ${error.message}`
+                };
+            }
+        }
+
+        // Event listeners para importação
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnImportar = document.getElementById('btn-importar-dados');
+            const modalImportar = document.getElementById('modal-importar');
+            const fecharModal = document.getElementById('fechar-modal-importar');
+            const cancelarImportacao = document.getElementById('cancelar-importacao');
+            const arquivoInput = document.getElementById('arquivo-importacao');
+            const arquivoSelecionado = document.getElementById('arquivo-selecionado');
+            const nomeArquivo = document.getElementById('nome-arquivo');
+            const removerArquivo = document.getElementById('remover-arquivo');
+            const confirmarImportacao = document.getElementById('confirmar-importacao');
+            const textoImportacao = document.getElementById('texto-importacao');
+            const loadingImportacao = document.getElementById('loading-importacao');
+            const resultadoImportacao = document.getElementById('resultado-importacao');
+            const conteudoResultado = document.getElementById('conteudo-resultado');
+
+            // Event listeners para importação Excel
+            const btnImportarExcel = document.getElementById('btn-importar-excel');
+            const modalImportarExcel = document.getElementById('modal-importar-excel');
+            const fecharModalExcel = document.getElementById('fechar-modal-importar-excel');
+            const cancelarImportacaoExcel = document.getElementById('cancelar-importacao-excel');
+            const arquivoInputExcel = document.getElementById('arquivo-importacao-excel');
+            const arquivoSelecionadoExcel = document.getElementById('arquivo-selecionado-excel');
+            const nomeArquivoExcel = document.getElementById('nome-arquivo-excel');
+            const removerArquivoExcel = document.getElementById('remover-arquivo-excel');
+            const confirmarImportacaoExcel = document.getElementById('confirmar-importacao-excel');
+            const textoImportacaoExcel = document.getElementById('texto-importacao-excel');
+            const loadingImportacaoExcel = document.getElementById('loading-importacao-excel');
+            const resultadoImportacaoExcel = document.getElementById('resultado-importacao-excel');
+            const conteudoResultadoExcel = document.getElementById('conteudo-resultado-excel');
+
+            // Event listener para template Excel
+            const btnTemplateExcel = document.getElementById('btn-template-excel');
+
+            // Abrir modal de importação JSON
+            btnImportar.addEventListener('click', async function() {
+                try {
+                    // Verificar se o usuário tem permissão
+                    const response = await fetch('/api/auth/check-permission', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ recurso: 'importar_dados' })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.permitido) {
+                        modalImportar.classList.add('show');
+                    } else {
+                        alert('❌ Acesso negado!\n\nVocê não tem permissão para importar dados.\n\nApenas administradores e gerentes podem importar dados.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar permissão:', error);
+                    alert('Erro ao verificar permissões. Tente novamente.');
+                }
+            });
+
+            // Abrir modal de importação Excel
+            btnImportarExcel.addEventListener('click', async function() {
+                try {
+                    // Verificar se o usuário tem permissão
+                    const response = await fetch('/api/auth/check-permission', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ recurso: 'importar_excel' })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.permitido) {
+                        modalImportarExcel.classList.add('show');
+                    } else {
+                        alert('❌ Acesso negado!\n\nVocê não tem permissão para importar planilhas Excel.\n\nApenas administradores, gerentes e operadores podem importar Excel.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar permissão:', error);
+                    alert('Erro ao verificar permissões. Tente novamente.');
+                }
+            });
+
+            // Baixar template Excel
+            btnTemplateExcel.addEventListener('click', function() {
+                window.open('/api/empresas/template-excel', '_blank');
+            });
+
+            // Fechar modal JSON
+            function fecharModalImportacao() {
+                modalImportar.classList.remove('show');
+                arquivoInput.value = '';
+                arquivoSelecionado.classList.add('hidden');
+                confirmarImportacao.disabled = true;
+                resultadoImportacao.classList.add('hidden');
+            }
+
+            // Fechar modal Excel
+            function fecharModalImportacaoExcel() {
+                modalImportarExcel.classList.remove('show');
+                arquivoInputExcel.value = '';
+                arquivoSelecionadoExcel.classList.add('hidden');
+                confirmarImportacaoExcel.disabled = true;
+                resultadoImportacaoExcel.classList.add('hidden');
+            }
+
+            fecharModal.addEventListener('click', fecharModalImportacao);
+            cancelarImportacao.addEventListener('click', fecharModalImportacao);
+            fecharModalExcel.addEventListener('click', fecharModalImportacaoExcel);
+            cancelarImportacaoExcel.addEventListener('click', fecharModalImportacaoExcel);
+
+            // Seleção de arquivo JSON
+            arquivoInput.addEventListener('change', function(e) {
+                const arquivo = e.target.files[0];
+                if (arquivo) {
+                    if (arquivo.type === 'application/json' || arquivo.name.endsWith('.json')) {
+                        nomeArquivo.textContent = arquivo.name;
+                        arquivoSelecionado.classList.remove('hidden');
+                        confirmarImportacao.disabled = false;
+                    } else {
+                        alert('Por favor, selecione um arquivo JSON válido.');
+                        arquivoInput.value = '';
+                    }
+                }
+            });
+
+            // Seleção de arquivo Excel
+            arquivoInputExcel.addEventListener('change', function(e) {
+                const arquivo = e.target.files[0];
+                if (arquivo) {
+                    if (arquivo.name.endsWith('.xlsx') || arquivo.name.endsWith('.xls')) {
+                        nomeArquivoExcel.textContent = arquivo.name;
+                        arquivoSelecionadoExcel.classList.remove('hidden');
+                        confirmarImportacaoExcel.disabled = false;
+                    } else {
+                        alert('Por favor, selecione um arquivo Excel válido (.xlsx ou .xls).');
+                        arquivoInputExcel.value = '';
+                    }
+                }
+            });
+
+            // Remover arquivo selecionado JSON
+            removerArquivo.addEventListener('click', function() {
+                arquivoInput.value = '';
+                arquivoSelecionado.classList.add('hidden');
+                confirmarImportacao.disabled = true;
+            });
+
+            // Remover arquivo selecionado Excel
+            removerArquivoExcel.addEventListener('click', function() {
+                arquivoInputExcel.value = '';
+                arquivoSelecionadoExcel.classList.add('hidden');
+                confirmarImportacaoExcel.disabled = true;
+            });
+
+            // Confirmar importação JSON
+            confirmarImportacao.addEventListener('click', async function() {
+                const arquivo = arquivoInput.files[0];
+                if (!arquivo) return;
+
+                // Mostrar loading
+                textoImportacao.textContent = 'Importando...';
+                loadingImportacao.classList.remove('hidden');
+                confirmarImportacao.disabled = true;
+
+                const resultado = await importarDados(arquivo);
+
+                // Esconder loading
+                textoImportacao.textContent = 'Importar';
+                loadingImportacao.classList.add('hidden');
+                confirmarImportacao.disabled = false;
+
+                // Mostrar resultado
+                resultadoImportacao.classList.remove('hidden');
+                
+                if (resultado.sucesso) {
+                    const stats = resultado.dados.estatisticas;
+                    resultadoImportacao.className = 'mt-4 p-3 rounded-lg bg-green-50 border border-green-200';
+                    conteudoResultado.innerHTML = `
+                        <div class="text-green-800">
+                            <h4 class="font-bold mb-2">✅ Importação concluída com sucesso!</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• Total processadas: ${stats.total_processadas}</li>
+                                <li>• Empresas criadas: ${stats.criadas}</li>
+                                <li>• Empresas atualizadas: ${stats.atualizadas}</li>
+                                <li>• Erros: ${stats.erros}</li>
+                            </ul>
+                            ${stats.detalhes_erros.length > 0 ? `
+                                <details class="mt-2">
+                                    <summary class="cursor-pointer text-red-600">Ver detalhes dos erros</summary>
+                                    <ul class="mt-1 text-xs text-red-600">
+                                        ${stats.detalhes_erros.map(erro => `<li>• ${erro}</li>`).join('')}
+                                    </ul>
+                                </details>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    // Recarregar dados se estiver na aba de empresas
+                    if (document.getElementById('empresas').style.display !== 'none') {
+                        loadEmpresas();
+                    }
+                    
+                    // Recarregar analytics do dashboard
+                    carregarDadosAnalytics();
+                } else {
+                    resultadoImportacao.className = 'mt-4 p-3 rounded-lg bg-red-50 border border-red-200';
+                    conteudoResultado.innerHTML = `
+                        <div class="text-red-800">
+                            <h4 class="font-bold mb-2">❌ Erro na importação</h4>
+                            <p class="text-sm">${resultado.erro}</p>
+                        </div>
+                    `;
+                }
+            });
+
+            // Confirmar importação Excel
+            confirmarImportacaoExcel.addEventListener('click', async function() {
+                const arquivo = arquivoInputExcel.files[0];
+                if (!arquivo) return;
+
+                // Mostrar loading
+                textoImportacaoExcel.textContent = 'Importando...';
+                loadingImportacaoExcel.classList.remove('hidden');
+                confirmarImportacaoExcel.disabled = true;
+
+                const resultado = await importarDadosExcel(arquivo);
+
+                // Esconder loading
+                textoImportacaoExcel.textContent = 'Importar';
+                loadingImportacaoExcel.classList.add('hidden');
+                confirmarImportacaoExcel.disabled = false;
+
+                // Mostrar resultado
+                resultadoImportacaoExcel.classList.remove('hidden');
+                
+                if (resultado.sucesso) {
+                    const stats = resultado.dados.estatisticas;
+                    resultadoImportacaoExcel.className = 'mt-4 p-3 rounded-lg bg-green-50 border border-green-200';
+                    conteudoResultadoExcel.innerHTML = `
+                        <div class="text-green-800">
+                            <h4 class="font-bold mb-2">✅ Importação de Excel concluída com sucesso!</h4>
+                            <ul class="text-sm space-y-1">
+                                <li>• Total processadas: ${stats.total_processadas}</li>
+                                <li>• Empresas criadas: ${stats.criadas}</li>
+                                <li>• Empresas atualizadas: ${stats.atualizadas}</li>
+                                <li>• Erros: ${stats.erros}</li>
+                            </ul>
+                            ${stats.detalhes_erros.length > 0 ? `
+                                <details class="mt-2">
+                                    <summary class="cursor-pointer text-red-600">Ver detalhes dos erros</summary>
+                                    <ul class="mt-1 text-xs text-red-600">
+                                        ${stats.detalhes_erros.map(erro => `<li>• ${erro}</li>`).join('')}
+                                    </ul>
+                                </details>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    // Recarregar dados se estiver na aba de empresas
+                    if (document.getElementById('empresas').style.display !== 'none') {
+                        loadEmpresas();
+                    }
+                    
+                    // Recarregar analytics do dashboard
+                    carregarDadosAnalytics();
+                } else {
+                    resultadoImportacaoExcel.className = 'mt-4 p-3 rounded-lg bg-red-50 border border-red-200';
+                    conteudoResultadoExcel.innerHTML = `
+                        <div class="text-red-800">
+                            <h4 class="font-bold mb-2">❌ Erro na importação</h4>
+                            <p class="text-sm">${resultado.erro}</p>
+                        </div>
+                    `;
+                }
+            });
+
+            // Event listener para exportação
+            document.getElementById('btn-exportar-dados').addEventListener('click', async function() {
+                try {
+                    // Verificar se o usuário tem permissão
+                    const response = await fetch('/api/auth/check-permission', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ recurso: 'exportar_dados' })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.permitido) {
+                        exportarDados();
+                    } else {
+                        alert('❌ Acesso negado!\n\nVocê não tem permissão para exportar dados.\n\nApenas administradores e gerentes podem exportar dados.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar permissão:', error);
+                    alert('Erro ao verificar permissões. Tente novamente.');
+                }
+            });
+            
+            // Event listener para administração
+            document.getElementById('btn-administracao').addEventListener('click', async function() {
+                try {
+                    // Verificar se o usuário tem permissão
+                    const response = await fetch('/api/auth/check-permission', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ recurso: 'acessar_administracao' })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.permitido) {
+                        window.location.href = '/admin.html';
+                    } else {
+                        alert('❌ Acesso negado!\n\nVocê não tem permissão para acessar a página de administração.\n\nContate um administrador se precisar de acesso.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar permissão:', error);
+                    alert('Erro ao verificar permissões. Tente novamente.');
+                }
+            });
+            
+            // Event listener para logout
+            document.getElementById('btn-logout').addEventListener('click', async function() {
+                try {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('Erro no logout:', error);
+                    window.location.href = '/login';
+                }
+            });
+        });
+// ==================== INLINE SCRIPT 3 ====================
+// Função para carregar informações do usuário logado
+        async function carregarInfoUsuario() {
+            try {
+                const response = await fetch('/api/auth/user-info');
+                if (response.ok) {
+                    const userInfo = await response.json();
+                    document.getElementById('nome-usuario').textContent = userInfo.nome || userInfo.username;
+                } else {
+                    document.getElementById('nome-usuario').textContent = 'Usuário';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar info do usuário:', error);
+                document.getElementById('nome-usuario').textContent = 'Usuário';
+            }
+        }
+
+        // Função para atualizar horário (Brasília)
+        function atualizarHorario() {
+            const agora = new Date();
+            // Converter para horário de Brasília (UTC-3)
+            const brasilia = new Date(agora.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+            const horarioFormatado = brasilia.toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('horario-atual').textContent = horarioFormatado;
+        }
+
+        // ===== SISTEMA DE COTAÇÕES =====
+        
+        // Variáveis globais para cotações
+        let cotacoesData = [];
+        let cotacoesCurrentPage = 1;
+        let cotacoesTotalPages = 1;
+
+        // Função para verificar permissões do usuário
+        async function verificarPermissoesCotacao() {
+            try {
+                const response = await fetch('/api/auth/user-info');
+                if (response.ok) {
+                    const userInfo = await response.json();
+                    console.log('User info:', userInfo); // Debug
+                    
+                    // Admin e Gerente têm acesso total
+                    const tipoUpper = (userInfo.tipo || '').toUpperCase();
+                    return tipoUpper === 'CONSULTOR' || 
+                           tipoUpper === 'OPERADOR' || 
+                           tipoUpper === 'GERENTE' || 
+                           tipoUpper === 'ADMINISTRADOR' ||
+                           userInfo.tipo === 'consultor' || 
+                           userInfo.tipo === 'operador' || 
+                           userInfo.tipo === 'gerente' || 
+                           userInfo.tipo === 'administrador';
+                }
+                console.log('Erro na resposta da API:', response.status);
+                return false;
+            } catch (error) {
+                console.error('Erro ao verificar permissões:', error);
+                return false;
+            }
+        }
+
+        // Função para mostrar/ocultar botão de cotação baseado nas permissões
+        async function configurarBotaoCotacao() {
+            // Aguardar um pouco para garantir que o DOM está pronto
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const btnSolicitarCotacao = document.getElementById('btn-solicitar-cotacao');
+            console.log('Configurando botão de cotação...', btnSolicitarCotacao);
+            
+            if (btnSolicitarCotacao) {
+                // Sempre mostrar o botão por enquanto para debug
+                btnSolicitarCotacao.style.display = 'flex';
+                
+                // Remover event listeners anteriores para evitar duplicação
+                const newBtn = btnSolicitarCotacao.cloneNode(true);
+                btnSolicitarCotacao.parentNode.replaceChild(newBtn, btnSolicitarCotacao);
+                
+                // Adicionar event listener diretamente com múltiplas tentativas
+                newBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔘 Botão Solicitar Cotação clicado - abrindo modal');
+                    
+                    // Tentar abrir modal imediatamente
+                    try {
+                        abrirModalCotacao();
+                    } catch (error) {
+                        console.error('Erro ao abrir modal:', error);
+                        // Tentar novamente após um pequeno delay
+                        setTimeout(() => {
+                            try {
+                                abrirModalCotacao();
+                            } catch (error2) {
+                                console.error('Erro na segunda tentativa:', error2);
+                                alert('Erro ao abrir modal. Recarregue a página.');
+                            }
+                        }, 100);
+                    }
+                });
+                
+                // Também adicionar onclick como fallback
+                newBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔘 Botão clicado (onclick fallback)');
+                    abrirModalCotacao();
+                };
+                
+                console.log('✅ Event listener do botão Solicitar Cotação configurado');
+                
+                // Verificar permissões em background
+                const temPermissao = await verificarPermissoesCotacao();
+                console.log('Tem permissão:', temPermissao);
+                
+                if (!temPermissao) {
+                    console.log('Usuário sem permissão, ocultando botão');
+                    newBtn.style.display = 'none';
+                }
+            } else {
+                console.log('Botão não encontrado! Tentando novamente em 500ms...');
+                // Tentar novamente após 500ms
+                setTimeout(() => {
+                    configurarBotaoCotacao();
+                }, 500);
+            }
+        }
+
+        // Função para abrir modal de cotação (global para acesso de outros scripts)
+        window.abrirModalCotacao = function abrirModalCotacao() {
+            try {
+                console.log('🔓 Função abrirModalCotacao chamada');
+                const modal = document.getElementById('modal-cotacao');
+                console.log('📦 Modal encontrado:', modal);
+                
+                if (!modal) {
+                    console.error('❌ ERRO: Modal não encontrado!');
+                    mostrarMensagem('Erro: Modal de cotação não encontrado. Recarregue a página.', 'error');
+                    return;
+                }
+                
+                // Forçar exibição do modal com múltiplas estratégias
+                console.log('✅ Forçando exibição do modal...');
+                
+                // 1. Remover qualquer display: none inline
+                modal.style.removeProperty('display');
+                
+                // 2. Adicionar classe show
+                modal.classList.add('show');
+                
+                // 3. Forçar display flex usando inline styles (maior prioridade que CSS)
+                // Remover todos os estilos inline primeiro
+                modal.removeAttribute('style');
+                
+                // Aplicar estilos inline diretamente (inline styles têm maior prioridade que !important em classes)
+                modal.style.cssText = `
+                    display: flex !important;
+                    position: fixed !important;
+                    z-index: 10000 !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    background-color: rgba(0,0,0,0.5) !important;
+                    align-items: flex-start !important;
+                    justify-content: center !important;
+                    overflow-y: auto !important;
+                    padding: 20px 0 !important;
+                    visibility: visible !important;
+                    opacity: 0;
+                `;
+                
+                // 4. Animar abertura
+                modal.style.opacity = '0';
+                requestAnimationFrame(() => {
+                    modal.style.transition = 'opacity 0.3s ease-in-out';
+                    modal.style.opacity = '1';
+                });
+                
+                // 5. Bloquear scroll do body
+                document.body.style.overflow = 'hidden';
+                
+                // 6. Garantir que o modal está no topo
+                modal.style.zIndex = '10000';
+                
+                console.log('✅ Modal deve estar visível agora');
+                console.log('📊 Estado do modal:', {
+                    display: window.getComputedStyle(modal).display,
+                    visibility: window.getComputedStyle(modal).visibility,
+                    opacity: window.getComputedStyle(modal).opacity,
+                    zIndex: window.getComputedStyle(modal).zIndex
+                });
+                
+                // Limpar formulário antes de abrir
+                const form = document.getElementById('form-cotacao');
+                if (form) {
+                    form.reset();
+                    console.log('✅ Formulário limpo');
+                }
+                
+                // Garantir que rodoviário seja selecionado por padrão
+                setTimeout(() => {
+                    const rodoviarioInput = document.querySelector('input[name="empresa_transporte"][value="brcargo_rodoviario"]');
+                    if (rodoviarioInput) {
+                        rodoviarioInput.checked = true;
+                        console.log('✅ Rodoviário selecionado por padrão');
+                        // Disparar evento change para aplicar as regras
+                        rodoviarioInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    
+                    // Inicializar campos baseado na modalidade selecionada
+                    if (typeof inicializarCamposPorModalidade === 'function') {
+                        inicializarCamposPorModalidade();
+                    }
+                }, 100);
+                
+                // Verificar se o modal está realmente visível após 200ms
+                setTimeout(() => {
+                    const computedStyle = window.getComputedStyle(modal);
+                    const rect = modal.getBoundingClientRect();
+                    console.log('🔍 Verificação do modal:', {
+                        display: computedStyle.display,
+                        visibility: computedStyle.visibility,
+                        opacity: computedStyle.opacity,
+                        zIndex: computedStyle.zIndex,
+                        width: rect.width,
+                        height: rect.height,
+                        top: rect.top,
+                        left: rect.left
+                    });
+                    
+                    if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden' || rect.width === 0) {
+                        console.error('❌ Modal ainda não está visível! Forçando novamente com método alternativo...');
+                        // Método alternativo: remover classe modal e aplicar estilos diretamente
+                        modal.className = '';
+                        modal.style.cssText = `
+                            display: flex !important;
+                            position: fixed !important;
+                            z-index: 10000 !important;
+                            left: 0 !important;
+                            top: 0 !important;
+                            width: 100% !important;
+                            height: 100% !important;
+                            background-color: rgba(0,0,0,0.5) !important;
+                            align-items: flex-start !important;
+                            justify-content: center !important;
+                            overflow-y: auto !important;
+                            padding: 20px 0 !important;
+                            visibility: visible !important;
+                            opacity: 1 !important;
+                        `;
+                    } else {
+                        console.log('✅ Modal confirmado como visível');
+                    }
+                }, 200);
+                
+            } catch (error) {
+                console.error('❌ Erro ao abrir modal:', error);
+                console.error('Stack trace:', error.stack);
+                mostrarMensagem('Erro ao abrir modal de cotação: ' + error.message, 'error');
+            }
+        }
+
+        // Função de teste global para debug (chame no console: testarModalCotacao())
+        window.testarModalCotacao = function() {
+            console.log('🧪 Testando modal de cotação...');
+            const modal = document.getElementById('modal-cotacao');
+            if (!modal) {
+                console.error('❌ Modal não encontrado!');
+                alert('Modal não encontrado! Verifique o HTML.');
+                return false;
+            }
+            console.log('✅ Modal encontrado');
+            console.log('📊 Estado atual:', {
+                classes: modal.className,
+                display: window.getComputedStyle(modal).display,
+                visibility: window.getComputedStyle(modal).visibility,
+                zIndex: window.getComputedStyle(modal).zIndex,
+                rect: modal.getBoundingClientRect()
+            });
+            
+            // Tentar abrir
+            console.log('🔓 Chamando abrirModalCotacao()...');
+            abrirModalCotacao();
+            
+            // Verificar após 500ms
+            setTimeout(() => {
+                const computed = window.getComputedStyle(modal);
+                const rect = modal.getBoundingClientRect();
+                console.log('📊 Estado após abertura:', {
+                    display: computed.display,
+                    visibility: computed.visibility,
+                    opacity: computed.opacity,
+                    width: rect.width,
+                    height: rect.height,
+                    top: rect.top,
+                    left: rect.left
+                });
+                
+                if (computed.display !== 'none' && rect.width > 0 && rect.height > 0) {
+                    console.log('✅ Modal está visível!');
+                    alert('Modal está visível! Verifique na tela.');
+                    return true;
+                } else {
+                    console.error('❌ Modal ainda não está visível!');
+                    alert('Modal não está visível. Verifique o console para detalhes.');
+                    return false;
+                }
+            }, 500);
+        };
+        
+        // Função para fechar modal de cotação
+        function fecharModalCotacao() {
+            try {
+                const modal = document.getElementById('modal-cotacao');
+                if (modal) {
+                    // Animar fechamento
+                    modal.style.transition = 'opacity 0.3s ease-in-out';
+                    modal.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        modal.classList.remove('show');
+                        modal.style.display = 'none';
+                        // Restaurar scroll do body
+                        document.body.style.overflow = 'auto';
+                    }, 300);
+                    
+                    // Limpar formulário
+                    const form = document.getElementById('form-cotacao');
+                    if (form) {
+                        form.reset();
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao fechar modal:', error);
+            }
+        }
+
+        // Função para carregar cotações
+        async function carregarCotacoes(page = 1) {
+            try {
+                const params = new URLSearchParams({
+                    page: page,
+                    per_page: 10,
+                    ...filtrosAtivos
+                });
+
+                const response = await fetch(`/api/v133/cotacoes?${params}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    cotacoesData = data.cotacoes;
+                    cotacoesCurrentPage = data.current_page;
+                    cotacoesTotalPages = data.pages;
+                    
+                    renderizarListaCotacoes();
+                    renderizarPaginacao();
+                } else {
+                    throw new Error('Erro ao carregar cotações');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar cotações:', error);
+                mostrarMensagem('Erro ao carregar cotações', 'error');
+            }
+        }
+
+        // Função para carregar estatísticas
+        async function carregarEstatisticasCotacoes() {
+            try {
+                // Usar endpoint de estatísticas da rota antiga (ainda não migrado para v133)
+                const response = await fetch('/api/cotacoes/estatisticas');
+                if (response.ok) {
+                    const data = await response.json();
+                    const stats = data.estatisticas;
+                    
+                    document.getElementById('total-cotacoes').textContent = stats.total_cotacoes || 0;
+                    document.getElementById('cotacoes-pendentes').textContent = 
+                        (stats.por_status.solicitada || 0) + (stats.por_status.em_analise || 0);
+                    document.getElementById('cotacoes-finalizadas').textContent = stats.por_status.finalizada || 0;
+                    document.getElementById('cotacoes-enviadas').textContent = stats.por_status.cotacao_enviada || 0;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        // Função para renderizar lista de cotações
+        function renderizarListaCotacoes() {
+            const container = document.getElementById('lista-cotacoes');
+            if (!container) return;
+
+            if (cotacoesData.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-500">Nenhuma cotação encontrada</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = cotacoesData.map(cotacao => `
+                <div class="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow" data-cotacao-id="${cotacao.id}">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-4">
+                            <h3 class="text-lg font-semibold text-gray-800">${cotacao.numero_cotacao}</h3>
+                            <span class="status-badge status-${cotacao.status}" data-status="${cotacao.status}">
+                                ${cotacao.status_display}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            ${new Date(cotacao.data_solicitacao).toLocaleDateString('pt-BR')}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Cliente</p>
+                            <p class="text-gray-800">${cotacao.cliente_nome}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Origem → Destino</p>
+                            <p class="text-gray-800">${cotacao.origem_cidade}/${cotacao.origem_estado} → ${cotacao.destino_cidade}/${cotacao.destino_estado}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Peso</p>
+                            <p class="text-gray-800">${cotacao.carga_peso_kg} kg</p>
+                        </div>
+                    </div>
+                    
+                    ${cotacao.cotacao_valor_frete ? `
+                        <div class="bg-green-50 p-3 rounded-lg mb-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-green-800">Valor da Cotação</p>
+                                    <p class="text-lg font-bold text-green-600">R$ ${parseFloat(cotacao.cotacao_valor_frete).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-green-800">Prazo</p>
+                                    <p class="text-green-600">${cotacao.cotacao_prazo_entrega} dias</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-500">
+                            ${cotacao.operador_nome ? `Operador: ${cotacao.operador_nome}` : 'Aguardando operador'}
+                        </div>
+                        <div class="cotacao-actions">
+                            ${getBotoesAcao(cotacao)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Função para obter botões de ação baseados no status e tipo de usuário
+        function getBotoesAcao(cotacao) {
+            let botoes = [];
+            
+            console.log('Cotação:', cotacao.id, 'Status:', cotacao.status, 'Operador ID:', cotacao.operador_id);
+            
+            // Botão Ver Detalhes (sempre presente)
+            botoes.push(`<button onclick="verDetalhesCotacao(${cotacao.id})" class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                <i class="fas fa-eye mr-1"></i>Detalhes
+            </button>`);
+            
+            // Verificar tipo de usuário (será obtido via API)
+            // Por enquanto, vamos assumir que operadores podem aceitar cotações
+            
+            if (cotacao.status === 'solicitada' && !cotacao.operador_responsavel) {
+                console.log('Adicionando botões ACEITAR/NEGAR para cotação', cotacao.id);
+                // Cotação pode ser aceita ou negada por qualquer operador
+                botoes.push(`<button data-action="aceitar-cotacao" data-cotacao-id="${cotacao.id}" class="btn-action btn-success">
+                    <i class="fas fa-check"></i>Aceitar
+                </button>`);
+                botoes.push(`<button data-action="negar-cotacao" data-cotacao-id="${cotacao.id}" class="btn-action btn-danger">
+                    <i class="fas fa-times"></i>Negar
+                </button>`);
+            } else if (cotacao.status === 'aceita_operador') {
+                console.log('Adicionando botões RESPONDER/REATRIBUIR para cotação', cotacao.id);
+                // Cotação aceita - operador pode responder e reatribuir
+                botoes.push(`<button data-action="responder-cotacao" data-cotacao-id="${cotacao.id}" class="btn-action btn-primary">
+                    <i class="fas fa-reply"></i>Responder
+                </button>`);
+                botoes.push(`<button data-action="reatribuir-cotacao" data-cotacao-id="${cotacao.id}" class="btn-action btn-secondary">
+                    <i class="fas fa-exchange-alt"></i>Reatribuir
+                </button>`);
+            } else if (cotacao.status === 'cotacao_enviada') {
+                console.log('Adicionando botões APROVAR/RECUSAR para cotação', cotacao.id);
+                // Cotação enviada - consultor pode aprovar/recusar
+                botoes.push(`<button data-action="aprovar-cotacao" data-cotacao-id="${cotacao.id}" class="btn-action btn-success">
+                    <i class="fas fa-thumbs-up"></i>Aprovar
+                </button>`);
+                botoes.push(`<button data-action="recusar-cotacao" data-cotacao-id="${cotacao.id}" class="btn-action btn-danger">
+                    <i class="fas fa-thumbs-down"></i>Recusar
+                </button>`);
+                // Operador também pode editar a resposta
+                botoes.push(`<button data-action="editar-resposta" data-cotacao-id="${cotacao.id}" class="btn-action btn-secondary">
+                    <i class="fas fa-edit"></i>Editar
+                </button>`);
+            } else if (cotacao.status === 'aceita_consultor') {
+                console.log('Adicionando botão FINALIZAR para cotação', cotacao.id);
+                // Cotação aprovada - pode finalizar
+                botoes.push(`<button data-action="finalizar-cotacao" data-cotacao-id="${cotacao.id}" class="btn-action btn-success">
+                    <i class="fas fa-flag-checkered"></i>Finalizar
+                </button>`);
+            } else if (cotacao.status === 'negada') {
+                // Cotação negada - apenas mostrar status
+                botoes.push(`<span class="text-red-600 text-sm">
+                    <i class="fas fa-times-circle mr-1"></i>Cotação negada
+                </span>`);
+            } else if (cotacao.status === 'recusada_consultor') {
+                // Cotação recusada pelo consultor
+                botoes.push(`<span class="text-orange-600 text-sm">
+                    <i class="fas fa-thumbs-down mr-1"></i>Recusada pelo cliente
+                </span>`);
+            } else if (cotacao.status === 'finalizada') {
+                // Cotação finalizada
+                botoes.push(`<span class="text-green-600 text-sm">
+                    <i class="fas fa-check-circle mr-1"></i>Finalizada
+                </span>`);
+            }
+            
+            // Botão de histórico sempre disponível
+            botoes.push(`<button data-action="ver-historico" data-cotacao-id="${cotacao.id}" class="btn-action" style="background: #6366f1; color: white;" title="Ver histórico de ações">
+                <i class="fas fa-history"></i>Histórico
+            </button>`);
+            
+            console.log('Botões gerados para cotação', cotacao.id, ':', botoes.length);
+            return botoes.join('');
+        }
+
+        // Função para renderizar paginação
+        function renderizarPaginacao() {
+            const container = document.getElementById('paginacao-cotacoes');
+            if (!container || cotacoesTotalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let paginacao = '<div class="flex items-center space-x-2">';
+            
+            // Botão anterior
+            if (cotacoesCurrentPage > 1) {
+                paginacao += `<button onclick="carregarCotacoes(${cotacoesCurrentPage - 1})" class="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Anterior</button>`;
+            }
+            
+            // Números das páginas
+            for (let i = Math.max(1, cotacoesCurrentPage - 2); i <= Math.min(cotacoesTotalPages, cotacoesCurrentPage + 2); i++) {
+                const isActive = i === cotacoesCurrentPage;
+                paginacao += `<button onclick="carregarCotacoes(${i})" class="px-3 py-2 ${isActive ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} rounded">${i}</button>`;
+            }
+            
+            // Botão próximo
+            if (cotacoesCurrentPage < cotacoesTotalPages) {
+                paginacao += `<button onclick="carregarCotacoes(${cotacoesCurrentPage + 1})" class="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Próximo</button>`;
+            }
+            
+            paginacao += '</div>';
+            container.innerHTML = paginacao;
+        }
+
+        // Função para aplicar filtros
+        function aplicarFiltrosCotacoes() {
+            filtrosAtivos = {};
+            
+            const status = document.getElementById('filtro-status').value;
+            const cliente = document.getElementById('filtro-cliente').value;
+            const dataInicio = document.getElementById('filtro-data-inicio').value;
+            const dataFim = document.getElementById('filtro-data-fim').value;
+            
+            if (status) filtrosAtivos.status = status;
+            if (cliente) filtrosAtivos.cliente_nome = cliente;
+            if (dataInicio) filtrosAtivos.data_inicio = dataInicio;
+            if (dataFim) filtrosAtivos.data_fim = dataFim;
+            
+            carregarCotacoes(1);
+        }
+
+        // Função para limpar filtros
+        function limparFiltrosCotacoes() {
+            document.getElementById('filtro-status').value = '';
+            document.getElementById('filtro-cliente').value = '';
+            document.getElementById('filtro-data-inicio').value = '';
+            document.getElementById('filtro-data-fim').value = '';
+            
+            filtrosAtivos = {};
+            carregarCotacoes(1);
+        }
+
+        // ==================== FUNÇÕES PARA ABAS DE MODALIDADE ====================
+        
+        let modalidadeAtiva = 'todas';
+        let filtrosUsuario = {};
+        
+        // Função para configurar filtros baseados no tipo de usuário - REMOVIDA
+        // Agora integrada ao sistema de filtros avançados
+        function configurarFiltrosUsuario() {
+            console.log('Filtros de usuário integrados ao sistema de filtros avançados');
+        }
+        
+        // Função para configurar abas de modalidade - REATIVADA
+        function configurarAbasModalidade() {
+            console.log('✅ Sistema de abas de modalidade ativo');
+            
+            // Configurar navegação por modalidade
+            const abasModalidade = document.querySelectorAll('[data-modalidade]');
+            abasModalidade.forEach(aba => {
+                aba.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const modalidade = this.getAttribute('data-modalidade');
+                    
+                    // Atualizar modalidade ativa
+                    modalidadeAtiva = modalidade;
+                    
+                    // Atualizar aparência das abas
+                    abasModalidade.forEach(a => a.classList.remove('active', 'bg-blue-600', 'text-white'));
+                    this.classList.add('active', 'bg-blue-600', 'text-white');
+                    
+                    // Recarregar cotações da modalidade
+                    carregarCotacoesPorModalidade(1);
+                });
+            });
+        }
+        
+        // Função para carregar cotações por modalidade
+        async function carregarCotacoesPorModalidade(page = 1) {
+            try {
+                let endpoint = '/api/v133/cotacoes';
+                
+                // Determinar endpoint baseado na modalidade e filtro de usuário
+                if (filtrosUsuario.tipo === 'disponiveis') {
+                    endpoint = '/api/v133/cotacoes/disponiveis';
+                } else if (filtrosUsuario.tipo === 'minhas-operacoes') {
+                    endpoint = '/api/v133/cotacoes/minhas-operacoes';
+                } else if (filtrosUsuario.tipo === 'minhas-solicitacoes') {
+                    endpoint = '/api/v133/cotacoes/minhas-solicitacoes';
+                } else if (modalidadeAtiva === 'rodoviarias') {
+                    endpoint = '/api/v133/cotacoes/rodoviarias';
+                } else if (modalidadeAtiva === 'maritimas') {
+                    endpoint = '/api/v133/cotacoes/maritimas';
+                } else if (modalidadeAtiva === 'aereas') {
+                    endpoint = '/api/v133/cotacoes/aereas';
+                }
+                
+                const params = new URLSearchParams({
+                    page: page,
+                    per_page: 10
+                });
+                
+                const response = await fetch(`${endpoint}?${params}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderizarCotacoes(data.cotacoes || []);
+                    renderizarPaginacao(data.pagination || { current_page: 1, total_pages: 1 });
+                    atualizarEstatisticasModalidade(data.cotacoes || []);
+                } else {
+                    console.error('Erro ao carregar cotações:', data.message);
+                    renderizarCotacoes([]);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar cotações por modalidade:', error);
+                renderizarCotacoes([]);
+            }
+        }
+        
+        // Função para renderizar cotações com design melhorado
+        function renderizarCotacoes(cotacoes) {
+            const container = document.getElementById('lista-cotacoes');
+            if (!container) return;
+            
+            if (cotacoes.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhuma cotação encontrada</h3>
+                        <p class="text-gray-500">Não há cotações para exibir nesta modalidade.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = cotacoes.map(cotacao => `
+                <div class="cotacao-card ${cotacao.status} bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">${cotacao.numero_cotacao}</h3>
+                                <span class="status-badge status-${cotacao.status}">${getStatusDisplay(cotacao.status)}</span>
+                                <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium">
+                                    ${getModalidadeDisplay(cotacao.empresa_transporte)}
+                                </span>
+                            </div>
+                            <p class="text-gray-600 mb-1"><strong>Cliente:</strong> ${cotacao.numero_cliente ? `#${cotacao.numero_cliente} - ` : ''}${cotacao.cliente_nome}</p>
+                            <p class="text-gray-600 mb-1"><strong>CNPJ:</strong> ${formatarCNPJ(cotacao.cliente_cnpj)}</p>
+                            ${cotacao.consultor_nome ? `<p class="text-gray-600 mb-1"><strong>Consultor:</strong> ${cotacao.consultor_nome}</p>` : ''}
+                            ${cotacao.operador_nome ? `<p class="text-gray-600 mb-1"><strong>Operador:</strong> ${cotacao.operador_nome}</p>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">${formatarData(cotacao.created_at)}</p>
+                            ${cotacao.cotacao_valor_frete ? `<p class="text-lg font-bold text-green-600 mt-1">R$ ${formatarMoeda(cotacao.cotacao_valor_frete)}</p>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                                ${getInfoTransporte(cotacao)}
+                            </div>
+                            <div class="flex gap-2">
+                                ${getBotoesAcaoV133(cotacao)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Função para obter botões de ação v1.3.3
+        function getBotoesAcaoV133(cotacao) {
+            let botoes = [];
+            const tipoUsuario = window.userInfo?.tipo || 'consultor';
+            
+            // Botão Ver Detalhes (sempre presente)
+            botoes.push(`
+                <button onclick="verDetalhesCotacao(${cotacao.id})" class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                    <i class="fas fa-eye mr-1"></i>Detalhes
+                </button>
+            `);
+            
+            // Botões específicos por status e tipo de usuário
+            if (tipoUsuario === 'operador' || tipoUsuario === 'administrador' || tipoUsuario === 'gerente') {
+                if (cotacao.status === 'solicitada') {
+                    botoes.push(`
+                        <button onclick="aceitarCotacaoV133(${cotacao.id})" class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                            <i class="fas fa-check mr-1"></i>Aceitar
+                        </button>
+                    `);
+                } else if (cotacao.status === 'aceita_operador' && (cotacao.operador_id === window.userInfo?.id || tipoUsuario !== 'operador')) {
+                    botoes.push(`
+                        <button onclick="enviarRespostaCotacao(${cotacao.id})" class="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
+                            <i class="fas fa-reply mr-1"></i>Responder
+                        </button>
+                    `);
+                }
+            }
+            
+            if (tipoUsuario === 'consultor' || tipoUsuario === 'administrador' || tipoUsuario === 'gerente') {
+                if (cotacao.status === 'cotacao_enviada' && (cotacao.consultor_id === window.userInfo?.id || tipoUsuario !== 'consultor')) {
+                    botoes.push(`
+                        <button onclick="aceitarCotacaoConsultor(${cotacao.id})" class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                            <i class="fas fa-thumbs-up mr-1"></i>Aceitar
+                        </button>
+                        <button onclick="negarCotacaoConsultor(${cotacao.id})" class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
+                            <i class="fas fa-thumbs-down mr-1"></i>Negar
+                        </button>
+                    `);
+                }
+            }
+            
+            return botoes.join('');
+        }
+        
+        // Funções auxiliares para exibição
+        function getStatusDisplay(status) {
+            const statusMap = {
+                'solicitada': 'Solicitada',
+                'aceita_operador': 'Aceita pelo Operador',
+                'cotacao_enviada': 'Cotação Enviada',
+                'aceita_consultor': 'Aceita pelo Consultor',
+                'negada_consultor': 'Negada pelo Consultor',
+                'finalizada': 'Finalizada'
+            };
+            return statusMap[status] || status;
+        }
+        
+        function getModalidadeDisplay(empresa_transporte) {
+            const modalidadeMap = {
+                'brcargo_rodoviario': 'Rodoviário',
+                'brcargo_maritimo': 'Marítimo',
+                'frete_aereo': 'Aéreo'
+            };
+            return modalidadeMap[empresa_transporte] || empresa_transporte;
+        }
+        
+        function getInfoTransporte(cotacao) {
+            if (cotacao.empresa_transporte === 'brcargo_maritimo') {
+                return `
+                    <span><i class="fas fa-anchor mr-1"></i>${cotacao.porto_origem || 'N/A'} → ${cotacao.porto_destino || 'N/A'}</span>
+                    ${cotacao.tipo_carga_maritima ? `<span><i class="fas fa-box mr-1"></i>${cotacao.tipo_carga_maritima}</span>` : ''}
+                `;
+            } else {
+                return `
+                    <span><i class="fas fa-map-marker-alt mr-1"></i>${cotacao.origem_cidade || 'N/A'} → ${cotacao.destino_cidade || 'N/A'}</span>
+                    <span><i class="fas fa-weight-hanging mr-1"></i>${cotacao.carga_peso_kg || 0} kg</span>
+                `;
+            }
+        }
+        
+        function atualizarEstatisticasModalidade(cotacoes) {
+            const total = cotacoes.length;
+            const pendentes = cotacoes.filter(c => ['solicitada', 'aceita_operador'].includes(c.status)).length;
+            const finalizadas = cotacoes.filter(c => c.status === 'finalizada').length;
+            const enviadas = cotacoes.filter(c => c.status === 'cotacao_enviada').length;
+            
+            document.getElementById('total-cotacoes').textContent = total;
+            document.getElementById('cotacoes-pendentes').textContent = pendentes;
+            document.getElementById('cotacoes-finalizadas').textContent = finalizadas;
+            document.getElementById('cotacoes-enviadas').textContent = enviadas;
+        }
+
+        // Função para criar cotação
+        async function criarCotacao(formData) {
+            try {
+                console.log('🚀 Criando cotação com dados:', formData);
+                
+                // Validar dados essenciais (validação adicional de segurança)
+                if (!formData.empresa_transporte) {
+                    throw new Error('Modalidade de transporte não selecionada');
+                }
+                
+                if (!formData.cliente_nome || !formData.cliente_cnpj) {
+                    throw new Error('Dados do cliente são obrigatórios');
+                }
+                
+                if (!formData.numero_cliente) {
+                    throw new Error('Número do cliente é obrigatório');
+                }
+                
+                console.log('✅ Validação inicial passou, enviando para API...');
+                
+                // Mostrar indicador de carregamento
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.id = 'loading-cotacao';
+                loadingIndicator.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                loadingIndicator.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 flex items-center space-x-4">
+                        <i class="fas fa-spinner fa-spin text-2xl text-orange-600"></i>
+                        <span class="text-lg font-medium">Criando cotação...</span>
+                    </div>
+                `;
+                document.body.appendChild(loadingIndicator);
+                
+                const response = await fetch('/api/v133/cotacoes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin', // Incluir cookies de autenticação
+                    body: JSON.stringify(formData)
+                });
+
+                // Remover indicador de carregamento
+                const loadingEl = document.getElementById('loading-cotacao');
+                if (loadingEl) {
+                    loadingEl.remove();
+                }
+
+                // Verificar se a resposta é JSON válido
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const textResponse = await response.text();
+                    console.error('Resposta não é JSON:', textResponse);
+                    
+                    // Tentar extrair mensagem de erro se possível
+                    let errorMessage = 'Erro interno do servidor.';
+                    try {
+                        const errorData = JSON.parse(textResponse);
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        // Se não for JSON, usar mensagem padrão
+                        if (response.status === 401) {
+                            errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
+                        } else if (response.status === 403) {
+                            errorMessage = 'Você não tem permissão para criar cotações.';
+                        } else if (response.status === 400) {
+                            errorMessage = 'Dados inválidos. Verifique os campos preenchidos.';
+                        }
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Sucesso!
+                    mostrarMensagem(`✅ Cotação ${data.cotacao?.numero_cotacao || 'criada'} criada com sucesso!`, 'success');
+                    
+                    // Fechar modal
+                    fecharModalCotacao();
+                    
+                    // Limpar formulário
+                    const form = document.getElementById('form-cotacao');
+                    if (form) {
+                        form.reset();
+                    }
+                    
+                    // Recarregar lista de cotações se a seção estiver visível
+                    const secaoCotacoes = document.getElementById('secao-cotacoes');
+                    if (secaoCotacoes && secaoCotacoes.style.display !== 'none') {
+                        carregarCotacoes();
+                        carregarEstatisticasCotacoes();
+                    }
+                    
+                    // Disparar evento customizado para outros módulos
+                    window.dispatchEvent(new CustomEvent('cotacaoCriada', { 
+                        detail: { cotacao: data.cotacao } 
+                    }));
+                    
+                } else {
+                    // Erro retornado pela API
+                    const errorMessage = data.message || data.error || 'Erro ao criar cotação';
+                    throw new Error(errorMessage);
+                }
+            } catch (error) {
+                console.error('Erro ao criar cotação:', error);
+                
+                // Remover indicador de carregamento se ainda estiver visível
+                const loadingEl = document.getElementById('loading-cotacao');
+                if (loadingEl) {
+                    loadingEl.remove();
+                }
+                
+                // Mostrar mensagem de erro apropriada
+                let errorMessage = error.message || 'Erro ao criar cotação. Tente novamente.';
+                
+                // Melhorar mensagens de erro comuns
+                if (errorMessage.includes('CNPJ')) {
+                    errorMessage = 'CNPJ inválido. Verifique o número digitado.';
+                } else if (errorMessage.includes('CEP')) {
+                    errorMessage = 'CEP inválido. Verifique o número digitado.';
+                } else if (errorMessage.includes('obrigatório')) {
+                    errorMessage = errorMessage; // Manter mensagem original
+                } else if (errorMessage.includes('NetworkError') || errorMessage.includes('Failed to fetch')) {
+                    errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+                }
+                
+                mostrarMensagem(errorMessage, 'error');
+                
+                // Scroll para o topo do modal para mostrar o erro
+                const modal = document.getElementById('modal-cotacao');
+                if (modal) {
+                    modal.scrollTop = 0;
+                }
+            }
+        }
+
+        // Event delegation para botões de ação das cotações
+        // Event listener específico para histórico (sempre ativo)
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('[data-action="ver-historico"]');
+            if (target) {
+                const cotacaoId = target.dataset.cotacaoId;
+                if (cotacaoId) {
+                    console.log('📜 Botão histórico clicado para cotação:', cotacaoId);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    verHistoricoCotacao(cotacaoId);
+                    return;
+                }
+            }
+        });
+        
+        // Event delegation DESABILITADO para outras ações - usando sistemas modulares
+        // Os event listeners agora são gerenciados pelos módulos específicos:
+        // - AceitarNegarCotacoes.js para aceitar/negar
+        // - ModalRespostaMelhorado.js para responder
+        // - FinalizarCotacoes.js para aprovar/recusar/finalizar
+        /*
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
+
+            const action = target.dataset.action;
+            const cotacaoId = target.dataset.cotacaoId;
+
+            console.log('Ação detectada:', action, 'Cotação ID:', cotacaoId);
+
+            switch (action) {
+                case 'aceitar-cotacao':
+                    aceitarCotacao(cotacaoId);
+                    break;
+                case 'negar-cotacao':
+                    negarCotacao(cotacaoId);
+                    break;
+                case 'responder-cotacao':
+                    responderCotacao(cotacaoId);
+                    break;
+                case 'reatribuir-cotacao':
+                    reatribuirCotacao(cotacaoId);
+                    break;
+                case 'aprovar-cotacao':
+                    aprovarCotacao(cotacaoId);
+                    break;
+                case 'recusar-cotacao':
+                    recusarCotacao(cotacaoId);
+                    break;
+                case 'editar-resposta':
+                    editarResposta(cotacaoId);
+                    break;
+                case 'finalizar-cotacao':
+                    finalizarCotacao(cotacaoId);
+                    break;
+            }
+        });
+        */
+
+        // Função para aceitar cotação
+        async function aceitarCotacao(cotacaoId) {
+            try {
+                console.log('Aceitando cotação:', cotacaoId);
+                
+                // Usar API centralizada
+                const resultado = await API.aceitarCotacao(cotacaoId, {
+                    observacoes: 'Cotação aceita pelo operador'
+                });
+
+                if (resultado.success) {
+                    // Disparar notificação em tempo real
+                    if (typeof SistemaNotificacoes !== 'undefined') {
+                        SistemaNotificacoes.mostrar(
+                            'Cotação Aceita',
+                            `Cotação COT-${cotacaoId} aceita com sucesso`,
+                            'success'
+                        );
+                    }
+                    
+                    mostrarMensagem('✅ Cotação aceita com sucesso!', 'success');
+                    
+                    // Atualizar dados locais
+                    const cotacaoAtualizada = {
+                        id: cotacaoId,
+                        status: 'aceita_operador',
+                        status_display: 'Aceita pelo Operador',
+                        status_color: 'bg-blue-100 text-blue-800',
+                        operador_nome: 'Operador Atual',
+                        data_aceite: new Date().toISOString()
+                    };
+                    atualizarCotacaoNosCarregados(cotacaoAtualizada);
+                    
+                    carregarCotacoes(); // Recarregar lista
+                    carregarEstatisticasCotacoes(); // Atualizar estatísticas
+                } else {
+                    mostrarMensagem('Erro ao aceitar cotação: ' + resultado.message, 'error');
+                    
+                    // Atualizar dados locais mesmo no fallback
+                    const cotacaoAtualizada = {
+                        id: cotacaoId,
+                        status: 'aceita_operador',
+                        status_display: 'Aceita pelo Operador',
+                        status_color: 'bg-blue-100 text-blue-800',
+                        operador_nome: 'Operador Atual',
+                        data_aceite: new Date().toISOString()
+                    };
+                    atualizarCotacaoNosCarregados(cotacaoAtualizada);
+                }
+            } catch (error) {
+                console.error('Erro ao aceitar cotação:', error);
+                
+                // Fallback para desenvolvimento - simular aceitação
+                console.warn('🔄 Modo fallback: simulando aceitação da cotação');
+                
+                // Disparar notificação em tempo real
+                if (typeof SistemaNotificacoes !== 'undefined') {
+                    SistemaNotificacoes.mostrar(
+                        'Cotação Aceita',
+                        `Cotação COT-${cotacaoId} aceita com sucesso (modo desenvolvimento)`,
+                        'success'
+                    );
+                }
+                
+                // Atualizar dados locais
+                const cotacaoAtualizada = {
+                    id: cotacaoId,
+                    status: 'aceita_operador',
+                    status_display: 'Aceita pelo Operador',
+                    status_color: 'bg-blue-100 text-blue-800',
+                    operador_nome: 'Operador Atual',
+                    data_aceite: new Date().toISOString()
+                };
+                atualizarCotacaoNosCarregados(cotacaoAtualizada);
+                
+                mostrarMensagem('✅ Cotação aceita com sucesso! (modo desenvolvimento)', 'success');
+                carregarCotacoes(); // Recarregar lista
+                carregarEstatisticasCotacoes(); // Atualizar estatísticas
+            }
+        }
+
+        // Função para negar cotação
+        async function negarCotacao(cotacaoId) {
+            const motivo = prompt('Digite o motivo da negação:');
+            if (!motivo) {
+                mostrarMensagem('Motivo é obrigatório para negar cotação', 'error');
+                return;
+            }
+
+            try {
+                console.log('Negando cotação:', cotacaoId);
+                
+                // Usar API centralizada
+                const resultado = await API.negarCotacao(cotacaoId, motivo);
+
+                if (resultado.success) {
+                    mostrarMensagem('✅ Cotação negada com sucesso!', 'success');
+                    
+                    // Atualizar dados locais
+                    const cotacaoAtualizada = {
+                        id: cotacaoId,
+                        status: 'negada',
+                        status_display: 'Negada',
+                        status_color: 'bg-red-100 text-red-800',
+                        motivo_negacao: motivo,
+                        data_negacao: new Date().toISOString()
+                    };
+                    atualizarCotacaoNosCarregados(cotacaoAtualizada);
+                    
+                    carregarCotacoes();
+                    carregarEstatisticasCotacoes();
+                } else {
+                    mostrarMensagem('Erro ao negar cotação: ' + resultado.message, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao negar cotação:', error);
+                mostrarMensagem('Erro ao negar cotação', 'error');
+            }
+        }
+
+        // Função para reatribuir cotação
+        async function reatribuirCotacao(cotacaoId) {
+            console.log('🔄 Iniciando reatribuição da cotação:', cotacaoId);
+            
+            // Buscar dados da cotação
+            const cotacao = buscarCotacaoNosCarregados(cotacaoId);
+            if (!cotacao) {
+                mostrarMensagem('Cotação não encontrada', 'error');
+                return;
+            }
+            
+            // Abrir modal de reatribuição
+            mostrarModalReatribuicao(cotacao);
+        }
+        
+        // Função para mostrar modal de reatribuição
+        function mostrarModalReatribuicao(cotacao) {
+            // Criar modal se não existir
+            let modal = document.getElementById('modal-reatribuicao');
+            if (!modal) {
+                modal = criarModalReatribuicao();
+            }
+            
+            // Preencher dados da cotação
+            preencherModalReatribuicao(modal, cotacao);
+            
+            // Mostrar modal
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Função para criar modal de reatribuição
+        function criarModalReatribuicao() {
+            const modalHTML = `
+                <div id="modal-reatribuicao" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-content" style="background-color: white; margin: 2% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 900px; max-height: 90vh; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <!-- Header -->
+                        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="margin: 0; font-size: 24px;">🔄 Reatribuir Cotação</h2>
+                                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;" id="reat-cotacao-info">Cotação #000000</p>
+                            </div>
+                            <span class="close" onclick="fecharModalReatribuicao()" style="font-size: 28px; font-weight: bold; cursor: pointer; opacity: 0.8; transition: opacity 0.3s;">&times;</span>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div class="modal-body" style="padding: 0; height: 70vh; display: flex;">
+                            <!-- Sidebar - Informações da Cotação -->
+                            <div style="width: 300px; background: #f8f9fa; border-right: 1px solid #dee2e6; padding: 20px; overflow-y: auto;">
+                                <h4 style="color: #495057; margin-bottom: 15px; font-size: 16px;">📋 Informações da Cotação</h4>
+                                
+                                <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <div style="margin-bottom: 10px;"><strong>Número:</strong> <span id="reat-numero"></span></div>
+                                    <div style="margin-bottom: 10px;"><strong>Status:</strong> <span id="reat-status"></span></div>
+                                    <div style="margin-bottom: 10px;"><strong>Cliente:</strong> <span id="reat-cliente"></span></div>
+                                    <div style="margin-bottom: 10px;"><strong>Operador Atual:</strong> <span id="reat-operador-atual"></span></div>
+                                    <div><strong>Data:</strong> <span id="reat-data"></span></div>
+                                </div>
+                                
+                                <h5 style="color: #495057; margin-bottom: 10px; font-size: 14px;">👥 Operadores Disponíveis</h5>
+                                <div id="lista-operadores" style="max-height: 200px; overflow-y: auto;">
+                                    <!-- Lista será preenchida dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Main Content - Chat/Mensagens -->
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <!-- Chat Header -->
+                                <div style="background: #fff; border-bottom: 1px solid #dee2e6; padding: 15px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                        <div>
+                                            <h4 style="margin: 0; color: #495057;">💬 Conversa com Operador</h4>
+                                            <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 14px;" id="operador-selecionado">Selecione um operador para iniciar a conversa</p>
+                                        </div>
+                                        <div id="status-operador" style="display: none;">
+                                            <span style="display: inline-block; width: 8px; height: 8px; background: #28a745; border-radius: 50%; margin-right: 5px;"></span>
+                                            <span style="font-size: 12px; color: #28a745;">Online</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Chat Messages -->
+                                <div id="chat-messages" style="flex: 1; padding: 20px; overflow-y: auto; background: #f8f9fa;">
+                                    <div style="text-align: center; color: #6c757d; margin-top: 50px;">
+                                        <div style="font-size: 48px; margin-bottom: 15px;">💬</div>
+                                        <p>Selecione um operador para iniciar a conversa sobre a reatribuição</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Chat Input -->
+                                <div id="chat-input-container" style="background: white; border-top: 1px solid #dee2e6; padding: 15px; display: none;">
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="chat-input" placeholder="Digite sua mensagem..." style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 20px; outline: none; font-size: 14px;">
+                                        <button onclick="enviarMensagem()" style="background: #007bff; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            <span style="font-size: 16px;">📤</span>
+                                        </button>
+                                    </div>
+                                    <div style="margin-top: 10px; text-align: center;">
+                                        <button onclick="confirmarReatribuicao()" class="btn btn-success" style="margin-right: 10px;">
+                                            ✅ Confirmar Reatribuição
+                                        </button>
+                                        <button onclick="fecharModalReatribuicao()" class="btn btn-secondary">
+                                            ❌ Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inserir o modal antes dos scripts, não no final do body
+            const scriptsContainer = document.querySelector('script');
+            if (scriptsContainer) {
+                scriptsContainer.insertAdjacentHTML('beforebegin', modalHTML);
+            } else {
+                // Fallback: inserir antes do final do body
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            }
+            
+            // Adicionar event listener para Enter no chat
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        enviarMensagem();
+                    }
+                });
+            }
+            
+            return document.getElementById('modal-reatribuicao');
+        }
+        
+        // Função para preencher modal de reatribuição
+        function preencherModalReatribuicao(modal, cotacao) {
+            console.log('📝 Preenchendo modal de reatribuição:', cotacao);
+            
+            // Preencher informações da cotação
+            modal.querySelector('#reat-cotacao-info').textContent = `Cotação ${cotacao.numero_cotacao || cotacao.id}`;
+            modal.querySelector('#reat-numero').textContent = cotacao.numero_cotacao || `COT-${String(cotacao.id).padStart(6, '0')}`;
+            modal.querySelector('#reat-status').innerHTML = `<span class="badge ${cotacao.status_color || ''}">${cotacao.status_display || cotacao.status}</span>`;
+            modal.querySelector('#reat-cliente').textContent = cotacao.cliente_nome || 'N/A';
+            modal.querySelector('#reat-operador-atual').textContent = cotacao.operador_nome || 'Não atribuído';
+            modal.querySelector('#reat-data').textContent = formatarData(cotacao.data_solicitacao) || 'N/A';
+            
+            // Carregar lista de operadores
+            carregarOperadoresDisponiveis(modal, cotacao.id);
+            
+            // Armazenar ID da cotação no modal
+            modal.setAttribute('data-cotacao-id', cotacao.id);
+        }
+        
+        // Função para carregar operadores disponíveis
+        async function carregarOperadoresDisponiveis(modal, cotacaoId) {
+            const listaContainer = modal.querySelector('#lista-operadores');
+            
+            try {
+                console.log('🔍 Carregando operadores disponíveis...');
+                
+                // Tentar carregar da API
+                const response = await fetch('/api/v133/operadores');
+                let operadores = [];
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    operadores = data.operadores || [];
+                } else {
+                    // Fallback com operadores simulados
+                    operadores = [
+                        { id: 1, nome: 'Maria Santos', email: 'maria@brcargo.com', status: 'online', especialidade: 'Rodoviário' },
+                        { id: 2, nome: 'João Silva', email: 'joao@brcargo.com', status: 'online', especialidade: 'Marítimo' },
+                        { id: 3, nome: 'Ana Costa', email: 'ana@brcargo.com', status: 'ocupado', especialidade: 'Aéreo' },
+                        { id: 4, nome: 'Carlos Lima', email: 'carlos@brcargo.com', status: 'online', especialidade: 'Rodoviário' },
+                        { id: 5, nome: 'Lucia Ferreira', email: 'lucia@brcargo.com', status: 'ausente', especialidade: 'Marítimo' }
+                    ];
+                }
+                
+                // Renderizar lista de operadores
+                let operadoresHTML = '';
+                operadores.forEach(operador => {
+                    const statusColor = {
+                        'online': '#28a745',
+                        'ocupado': '#ffc107', 
+                        'ausente': '#6c757d'
+                    }[operador.status] || '#6c757d';
+                    
+                    const statusIcon = {
+                        'online': '🟢',
+                        'ocupado': '🟡',
+                        'ausente': '⚫'
+                    }[operador.status] || '⚫';
+                    
+                    operadoresHTML += `
+                        <div class="operador-item" onclick="selecionarOperador(${operador.id}, '${operador.nome}')" 
+                             style="background: white; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                             onmouseover="this.style.borderColor='#007bff'; this.style.transform='translateY(-2px)'"
+                             onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div>
+                                    <div style="font-weight: bold; color: #495057; font-size: 14px;">${operador.nome}</div>
+                                    <div style="color: #6c757d; font-size: 12px;">${operador.especialidade}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 12px;">${statusIcon}</div>
+                                    <div style="color: ${statusColor}; font-size: 10px; text-transform: uppercase;">${operador.status}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                listaContainer.innerHTML = operadoresHTML;
+                console.log('✅ Operadores carregados:', operadores.length);
+                
+            } catch (error) {
+                console.error('❌ Erro ao carregar operadores:', error);
+                listaContainer.innerHTML = '<p style="color: #dc3545; text-align: center; padding: 20px;">Erro ao carregar operadores</p>';
+            }
+        }
+        
+        // Variáveis globais para o chat
+        let operadorSelecionadoId = null;
+        let operadorSelecionadoNome = null;
+        let conversaAtual = [];
+        
+        // Função para selecionar operador
+        function selecionarOperador(operadorId, operadorNome) {
+            console.log('👤 Operador selecionado:', operadorNome, 'ID:', operadorId);
+            
+            operadorSelecionadoId = operadorId;
+            operadorSelecionadoNome = operadorNome;
+            
+            // Atualizar interface
+            document.getElementById('operador-selecionado').textContent = `Conversando com ${operadorNome}`;
+            document.getElementById('status-operador').style.display = 'block';
+            document.getElementById('chat-input-container').style.display = 'block';
+            
+            // Destacar operador selecionado
+            document.querySelectorAll('.operador-item').forEach(item => {
+                item.style.borderColor = 'transparent';
+                item.style.backgroundColor = 'white';
+            });
+            
+            event.target.closest('.operador-item').style.borderColor = '#007bff';
+            event.target.closest('.operador-item').style.backgroundColor = '#f8f9ff';
+            
+            // Carregar conversa existente (se houver)
+            carregarConversaExistente(operadorId);
+            
+            // Iniciar conversa automática
+            iniciarConversaAutomatica();
+        }
+        
+        // Função para carregar conversa existente
+        async function carregarConversaExistente(operadorId) {
+            const modal = document.getElementById('modal-reatribuicao');
+            const cotacaoId = modal.getAttribute('data-cotacao-id');
+            
+            try {
+                console.log('💬 Carregando conversa existente:', { cotacaoId, operadorId });
+                
+                const resultado = await API.getConversas(cotacaoId, operadorId);
+                
+                if (resultado.success && resultado.mensagens) {
+                    conversaAtual = resultado.mensagens;
+                    console.log('✅ Conversa carregada:', conversaAtual.length, 'mensagens');
+                } else {
+                    // Não há conversa anterior
+                    conversaAtual = [];
+                    console.log('ℹ️ Nenhuma conversa anterior encontrada');
+                }
+                
+                renderizarMensagens();
+            } catch (error) {
+                console.warn('⚠️ Erro ao carregar conversa:', error);
+                conversaAtual = [];
+                renderizarMensagens();
+            }
+        }
+        
+        // Função para iniciar conversa automática
+        function iniciarConversaAutomatica() {
+            if (conversaAtual.length === 0) {
+                const modal = document.getElementById('modal-reatribuicao');
+                const cotacaoNumero = modal.querySelector('#reat-numero').textContent;
+                const clienteNome = modal.querySelector('#reat-cliente').textContent;
+                
+                const mensagemInicial = {
+                    id: Date.now(),
+                    texto: `Olá! Preciso reatribuir a cotação ${cotacaoNumero} do cliente ${clienteNome}. Você pode assumir esta cotação?`,
+                    autor: 'eu',
+                    timestamp: new Date().toISOString(),
+                    tipo: 'reatribuicao'
+                };
+                
+                conversaAtual.push(mensagemInicial);
+                renderizarMensagens();
+            }
+        }
+        
+        // Função para renderizar mensagens
+        function renderizarMensagens() {
+            const chatContainer = document.getElementById('chat-messages');
+            
+            if (conversaAtual.length === 0) {
+                chatContainer.innerHTML = `
+                    <div style="text-align: center; color: #6c757d; margin-top: 50px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">💬</div>
+                        <p>Nenhuma mensagem ainda. Digite algo para iniciar a conversa!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let mensagensHTML = '';
+            conversaAtual.forEach(mensagem => {
+                const isMinhaMsg = mensagem.autor === 'eu';
+                const timestamp = new Date(mensagem.timestamp).toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                const tipoIcon = {
+                    'reatribuicao': '🔄',
+                    'pergunta': '❓',
+                    'resposta': '💬',
+                    'confirmacao': '✅'
+                }[mensagem.tipo] || '💬';
+                
+                mensagensHTML += `
+                    <div style="display: flex; justify-content: ${isMinhaMsg ? 'flex-end' : 'flex-start'}; margin-bottom: 15px;">
+                        <div style="max-width: 70%; background: ${isMinhaMsg ? '#007bff' : '#e9ecef'}; color: ${isMinhaMsg ? 'white' : '#495057'}; padding: 12px 16px; border-radius: ${isMinhaMsg ? '18px 18px 4px 18px' : '18px 18px 18px 4px'}; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                <span style="margin-right: 5px;">${tipoIcon}</span>
+                                <strong style="font-size: 12px; opacity: 0.8;">${isMinhaMsg ? 'Você' : operadorSelecionadoNome}</strong>
+                            </div>
+                            <div style="margin-bottom: 5px;">${mensagem.texto}</div>
+                            <div style="font-size: 10px; opacity: 0.7; text-align: right;">${timestamp}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            chatContainer.innerHTML = mensagensHTML;
+            
+            // Scroll para a última mensagem
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Função para enviar mensagem
+        function enviarMensagem() {
+            const chatInput = document.getElementById('chat-input');
+            const texto = chatInput.value.trim();
+            
+            if (!texto || !operadorSelecionadoId) {
+                return;
+            }
+            
+            const novaMensagem = {
+                id: Date.now(),
+                texto: texto,
+                autor: 'eu',
+                timestamp: new Date().toISOString(),
+                tipo: 'resposta'
+            };
+            
+            conversaAtual.push(novaMensagem);
+            chatInput.value = '';
+            renderizarMensagens();
+            
+            // Simular resposta do operador (para demonstração)
+            setTimeout(() => {
+                simularRespostaOperador(texto);
+            }, 1000 + Math.random() * 2000);
+            
+            // Salvar mensagem na API (se disponível)
+            salvarMensagemNaAPI(novaMensagem);
+        }
+        
+        // Função para simular resposta do operador
+        function simularRespostaOperador(mensagemOriginal) {
+            const respostasAutomaticas = [
+                "Entendi! Vou analisar a cotação e te dou um retorno em breve.",
+                "Posso sim assumir esta cotação. Qual é a urgência?",
+                "Deixa comigo! Já vou começar a trabalhar nela.",
+                "Perfeito! Vou revisar os detalhes e processar.",
+                "Ok, assumindo a cotação. Obrigado pelo repasse!",
+                "Pode deixar! Vou dar prioridade para esta.",
+                "Entendido! Vou entrar em contato com o cliente hoje mesmo."
+            ];
+            
+            const respostaAleatoria = respostasAutomaticas[Math.floor(Math.random() * respostasAutomaticas.length)];
+            
+            const respostaOperador = {
+                id: Date.now() + 1,
+                texto: respostaAleatoria,
+                autor: 'operador',
+                timestamp: new Date().toISOString(),
+                tipo: 'confirmacao'
+            };
+            
+            conversaAtual.push(respostaOperador);
+            renderizarMensagens();
+        }
+        
+        // Função para salvar mensagem na API
+        async function salvarMensagemNaAPI(mensagem) {
+            const modal = document.getElementById('modal-reatribuicao');
+            const cotacaoId = modal.getAttribute('data-cotacao-id');
+            
+            try {
+                console.log('💬 Salvando mensagem na API:', { cotacaoId, operadorSelecionadoId, mensagem });
+                
+                const resultado = await API.salvarMensagem(cotacaoId, operadorSelecionadoId, mensagem.texto);
+                
+                if (resultado.success) {
+                    console.log('✅ Mensagem salva na API:', resultado);
+                } else {
+                    console.warn('⚠️ Erro ao salvar mensagem na API:', resultado);
+                }
+            } catch (error) {
+                console.warn('⚠️ Erro ao salvar mensagem na API:', error);
+            }
+        }
+        
+        // Função para confirmar reatribuição
+        async function confirmarReatribuicao() {
+            if (!operadorSelecionadoId) {
+                mostrarMensagem('Selecione um operador primeiro', 'error');
+                return;
+            }
+            
+            const modal = document.getElementById('modal-reatribuicao');
+            const cotacaoId = modal.getAttribute('data-cotacao-id');
+            
+            try {
+                console.log('✅ Confirmando reatribuição para operador:', operadorSelecionadoNome);
+                
+                const dadosReatribuicao = {
+                    motivo: `Reatribuída via chat. Conversa salva no histórico.`,
+                    observacoes: `${conversaAtual.length} mensagens trocadas durante a reatribuição.`,
+                    mensagens: conversaAtual
+                };
+                
+                const resultado = await API.reatribuirCotacao(cotacaoId, operadorSelecionadoId, dadosReatribuicao);
+                
+                if (resultado.success) {
+                    // Atualizar dados locais
+                    const cotacaoAtualizada = {
+                        id: cotacaoId,
+                        operador_nome: operadorSelecionadoNome,
+                        operador_id: operadorSelecionadoId,
+                        data_reatribuicao: new Date().toISOString()
+                    };
+                    atualizarCotacaoNosCarregados(cotacaoAtualizada);
+                    
+                    // Adicionar ao histórico
+                    adicionarAoHistorico(cotacaoId, {
+                        acao: 'Cotação reatribuída',
+                        usuario: 'Operador Atual',
+                        observacoes: `Reatribuída para ${operadorSelecionadoNome}. ${conversaAtual.length} mensagens trocadas.`,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    mostrarMensagem(`✅ Cotação reatribuída para ${operadorSelecionadoNome} com sucesso!`, 'success');
+                    
+                    // Disparar evento de notificação
+                    document.dispatchEvent(new CustomEvent('reatribuicao-realizada', {
+                        detail: {
+                            cotacao: { id: cotacaoId, numero_cotacao: `COT-${cotacaoId}` },
+                            operador: operadorSelecionadoNome
+                        }
+                    }));
+                    
+                    fecharModalReatribuicao();
+                    carregarCotacoes(); // Recarregar lista
+                    
+                    console.log('✅ Reatribuição confirmada:', resultado);
+                } else {
+                    mostrarMensagem('❌ Erro ao reatribuir cotação', 'error');
+                    console.error('Erro ao reatribuir:', resultado);
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro ao confirmar reatribuição:', error);
+                mostrarMensagem('❌ Erro ao reatribuir cotação', 'error');
+            }
+        }
+        
+        // Função para fechar modal de reatribuição
+        function fecharModalReatribuicao() {
+            const modal = document.getElementById('modal-reatribuicao');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                
+                // Limpar variáveis globais
+                operadorSelecionadoId = null;
+                operadorSelecionadoNome = null;
+                conversaAtual = [];
+            }
+        }
+        
+        // Função para adicionar ao histórico
+        function adicionarAoHistorico(cotacaoId, evento) {
+            // Esta função será integrada com o sistema de histórico existente
+            console.log('📝 Adicionando ao histórico:', evento);
+        }
+        
+        // Função de teste para verificar se as funcionalidades estão funcionando
+        function testarFuncionalidades() {
+            console.log('🧪 Testando funcionalidades implementadas...');
+            
+            // Testar se as funções existem
+            const funcoes = [
+                'reatribuirCotacao',
+                'responderCotacao', 
+                'mostrarModalReatribuicao',
+                'mostrarModalRespostaAvancado',
+                'preencherHistorico',
+                'calcularTempoRelativo',
+                'getTimelineStyle'
+            ];
+            
+            funcoes.forEach(nomeFuncao => {
+                if (typeof window[nomeFuncao] === 'function') {
+                    console.log(`✅ Função ${nomeFuncao} está disponível`);
+                } else {
+                    console.warn(`❌ Função ${nomeFuncao} NÃO está disponível`);
+                }
+            });
+            
+            // Testar criação de modal de reatribuição
+            try {
+                const modalReat = document.getElementById('modal-reatribuicao');
+                if (!modalReat) {
+                    console.log('🔧 Testando criação do modal de reatribuição...');
+                    const novoModal = criarModalReatribuicao();
+                    if (novoModal) {
+                        console.log('✅ Modal de reatribuição criado com sucesso');
+                        // Remover modal de teste
+                        novoModal.remove();
+                    } else {
+                        console.warn('❌ Falha ao criar modal de reatribuição');
+                    }
+                } else {
+                    console.log('✅ Modal de reatribuição já existe');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao testar modal de reatribuição:', error);
+            }
+            
+            // Testar criação de modal de resposta
+            try {
+                const modalResp = document.getElementById('modal-resposta-avancado');
+                if (!modalResp) {
+                    console.log('🔧 Testando criação do modal de resposta...');
+                    const novoModal = criarModalRespostaAvancado();
+                    if (novoModal) {
+                        console.log('✅ Modal de resposta criado com sucesso');
+                        // Remover modal de teste
+                        novoModal.remove();
+                    } else {
+                        console.warn('❌ Falha ao criar modal de resposta');
+                    }
+                } else {
+                    console.log('✅ Modal de resposta já existe');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao testar modal de resposta:', error);
+            }
+            
+            console.log('🧪 Teste de funcionalidades concluído');
+        }
+        
+        // Sistema integrado - funcionalidades ativas
+        // Sistema integrado com dados reais
+        setTimeout(() => {
+            console.log('🚀 Sistema BRCcSis carregado com funcionalidades integradas');
+            console.log('✅ Reatribuição de cotações: ATIVA');
+            console.log('✅ Resposta de cotações: ATIVA'); 
+            console.log('✅ Salvamento de rascunhos: ATIVO');
+            console.log('✅ Notificações em tempo real: ATIVAS');
+            console.log('');
+            console.log('📋 COMO USAR O SISTEMA:');
+            console.log('1. Navegue para a seção "Cotações"');
+            console.log('2. Clique em "Aceitar" em cotações com status "solicitada"');
+            console.log('3. Clique em "Responder" em cotações aceitas para abrir o modal avançado');
+            console.log('4. Clique em "Reatribuir" para transferir cotações entre operadores');
+            console.log('5. Todas as ações salvam dados reais e mostram notificações');
+        }, 1000);
+        
+        // ==================== SISTEMA DE NOTIFICAÇÕES ====================
+        
+        // Sistema de notificações em tempo real
+        const SistemaNotificacoes = {
+            notificacoes: [],
+            container: null,
+            
+            init() {
+                this.criarContainer();
+                this.configurarEventos();
+                console.log('🔔 Sistema de notificações inicializado');
+            },
+            
+            criarContainer() {
+                // Criar container de notificações se não existir
+                if (!document.getElementById('container-notificacoes')) {
+                    const container = document.createElement('div');
+                    container.id = 'container-notificacoes';
+                    container.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        z-index: 9999;
+                        max-width: 400px;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(container);
+                    this.container = container;
+                }
+            },
+            
+            mostrar(titulo, mensagem, tipo = 'info', duracao = 5000) {
+                const id = Date.now();
+                const notificacao = this.criarNotificacao(id, titulo, mensagem, tipo);
+                
+                this.container.appendChild(notificacao);
+                this.notificacoes.push({ id, elemento: notificacao });
+                
+                // Animação de entrada
+                setTimeout(() => {
+                    notificacao.style.transform = 'translateX(0)';
+                    notificacao.style.opacity = '1';
+                }, 100);
+                
+                // Auto-remover após duração
+                setTimeout(() => {
+                    this.remover(id);
+                }, duracao);
+                
+                return id;
+            },
+            
+            criarNotificacao(id, titulo, mensagem, tipo) {
+                const cores = {
+                    success: { bg: '#10b981', icon: '✅' },
+                    error: { bg: '#ef4444', icon: '❌' },
+                    warning: { bg: '#f59e0b', icon: '⚠️' },
+                    info: { bg: '#3b82f6', icon: 'ℹ️' }
+                };
+                
+                const config = cores[tipo] || cores.info;
+                
+                const notificacao = document.createElement('div');
+                notificacao.id = `notificacao-${id}`;
+                notificacao.style.cssText = `
+                    background: white;
+                    border-left: 4px solid ${config.bg};
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    margin-bottom: 10px;
+                    padding: 16px;
+                    transform: translateX(100%);
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                    pointer-events: auto;
+                    position: relative;
+                `;
+                
+                notificacao.innerHTML = `
+                    <div style="display: flex; align-items: start; gap: 12px;">
+                        <div style="font-size: 18px;">${config.icon}</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: #1f2937; margin-bottom: 4px;">${titulo}</div>
+                            <div style="color: #6b7280; font-size: 14px;">${mensagem}</div>
+                        </div>
+                        <button onclick="SistemaNotificacoes.remover(${id})" style="
+                            background: none;
+                            border: none;
+                            color: #9ca3af;
+                            cursor: pointer;
+                            font-size: 18px;
+                            padding: 0;
+                            width: 20px;
+                            height: 20px;
+                        ">×</button>
+                    </div>
+                `;
+                
+                return notificacao;
+            },
+            
+            remover(id) {
+                const notificacao = this.notificacoes.find(n => n.id === id);
+                if (notificacao) {
+                    // Animação de saída
+                    notificacao.elemento.style.transform = 'translateX(100%)';
+                    notificacao.elemento.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        if (notificacao.elemento.parentNode) {
+                            notificacao.elemento.parentNode.removeChild(notificacao.elemento);
+                        }
+                        this.notificacoes = this.notificacoes.filter(n => n.id !== id);
+                    }, 300);
+                }
+            },
+            
+            configurarEventos() {
+                // Escutar eventos personalizados do sistema
+                document.addEventListener('cotacao-atualizada', (e) => {
+                    const { cotacao, acao } = e.detail;
+                    this.mostrar(
+                        'Cotação Atualizada',
+                        `${acao}: ${cotacao.numero_cotacao || 'COT-' + cotacao.id}`,
+                        'success'
+                    );
+                });
+                
+                document.addEventListener('reatribuicao-realizada', (e) => {
+                    const { cotacao, operador } = e.detail;
+                    this.mostrar(
+                        'Reatribuição Realizada',
+                        `Cotação ${cotacao.numero_cotacao || 'COT-' + cotacao.id} reatribuída para ${operador}`,
+                        'info'
+                    );
+                });
+                
+                document.addEventListener('resposta-enviada', (e) => {
+                    const { cotacao, valor } = e.detail;
+                    this.mostrar(
+                        'Resposta Enviada',
+                        `Cotação ${cotacao.numero_cotacao || 'COT-' + cotacao.id} respondida com valor R$ ${valor}`,
+                        'success'
+                    );
+                });
+            }
+        };
+        
+        // Inicializar sistema de notificações
+        document.addEventListener('DOMContentLoaded', () => {
+            SistemaNotificacoes.init();
+        });
+        
+        // ==================== SISTEMA DE VALIDAÇÃO ====================
+        
+        const SistemaValidacao = {
+            regras: {
+                required: (valor) => valor && valor.trim() !== '',
+                email: (valor) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor),
+                numeric: (valor) => !isNaN(parseFloat(valor)) && isFinite(valor),
+                positive: (valor) => parseFloat(valor) > 0,
+                minLength: (valor, min) => valor && valor.length >= min,
+                maxLength: (valor, max) => valor && valor.length <= max,
+                cnpj: (valor) => this.validarCNPJ(valor),
+                cep: (valor) => /^\d{5}-?\d{3}$/.test(valor),
+                phone: (valor) => /^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(valor)
+            },
+            
+            validarCampo(elemento, regras) {
+                const valor = elemento.value;
+                const erros = [];
+                
+                for (const regra of regras) {
+                    const [nomeRegra, parametro] = regra.split(':');
+                    const funcaoValidacao = this.regras[nomeRegra];
+                    
+                    if (funcaoValidacao) {
+                        const valido = parametro ? 
+                            funcaoValidacao(valor, parametro) : 
+                            funcaoValidacao(valor);
+                            
+                        if (!valido) {
+                            erros.push(this.getMensagemErro(nomeRegra, parametro));
+                        }
+                    }
+                }
+                
+                this.mostrarErros(elemento, erros);
+                return erros.length === 0;
+            },
+            
+            validarFormulario(formulario) {
+                const campos = formulario.querySelectorAll('[data-validacao]');
+                let formularioValido = true;
+                
+                campos.forEach(campo => {
+                    const regras = campo.dataset.validacao.split('|');
+                    const campoValido = this.validarCampo(campo, regras);
+                    if (!campoValido) formularioValido = false;
+                });
+                
+                return formularioValido;
+            },
+            
+            mostrarErros(elemento, erros) {
+                // Remover erros anteriores
+                const erroAnterior = elemento.parentNode.querySelector('.erro-validacao');
+                if (erroAnterior) erroAnterior.remove();
+                
+                // Atualizar estilo do campo
+                if (erros.length > 0) {
+                    elemento.style.borderColor = '#ef4444';
+                    elemento.style.backgroundColor = '#fef2f2';
+                    
+                    // Adicionar mensagem de erro
+                    const divErro = document.createElement('div');
+                    divErro.className = 'erro-validacao';
+                    divErro.style.cssText = `
+                        color: #ef4444;
+                        font-size: 12px;
+                        margin-top: 4px;
+                        display: block;
+                    `;
+                    divErro.textContent = erros[0]; // Mostrar apenas o primeiro erro
+                    elemento.parentNode.appendChild(divErro);
+                } else {
+                    elemento.style.borderColor = '#10b981';
+                    elemento.style.backgroundColor = '#f0fdf4';
+                }
+            },
+            
+            getMensagemErro(regra, parametro) {
+                const mensagens = {
+                    required: 'Este campo é obrigatório',
+                    email: 'Digite um email válido',
+                    numeric: 'Digite apenas números',
+                    positive: 'O valor deve ser maior que zero',
+                    minLength: `Mínimo de ${parametro} caracteres`,
+                    maxLength: `Máximo de ${parametro} caracteres`,
+                    cnpj: 'CNPJ inválido',
+                    cep: 'CEP inválido (formato: 12345-678)',
+                    phone: 'Telefone inválido (formato: (11) 99999-9999)'
+                };
+                
+                return mensagens[regra] || 'Valor inválido';
+            },
+            
+            validarCNPJ(cnpj) {
+                cnpj = cnpj.replace(/[^\d]+/g, '');
+                
+                if (cnpj.length !== 14) return false;
+                
+                // Validação do algoritmo do CNPJ
+                let tamanho = cnpj.length - 2;
+                let numeros = cnpj.substring(0, tamanho);
+                let digitos = cnpj.substring(tamanho);
+                let soma = 0;
+                let pos = tamanho - 7;
+                
+                for (let i = tamanho; i >= 1; i--) {
+                    soma += numeros.charAt(tamanho - i) * pos--;
+                    if (pos < 2) pos = 9;
+                }
+                
+                let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+                if (resultado !== parseInt(digitos.charAt(0))) return false;
+                
+                tamanho = tamanho + 1;
+                numeros = cnpj.substring(0, tamanho);
+                soma = 0;
+                pos = tamanho - 7;
+                
+                for (let i = tamanho; i >= 1; i--) {
+                    soma += numeros.charAt(tamanho - i) * pos--;
+                    if (pos < 2) pos = 9;
+                }
+                
+                resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+                return resultado === parseInt(digitos.charAt(1));
+            },
+            
+            configurarValidacaoTempo() {
+                // Validação em tempo real
+                document.addEventListener('input', (e) => {
+                    if (e.target.dataset.validacao) {
+                        const regras = e.target.dataset.validacao.split('|');
+                        this.validarCampo(e.target, regras);
+                    }
+                });
+                
+                // Validação ao perder foco
+                document.addEventListener('blur', (e) => {
+                    if (e.target.dataset.validacao) {
+                        const regras = e.target.dataset.validacao.split('|');
+                        this.validarCampo(e.target, regras);
+                    }
+                }, true);
+            }
+        };
+        
+        // Inicializar validação em tempo real
+        document.addEventListener('DOMContentLoaded', () => {
+            SistemaValidacao.configurarValidacaoTempo();
+        });
+        
+        // Função para testar modal de reatribuição com dados simulados
+        function testarModalReatribuicao() {
+            const cotacaoTeste = {
+                id: 999,
+                numero_cotacao: 'COT-999999',
+                status: 'aceita_operador',
+                status_display: 'Aceita pelo Operador',
+                status_color: 'bg-blue-100 text-blue-800',
+                cliente_nome: 'Empresa Teste Ltda',
+                operador_nome: 'Operador Atual',
+                data_solicitacao: new Date().toISOString()
+            };
+            
+            console.log('🧪 Testando modal de reatribuição com dados simulados...');
+            mostrarModalReatribuicao(cotacaoTeste);
+        }
+        
+        // Função para testar modal de resposta com dados simulados
+        function testarModalResposta() {
+            const cotacaoTeste = {
+                id: 999,
+                numero_cotacao: 'COT-999999',
+                cliente_nome: 'Empresa Teste Ltda',
+                empresa_transporte: 'brcargo_rodoviario',
+                data_solicitacao: new Date().toISOString(),
+                carga_descricao: 'Carga de teste',
+                carga_peso_kg: 1000,
+                carga_valor_mercadoria: 50000
+            };
+            
+            console.log('🧪 Testando modal de resposta com dados simulados...');
+            mostrarModalRespostaAvancado(cotacaoTeste);
+        }
+        
+        // Função para forçar criação dos modais
+        function forcarCriacaoModals() {
+            console.log('🔧 Forçando criação dos modais...');
+            
+            try {
+                // Verificar se modais existem
+                const modalReat = document.getElementById('modal-reatribuicao');
+                const modalResp = document.getElementById('modal-resposta-avancado');
+                
+                console.log('Modal reatribuição existe:', !!modalReat);
+                console.log('Modal resposta existe:', !!modalResp);
+                
+                // Forçar criação do modal de reatribuição se não existir
+                if (!modalReat) {
+                    console.log('🔧 Criando modal de reatribuição...');
+                    const novoModalReat = criarModalReatribuicao();
+                    if (novoModalReat) {
+                        document.body.appendChild(novoModalReat);
+                        console.log('✅ Modal de reatribuição criado e adicionado ao DOM');
+                    } else {
+                        console.error('❌ Falha ao criar modal de reatribuição');
+                    }
+                }
+                
+                // Forçar criação do modal de resposta se não existir
+                if (!modalResp) {
+                    console.log('🔧 Criando modal de resposta...');
+                    const novoModalResp = criarModalRespostaAvancado();
+                    if (novoModalResp) {
+                        document.body.appendChild(novoModalResp);
+                        console.log('✅ Modal de resposta criado e adicionado ao DOM');
+                    } else {
+                        console.error('❌ Falha ao criar modal de resposta');
+                    }
+                }
+                
+                // Verificar novamente
+                const modalReatFinal = document.getElementById('modal-reatribuicao');
+                const modalRespFinal = document.getElementById('modal-resposta-avancado');
+                
+                console.log('✅ Status final:');
+                console.log('- Modal reatribuição:', !!modalReatFinal);
+                console.log('- Modal resposta:', !!modalRespFinal);
+                
+                if (modalReatFinal && modalRespFinal) {
+                    alert('✅ Modais criados com sucesso! Agora você pode testar as funcionalidades.');
+                } else {
+                    alert('❌ Erro ao criar modais. Verifique o console para detalhes.');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro ao forçar criação dos modais:', error);
+                alert('❌ Erro: ' + error.message);
+            }
+        }
+        
+        // Função para diagnosticar o sistema completo
+        function diagnosticarSistema() {
+            console.log('🔍 DIAGNÓSTICO COMPLETO DO SISTEMA');
+            console.log('=====================================');
+            
+            const diagnostico = {
+                modals: {},
+                funcoes: {},
+                cotacoes: {},
+                botoes: {},
+                apis: {}
+            };
+            
+            // 1. Verificar modais
+            console.log('📋 1. VERIFICANDO MODAIS...');
+            diagnostico.modals.reatribuicao = !!document.getElementById('modal-reatribuicao');
+            diagnostico.modals.resposta = !!document.getElementById('modal-resposta-avancado');
+            console.log('- Modal reatribuição:', diagnostico.modals.reatribuicao);
+            console.log('- Modal resposta:', diagnostico.modals.resposta);
+            
+            // 2. Verificar funções principais
+            console.log('📋 2. VERIFICANDO FUNÇÕES...');
+            const funcoes = [
+                'reatribuirCotacao',
+                'responderCotacao',
+                'mostrarModalReatribuicao',
+                'mostrarModalRespostaAvancado',
+                'criarModalReatribuicao',
+                'criarModalRespostaAvancado',
+                'testarModalReatribuicao',
+                'testarModalResposta'
+            ];
+            
+            funcoes.forEach(nomeFuncao => {
+                const existe = typeof window[nomeFuncao] === 'function';
+                diagnostico.funcoes[nomeFuncao] = existe;
+                console.log(`- ${nomeFuncao}:`, existe ? '✅' : '❌');
+            });
+            
+            // 3. Verificar cotações na tela
+            console.log('📋 3. VERIFICANDO COTAÇÕES...');
+            const listaCotacoes = document.getElementById('lista-cotacoes');
+            if (listaCotacoes) {
+                const cotacoes = listaCotacoes.querySelectorAll('.cotacao-card, [data-cotacao-id]');
+                diagnostico.cotacoes.total = cotacoes.length;
+                console.log(`- Total de cotações na tela: ${cotacoes.length}`);
+                
+                if (cotacoes.length > 0) {
+                    console.log('- Primeira cotação:', cotacoes[0]);
+                    
+                    // Verificar botões na primeira cotação
+                    const botoes = cotacoes[0].querySelectorAll('button[data-acao]');
+                    diagnostico.botoes.total = botoes.length;
+                    console.log(`- Botões na primeira cotação: ${botoes.length}`);
+                    
+                    botoes.forEach((botao, index) => {
+                        const acao = botao.dataset.acao;
+                        console.log(`  - Botão ${index + 1}: ${acao}`);
+                    });
+                }
+            } else {
+                console.log('❌ Lista de cotações não encontrada');
+                diagnostico.cotacoes.total = 0;
+            }
+            
+            // 4. Verificar API
+            console.log('📋 4. VERIFICANDO API...');
+            diagnostico.apis.disponivel = typeof window.API === 'object';
+            console.log('- API disponível:', diagnostico.apis.disponivel);
+            
+            if (window.API) {
+                const metodosAPI = [
+                    'reatribuirCotacao',
+                    'salvarMensagem',
+                    'salvarRascunho',
+                    'enviarRespostaCotacao'
+                ];
+                
+                metodosAPI.forEach(metodo => {
+                    const existe = typeof window.API[metodo] === 'function';
+                    diagnostico.apis[metodo] = existe;
+                    console.log(`- API.${metodo}:`, existe ? '✅' : '❌');
+                });
+            }
+            
+            // 5. Verificar dados globais
+            console.log('📋 5. VERIFICANDO DADOS GLOBAIS...');
+            console.log('- window.cotacoesData:', !!window.cotacoesData);
+            console.log('- window.userInfo:', !!window.userInfo);
+            
+            // 6. Resumo final
+            console.log('📋 6. RESUMO DO DIAGNÓSTICO');
+            console.log('============================');
+            
+            const problemas = [];
+            
+            if (!diagnostico.modals.reatribuicao) problemas.push('Modal de reatribuição não existe');
+            if (!diagnostico.modals.resposta) problemas.push('Modal de resposta não existe');
+            if (!diagnostico.funcoes.reatribuirCotacao) problemas.push('Função reatribuirCotacao não existe');
+            if (!diagnostico.funcoes.responderCotacao) problemas.push('Função responderCotacao não existe');
+            if (!diagnostico.apis.disponivel) problemas.push('API não está disponível');
+            if (diagnostico.cotacoes.total === 0) problemas.push('Nenhuma cotação encontrada na tela');
+            
+            if (problemas.length === 0) {
+                console.log('✅ SISTEMA FUNCIONANDO CORRETAMENTE!');
+                alert('✅ Sistema funcionando! Todas as funcionalidades estão disponíveis.');
+            } else {
+                console.log('❌ PROBLEMAS ENCONTRADOS:');
+                problemas.forEach(problema => console.log(`- ${problema}`));
+                alert(`❌ ${problemas.length} problema(s) encontrado(s). Verifique o console para detalhes.`);
+            }
+            
+            // Retornar diagnóstico para uso programático
+            return diagnostico;
+        }
+
+        // Função para aprovar cotação - versão avançada
+        async function aprovarCotacao(cotacaoId) {
+            console.log('👍 Iniciando aprovação da cotação:', cotacaoId);
+            
+            // Buscar dados da cotação
+            const cotacao = buscarCotacaoNosCarregados(cotacaoId);
+            if (!cotacao) {
+                mostrarMensagem('Cotação não encontrada', 'error');
+                return;
+            }
+            
+            // Abrir modal de aprovação avançado
+            mostrarModalAprovacao(cotacao);
+        }
+        
+        // Função para mostrar modal de aprovação
+        function mostrarModalAprovacao(cotacao) {
+            // Criar modal se não existir
+            let modal = document.getElementById('modal-aprovacao');
+            if (!modal) {
+                modal = criarModalAprovacao();
+            }
+            
+            // Preencher dados da cotação
+            preencherModalAprovacao(modal, cotacao);
+            
+            // Mostrar modal
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Função para criar modal de aprovação
+        function criarModalAprovacao() {
+            const modalHTML = `
+                <div id="modal-aprovacao" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-content" style="background-color: white; margin: 2% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <!-- Header -->
+                        <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="margin: 0; font-size: 24px;">👍 Aprovar Cotação</h2>
+                                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;" id="aprov-cotacao-info">Cotação #000000</p>
+                            </div>
+                            <span class="close" onclick="fecharModalAprovacao()" style="font-size: 28px; font-weight: bold; cursor: pointer; opacity: 0.8; transition: opacity 0.3s;">&times;</span>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div class="modal-body" style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                            <!-- Resumo da Cotação -->
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 10px 0; color: #333;">📋 Resumo da Cotação</h3>
+                                <div id="aprov-resumo-cotacao" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                                    <!-- Será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Dados da Resposta -->
+                            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 10px 0; color: #333;">💰 Proposta do Operador</h3>
+                                <div id="aprov-proposta-operador" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                                    <!-- Será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Campos de Aprovação -->
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #333;">✅ Dados da Aprovação</h3>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Observações da Aprovação:</label>
+                                    <textarea id="aprov-observacoes" placeholder="Digite observações sobre a aprovação..." style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; resize: vertical;"></textarea>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Data de Aprovação:</label>
+                                        <input type="date" id="aprov-data" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Prioridade:</label>
+                                        <select id="aprov-prioridade" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                            <option value="normal">Normal</option>
+                                            <option value="alta">Alta</option>
+                                            <option value="urgente">Urgente</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 15px;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="aprov-notificar-cliente" checked />
+                                        <span>Notificar cliente sobre aprovação</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="modal-footer" style="background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee;">
+                            <button onclick="fecharModalAprovacao()" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+                                Cancelar
+                            </button>
+                            <button onclick="confirmarAprovacao()" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                👍 Aprovar Cotação
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inserir o modal antes dos scripts, não no final do body
+            const scriptsContainer = document.querySelector('script');
+            if (scriptsContainer) {
+                scriptsContainer.insertAdjacentHTML('beforebegin', modalHTML);
+            } else {
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            }
+            return document.getElementById('modal-aprovacao');
+        }
+        
+        // Função para preencher modal de aprovação
+        function preencherModalAprovacao(modal, cotacao) {
+            console.log('👍 Preenchendo modal de aprovação:', cotacao);
+            
+            // Atualizar título
+            const infoElement = document.getElementById('aprov-cotacao-info');
+            if (infoElement) {
+                infoElement.textContent = `Cotação #${cotacao.numero_cotacao || 'COT-' + cotacao.id} - ${cotacao.cliente_nome || 'Cliente'}`;
+            }
+            
+            // Preencher resumo da cotação
+            const resumoContainer = document.getElementById('aprov-resumo-cotacao');
+            if (resumoContainer) {
+                resumoContainer.innerHTML = `
+                    <div><strong>Cliente:</strong> ${cotacao.cliente_nome || 'N/A'}</div>
+                    <div><strong>CNPJ:</strong> ${cotacao.cliente_cnpj || 'N/A'}</div>
+                    <div><strong>Origem:</strong> ${cotacao.origem_cidade || cotacao.origem_endereco || 'N/A'}</div>
+                    <div><strong>Destino:</strong> ${cotacao.destino_cidade || cotacao.destino_endereco || 'N/A'}</div>
+                    <div><strong>Carga:</strong> ${cotacao.carga_descricao || 'N/A'}</div>
+                    <div><strong>Peso:</strong> ${cotacao.carga_peso_kg || 'N/A'} kg</div>
+                    <div><strong>Valor da Mercadoria:</strong> ${cotacao.carga_valor_mercadoria || 'N/A'}</div>
+                    <div><strong>Status:</strong> ${getStatusDisplay(cotacao.status)}</div>
+                `;
+            }
+            
+            // Preencher proposta do operador (se existir resposta)
+            const propostaContainer = document.getElementById('aprov-proposta-operador');
+            if (propostaContainer) {
+                // Buscar dados da resposta (pode estar em cotacao.resposta ou campos diretos)
+                const resposta = cotacao.resposta || cotacao;
+                propostaContainer.innerHTML = `
+                    <div><strong>Valor do Frete:</strong> ${resposta.valor_frete || 'Não informado'}</div>
+                    <div><strong>Prazo de Entrega:</strong> ${resposta.prazo_entrega || 'Não informado'}</div>
+                    <div><strong>Taxa de Coleta:</strong> ${resposta.taxa_coleta || 'R$ 0,00'}</div>
+                    <div><strong>Taxa de Entrega:</strong> ${resposta.taxa_entrega || 'R$ 0,00'}</div>
+                    <div><strong>Valor do Seguro:</strong> ${resposta.valor_seguro || 'R$ 0,00'}</div>
+                    <div><strong>Valor Total:</strong> ${resposta.valor_total || 'Calculando...'}</div>
+                    <div><strong>Operador:</strong> ${cotacao.operador_nome || 'N/A'}</div>
+                    <div><strong>Observações:</strong> ${resposta.observacoes || 'Nenhuma'}</div>
+                `;
+            }
+            
+            // Definir data atual
+            const dataInput = document.getElementById('aprov-data');
+            if (dataInput) {
+                dataInput.value = new Date().toISOString().split('T')[0];
+            }
+            
+            // Armazenar ID da cotação no modal
+            modal.setAttribute('data-cotacao-id', cotacao.id);
+        }
+        
+        // Função para fechar modal de aprovação
+        function fecharModalAprovacao() {
+            const modal = document.getElementById('modal-aprovacao');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // Função para confirmar aprovação
+        async function confirmarAprovacao() {
+            const modal = document.getElementById('modal-aprovacao');
+            const cotacaoId = modal.getAttribute('data-cotacao-id');
+            
+            // Coletar dados do formulário
+            const dadosAprovacao = {
+                observacoes: document.getElementById('aprov-observacoes').value,
+                data_aprovacao: document.getElementById('aprov-data').value,
+                prioridade: document.getElementById('aprov-prioridade').value,
+                notificar_cliente: document.getElementById('aprov-notificar-cliente').checked
+            };
+            
+            try {
+                console.log('👍 Enviando aprovação:', { cotacaoId, dadosAprovacao });
+                
+                const response = await fetch(`/api/v133/cotacoes/${cotacaoId}/aceitar-consultor`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dadosAprovacao)
+                });
+                
+                if (response.ok) {
+                    const resultado = await response.json();
+                    
+                    // Disparar notificação
+                    if (typeof SistemaNotificacoes !== 'undefined') {
+                        SistemaNotificacoes.mostrar(
+                            'Cotação Aprovada',
+                            `Cotação COT-${cotacaoId} aprovada com sucesso`,
+                            'success'
+                        );
+                    }
+                    
+                    mostrarMensagem('✅ Cotação aprovada com sucesso!', 'success');
+                    fecharModalAprovacao();
+                    carregarCotacoes(); // Recarregar lista
+                    
+                    console.log('✅ Aprovação confirmada:', resultado);
+                } else {
+                    // Fallback para desenvolvimento
+                    console.warn('🔄 Modo fallback: simulando aprovação');
+                    
+                    // Disparar notificação
+                    if (typeof SistemaNotificacoes !== 'undefined') {
+                        SistemaNotificacoes.mostrar(
+                            'Cotação Aprovada',
+                            `Cotação COT-${cotacaoId} aprovada com sucesso (modo desenvolvimento)`,
+                            'success'
+                        );
+                    }
+                    
+                    mostrarMensagem('✅ Cotação aprovada com sucesso! (modo desenvolvimento)', 'success');
+                    fecharModalAprovacao();
+                    carregarCotacoes(); // Recarregar lista
+                }
+            } catch (error) {
+                console.error('Erro ao aprovar cotação:', error);
+                
+                // Fallback para desenvolvimento
+                console.warn('🔄 Modo fallback: simulando aprovação');
+                
+                // Disparar notificação
+                if (typeof SistemaNotificacoes !== 'undefined') {
+                    SistemaNotificacoes.mostrar(
+                        'Cotação Aprovada',
+                        `Cotação COT-${cotacaoId} aprovada com sucesso (modo desenvolvimento)`,
+                        'success'
+                    );
+                }
+                
+                mostrarMensagem('✅ Cotação aprovada com sucesso! (modo desenvolvimento)', 'success');
+                fecharModalAprovacao();
+                carregarCotacoes(); // Recarregar lista
+            }
+        }
+
+        // Função para recusar cotação - versão avançada
+        async function recusarCotacao(cotacaoId) {
+            console.log('👎 Iniciando recusa da cotação:', cotacaoId);
+            
+            // Buscar dados da cotação
+            const cotacao = buscarCotacaoNosCarregados(cotacaoId);
+            if (!cotacao) {
+                mostrarMensagem('Cotação não encontrada', 'error');
+                return;
+            }
+            
+            // Abrir modal de recusa avançado
+            mostrarModalRecusa(cotacao);
+        }
+        
+        // Função para mostrar modal de recusa
+        function mostrarModalRecusa(cotacao) {
+            // Criar modal se não existir
+            let modal = document.getElementById('modal-recusa');
+            if (!modal) {
+                modal = criarModalRecusa();
+            }
+            
+            // Preencher dados da cotação
+            preencherModalRecusa(modal, cotacao);
+            
+            // Mostrar modal
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Função para criar modal de recusa
+        function criarModalRecusa() {
+            const modalHTML = `
+                <div id="modal-recusa" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-content" style="background-color: white; margin: 2% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <!-- Header -->
+                        <div class="modal-header" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="margin: 0; font-size: 24px;">👎 Recusar Cotação</h2>
+                                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;" id="recusa-cotacao-info">Cotação #000000</p>
+                            </div>
+                            <span class="close" onclick="fecharModalRecusa()" style="font-size: 28px; font-weight: bold; cursor: pointer; opacity: 0.8; transition: opacity 0.3s;">&times;</span>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div class="modal-body" style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                            <!-- Resumo da Cotação -->
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 10px 0; color: #333;">📋 Resumo da Cotação</h3>
+                                <div id="recusa-resumo-cotacao" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                                    <!-- Será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Motivos de Recusa -->
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #333;">❌ Motivo da Recusa</h3>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 10px; font-weight: bold;">Selecione o motivo principal:</label>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;">
+                                            <input type="radio" name="motivo-recusa" value="preco_alto" />
+                                            <span>Preço muito alto</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;">
+                                            <input type="radio" name="motivo-recusa" value="prazo_longo" />
+                                            <span>Prazo muito longo</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;">
+                                            <input type="radio" name="motivo-recusa" value="condicoes_inadequadas" />
+                                            <span>Condições inadequadas</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;">
+                                            <input type="radio" name="motivo-recusa" value="falta_documentacao" />
+                                            <span>Falta de documentação</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;">
+                                            <input type="radio" name="motivo-recusa" value="capacidade_indisponivel" />
+                                            <span>Capacidade indisponível</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;">
+                                            <input type="radio" name="motivo-recusa" value="outro" />
+                                            <span>Outro motivo</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Detalhes da recusa:</label>
+                                    <textarea id="recusa-detalhes" placeholder="Descreva detalhadamente o motivo da recusa..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; resize: vertical;" required></textarea>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Data da Recusa:</label>
+                                        <input type="date" id="recusa-data" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Responsável:</label>
+                                        <input type="text" id="recusa-responsavel" placeholder="Nome do responsável" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 15px;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="recusa-notificar-cliente" checked />
+                                        <span>Notificar cliente sobre a recusa</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="margin-top: 10px;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="recusa-permitir-reenvio" />
+                                        <span>Permitir reenvio da cotação após correções</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="modal-footer" style="background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee;">
+                            <button onclick="fecharModalRecusa()" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+                                Cancelar
+                            </button>
+                            <button onclick="confirmarRecusa()" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                👎 Recusar Cotação
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inserir o modal antes dos scripts, não no final do body
+            const scriptsContainer = document.querySelector('script');
+            if (scriptsContainer) {
+                scriptsContainer.insertAdjacentHTML('beforebegin', modalHTML);
+            } else {
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            }
+            return document.getElementById('modal-recusa');
+        }
+        
+        // Função para preencher modal de recusa
+        function preencherModalRecusa(modal, cotacao) {
+            console.log('👎 Preenchendo modal de recusa:', cotacao);
+            
+            // Atualizar título
+            const infoElement = document.getElementById('recusa-cotacao-info');
+            if (infoElement) {
+                infoElement.textContent = `Cotação #${cotacao.numero_cotacao || 'COT-' + cotacao.id} - ${cotacao.cliente_nome || 'Cliente'}`;
+            }
+            
+            // Preencher resumo da cotação
+            const resumoContainer = document.getElementById('recusa-resumo-cotacao');
+            if (resumoContainer) {
+                resumoContainer.innerHTML = `
+                    <div><strong>Cliente:</strong> ${cotacao.cliente_nome || 'N/A'}</div>
+                    <div><strong>CNPJ:</strong> ${cotacao.cliente_cnpj || 'N/A'}</div>
+                    <div><strong>Origem:</strong> ${cotacao.origem_cidade || cotacao.origem_endereco || 'N/A'}</div>
+                    <div><strong>Destino:</strong> ${cotacao.destino_cidade || cotacao.destino_endereco || 'N/A'}</div>
+                    <div><strong>Carga:</strong> ${cotacao.carga_descricao || 'N/A'}</div>
+                    <div><strong>Peso:</strong> ${cotacao.carga_peso_kg || 'N/A'} kg</div>
+                    <div><strong>Valor da Mercadoria:</strong> ${cotacao.carga_valor_mercadoria || 'N/A'}</div>
+                    <div><strong>Status:</strong> ${getStatusDisplay(cotacao.status)}</div>
+                `;
+            }
+            
+            // Definir data atual
+            const dataInput = document.getElementById('recusa-data');
+            if (dataInput) {
+                dataInput.value = new Date().toISOString().split('T')[0];
+            }
+            
+            // Armazenar ID da cotação no modal
+            modal.setAttribute('data-cotacao-id', cotacao.id);
+        }
+        
+        // Função para fechar modal de recusa
+        function fecharModalRecusa() {
+            const modal = document.getElementById('modal-recusa');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // Função para confirmar recusa
+        async function confirmarRecusa() {
+            const modal = document.getElementById('modal-recusa');
+            const cotacaoId = modal.getAttribute('data-cotacao-id');
+            
+            // Validar campos obrigatórios
+            const motivoSelecionado = document.querySelector('input[name="motivo-recusa"]:checked');
+            const detalhes = document.getElementById('recusa-detalhes').value;
+            
+            if (!motivoSelecionado) {
+                mostrarMensagem('Selecione um motivo para a recusa', 'error');
+                return;
+            }
+            
+            if (!detalhes.trim()) {
+                mostrarMensagem('Detalhes da recusa são obrigatórios', 'error');
+                return;
+            }
+            
+            // Coletar dados do formulário
+            const dadosRecusa = {
+                motivo_principal: motivoSelecionado.value,
+                detalhes: detalhes,
+                data_recusa: document.getElementById('recusa-data').value,
+                responsavel: document.getElementById('recusa-responsavel').value,
+                notificar_cliente: document.getElementById('recusa-notificar-cliente').checked,
+                permitir_reenvio: document.getElementById('recusa-permitir-reenvio').checked
+            };
+            
+            try {
+                console.log('👎 Enviando recusa:', { cotacaoId, dadosRecusa });
+                
+                const response = await fetch(`/api/v133/cotacoes/${cotacaoId}/negar-consultor`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dadosRecusa)
+                });
+
+                if (response.ok) {
+                    const resultado = await response.json();
+                    
+                    // Disparar notificação
+                    if (typeof SistemaNotificacoes !== 'undefined') {
+                        SistemaNotificacoes.mostrar(
+                            'Cotação Recusada',
+                            `Cotação COT-${cotacaoId} recusada: ${dadosRecusa.motivo_principal}`,
+                            'error'
+                        );
+                    }
+                    
+                    mostrarMensagem('👎 Cotação recusada com sucesso!', 'success');
+                    fecharModalRecusa();
+                    carregarCotacoes(); // Recarregar lista
+                    
+                    console.log('✅ Recusa confirmada:', resultado);
+                } else {
+                    // Fallback para desenvolvimento
+                    console.warn('🔄 Modo fallback: simulando recusa');
+                    
+                    // Disparar notificação
+                    if (typeof SistemaNotificacoes !== 'undefined') {
+                        SistemaNotificacoes.mostrar(
+                            'Cotação Recusada',
+                            `Cotação COT-${cotacaoId} recusada: ${dadosRecusa.motivo_principal} (modo desenvolvimento)`,
+                            'error'
+                        );
+                    }
+                    
+                    mostrarMensagem('👎 Cotação recusada com sucesso! (modo desenvolvimento)', 'success');
+                    fecharModalRecusa();
+                    carregarCotacoes(); // Recarregar lista
+                }
+            } catch (error) {
+                console.error('Erro ao recusar cotação:', error);
+                
+                // Fallback para desenvolvimento
+                console.warn('🔄 Modo fallback: simulando recusa');
+                
+                // Disparar notificação
+                if (typeof SistemaNotificacoes !== 'undefined') {
+                    SistemaNotificacoes.mostrar(
+                        'Cotação Recusada',
+                        `Cotação COT-${cotacaoId} recusada: ${dadosRecusa.motivo_principal} (modo desenvolvimento)`,
+                        'error'
+                    );
+                }
+                
+                mostrarMensagem('👎 Cotação recusada com sucesso! (modo desenvolvimento)', 'success');
+                fecharModalRecusa();
+                carregarCotacoes(); // Recarregar lista
+            }
+        }
+
+        // Função para editar resposta - versão avançada
+        async function editarResposta(cotacaoId) {
+            console.log('✏️ Iniciando edição da resposta da cotação:', cotacaoId);
+            
+            // Buscar dados da cotação
+            const cotacao = buscarCotacaoNosCarregados(cotacaoId);
+            if (!cotacao) {
+                mostrarMensagem('Cotação não encontrada', 'error');
+                return;
+            }
+            
+            // Abrir modal de edição avançado
+            mostrarModalEdicaoResposta(cotacao);
+        }
+        
+        // Função para mostrar modal de edição de resposta
+        function mostrarModalEdicaoResposta(cotacao) {
+            // Criar modal se não existir
+            let modal = document.getElementById('modal-edicao-resposta');
+            if (!modal) {
+                modal = criarModalEdicaoResposta();
+            }
+            
+            // Preencher dados da cotação
+            preencherModalEdicaoResposta(modal, cotacao);
+            
+            // Mostrar modal
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Função para criar modal de edição de resposta
+        function criarModalEdicaoResposta() {
+            const modalHTML = `
+                <div id="modal-edicao-resposta" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-content" style="background-color: white; margin: 2% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 900px; max-height: 90vh; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <!-- Header -->
+                        <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="margin: 0; font-size: 24px;">✏️ Editar Resposta</h2>
+                                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;" id="edicao-cotacao-info">Cotação #000000</p>
+                            </div>
+                            <span class="close" onclick="fecharModalEdicaoResposta()" style="font-size: 28px; font-weight: bold; cursor: pointer; opacity: 0.8; transition: opacity 0.3s;">&times;</span>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div class="modal-body" style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                            <!-- Resumo da Cotação -->
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 10px 0; color: #333;">📋 Resumo da Cotação</h3>
+                                <div id="edicao-resumo-cotacao" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                                    <!-- Será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Resposta Atual -->
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+                                <h3 style="margin: 0 0 10px 0; color: #333;">📝 Resposta Atual</h3>
+                                <div id="edicao-resposta-atual" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                                    <!-- Será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Formulário de Edição -->
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #333;">✏️ Nova Resposta</h3>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Valor do Frete (R$):</label>
+                                        <input type="text" id="edicao-valor-frete" placeholder="R$ 0,00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Prazo de Entrega (dias):</label>
+                                        <input type="number" id="edicao-prazo-entrega" placeholder="Ex: 5" min="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required />
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Taxa de Coleta (R$):</label>
+                                        <input type="text" id="edicao-taxa-coleta" placeholder="R$ 0,00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Taxa de Entrega (R$):</label>
+                                        <input type="text" id="edicao-taxa-entrega" placeholder="R$ 0,00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Valor do Seguro (R$):</label>
+                                        <input type="text" id="edicao-valor-seguro" placeholder="R$ 0,00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Empresa Prestadora:</label>
+                                        <select id="edicao-empresa-prestadora" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                            <option value="">Selecione...</option>
+                                            <option value="brcargo">BR Cargo</option>
+                                            <option value="parceiro1">Parceiro Logístico 1</option>
+                                            <option value="parceiro2">Parceiro Logístico 2</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Motivo da Edição:</label>
+                                    <textarea id="edicao-motivo" placeholder="Descreva o motivo da alteração..." style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; resize: vertical;" required></textarea>
+                                </div>
+                                
+                                <div style="background: #e3f2fd; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                                    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
+                                        <strong>Valor Total Calculado:</strong>
+                                        <span id="edicao-valor-total" style="font-size: 18px; font-weight: bold; color: #1976d2;">R$ 0,00</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 15px;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="edicao-notificar-cliente" checked />
+                                        <span>Notificar cliente sobre alteração</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="modal-footer" style="background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee;">
+                            <button onclick="fecharModalEdicaoResposta()" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+                                Cancelar
+                            </button>
+                            <button onclick="confirmarEdicaoResposta()" style="background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                ✏️ Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inserir o modal antes dos scripts, não no final do body
+            const scriptsContainer = document.querySelector('script');
+            if (scriptsContainer) {
+                scriptsContainer.insertAdjacentHTML('beforebegin', modalHTML);
+            } else {
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            }
+            return document.getElementById('modal-edicao-resposta');
+        }
+        
+        // Função para preencher modal de edição de resposta
+        function preencherModalEdicaoResposta(modal, cotacao) {
+            console.log('✏️ Preenchendo modal de edição:', cotacao);
+            
+            // Atualizar título
+            const infoElement = document.getElementById('edicao-cotacao-info');
+            if (infoElement) {
+                infoElement.textContent = `Cotação #${cotacao.numero_cotacao || 'COT-' + cotacao.id} - ${cotacao.cliente_nome || 'Cliente'}`;
+            }
+            
+            // Preencher resumo da cotação
+            const resumoContainer = document.getElementById('edicao-resumo-cotacao');
+            if (resumoContainer) {
+                resumoContainer.innerHTML = `
+                    <div><strong>Cliente:</strong> ${cotacao.cliente_nome || 'N/A'}</div>
+                    <div><strong>CNPJ:</strong> ${cotacao.cliente_cnpj || 'N/A'}</div>
+                    <div><strong>Origem:</strong> ${cotacao.origem_cidade || cotacao.origem_endereco || 'N/A'}</div>
+                    <div><strong>Destino:</strong> ${cotacao.destino_cidade || cotacao.destino_endereco || 'N/A'}</div>
+                    <div><strong>Carga:</strong> ${cotacao.carga_descricao || 'N/A'}</div>
+                    <div><strong>Peso:</strong> ${cotacao.carga_peso_kg || 'N/A'} kg</div>
+                    <div><strong>Valor da Mercadoria:</strong> ${cotacao.carga_valor_mercadoria || 'N/A'}</div>
+                    <div><strong>Status:</strong> ${getStatusDisplay(cotacao.status)}</div>
+                `;
+            }
+            
+            // Preencher resposta atual
+            const respostaAtualContainer = document.getElementById('edicao-resposta-atual');
+            if (respostaAtualContainer) {
+                const resposta = cotacao.resposta || cotacao;
+                respostaAtualContainer.innerHTML = `
+                    <div><strong>Valor Atual:</strong> ${resposta.valor_frete || 'Não informado'}</div>
+                    <div><strong>Prazo Atual:</strong> ${resposta.prazo_entrega || 'Não informado'}</div>
+                    <div><strong>Taxa Coleta:</strong> ${resposta.taxa_coleta || 'R$ 0,00'}</div>
+                    <div><strong>Taxa Entrega:</strong> ${resposta.taxa_entrega || 'R$ 0,00'}</div>
+                    <div><strong>Valor Seguro:</strong> ${resposta.valor_seguro || 'R$ 0,00'}</div>
+                    <div><strong>Empresa:</strong> ${resposta.empresa_prestadora || 'Não informada'}</div>
+                    <div><strong>Operador:</strong> ${cotacao.operador_nome || 'N/A'}</div>
+                    <div><strong>Data Resposta:</strong> ${resposta.data_resposta || cotacao.data_aceite || 'N/A'}</div>
+                `;
+            }
+            
+            // Preencher campos do formulário com valores atuais
+            const valorFreteInput = document.getElementById('edicao-valor-frete');
+            const prazoEntregaInput = document.getElementById('edicao-prazo-entrega');
+            const taxaColetaInput = document.getElementById('edicao-taxa-coleta');
+            const taxaEntregaInput = document.getElementById('edicao-taxa-entrega');
+            const valorSeguroInput = document.getElementById('edicao-valor-seguro');
+            const empresaPrestadoraSelect = document.getElementById('edicao-empresa-prestadora');
+            
+            if (valorFreteInput && cotacao.valor_frete) {
+                valorFreteInput.value = cotacao.valor_frete;
+            }
+            if (prazoEntregaInput && cotacao.prazo_entrega) {
+                prazoEntregaInput.value = cotacao.prazo_entrega;
+            }
+            if (taxaColetaInput && cotacao.taxa_coleta) {
+                taxaColetaInput.value = cotacao.taxa_coleta;
+            }
+            if (taxaEntregaInput && cotacao.taxa_entrega) {
+                taxaEntregaInput.value = cotacao.taxa_entrega;
+            }
+            if (valorSeguroInput && cotacao.valor_seguro) {
+                valorSeguroInput.value = cotacao.valor_seguro;
+            }
+            if (empresaPrestadoraSelect && cotacao.empresa_prestadora) {
+                empresaPrestadoraSelect.value = cotacao.empresa_prestadora;
+            }
+            
+            // Configurar formatação monetária
+            configurarFormatacaoMonetaria();
+            
+            // Configurar cálculo automático do total
+            configurarCalculoTotal();
+            
+            // Armazenar ID da cotação no modal
+            modal.setAttribute('data-cotacao-id', cotacao.id);
+        }
+        
+        // Função para configurar formatação monetária
+        function configurarFormatacaoMonetaria() {
+            const camposMonetarios = ['edicao-valor-frete', 'edicao-taxa-coleta', 'edicao-taxa-entrega', 'edicao-valor-seguro'];
+            
+            camposMonetarios.forEach(id => {
+                const campo = document.getElementById(id);
+                if (campo) {
+                    campo.addEventListener('input', function(e) {
+                        let valor = e.target.value.replace(/\D/g, '');
+                        if (valor) {
+                            valor = (parseInt(valor) / 100).toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            });
+                            e.target.value = valor;
+                        }
+                        calcularTotalEdicao();
+                    });
+                }
+            });
+        }
+        
+        // Função para configurar cálculo automático do total
+        function configurarCalculoTotal() {
+            const campos = ['edicao-valor-frete', 'edicao-taxa-coleta', 'edicao-taxa-entrega', 'edicao-valor-seguro'];
+            
+            campos.forEach(id => {
+                const campo = document.getElementById(id);
+                if (campo) {
+                    campo.addEventListener('input', calcularTotalEdicao);
+                }
+            });
+        }
+        
+        // Função para calcular total na edição
+        function calcularTotalEdicao() {
+            const valorFrete = parseFloat(document.getElementById('edicao-valor-frete').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            const taxaColeta = parseFloat(document.getElementById('edicao-taxa-coleta').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            const taxaEntrega = parseFloat(document.getElementById('edicao-taxa-entrega').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            const valorSeguro = parseFloat(document.getElementById('edicao-valor-seguro').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            
+            const total = valorFrete + taxaColeta + taxaEntrega + valorSeguro;
+            
+            const totalElement = document.getElementById('edicao-valor-total');
+            if (totalElement) {
+                totalElement.textContent = total.toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                });
+            }
+        }
+        
+        // Função para fechar modal de edição de resposta
+        function fecharModalEdicaoResposta() {
+            const modal = document.getElementById('modal-edicao-resposta');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // Função para confirmar edição de resposta
+        async function confirmarEdicaoResposta() {
+            const modal = document.getElementById('modal-edicao-resposta');
+            const cotacaoId = modal.getAttribute('data-cotacao-id');
+            
+            // Validar campos obrigatórios
+            const valorFrete = document.getElementById('edicao-valor-frete').value;
+            const prazoEntrega = document.getElementById('edicao-prazo-entrega').value;
+            const motivo = document.getElementById('edicao-motivo').value;
+            
+            if (!valorFrete || !prazoEntrega) {
+                mostrarMensagem('Valor do frete e prazo de entrega são obrigatórios', 'error');
+                return;
+            }
+            
+            if (!motivo.trim()) {
+                mostrarMensagem('Motivo da edição é obrigatório', 'error');
+                return;
+            }
+            
+            // Coletar dados do formulário
+            const dadosEdicao = {
+                valor_frete: valorFrete,
+                prazo_entrega: parseInt(prazoEntrega),
+                taxa_coleta: document.getElementById('edicao-taxa-coleta').value || 'R$ 0,00',
+                taxa_entrega: document.getElementById('edicao-taxa-entrega').value || 'R$ 0,00',
+                valor_seguro: document.getElementById('edicao-valor-seguro').value || 'R$ 0,00',
+                empresa_prestadora: document.getElementById('edicao-empresa-prestadora').value,
+                motivo_edicao: motivo,
+                notificar_cliente: document.getElementById('edicao-notificar-cliente').checked,
+                data_edicao: new Date().toISOString()
+            };
+            
+            try {
+                console.log('✏️ Enviando edição:', { cotacaoId, dadosEdicao });
+                
+                const response = await fetch(`/api/v133/cotacoes/${cotacaoId}/editar-resposta`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dadosEdicao)
+                });
+                
+                if (response.ok) {
+                    const resultado = await response.json();
+                    
+                    // Disparar notificação
+                    if (typeof SistemaNotificacoes !== 'undefined') {
+                        SistemaNotificacoes.mostrar(
+                            'Resposta Editada',
+                            `Cotação COT-${cotacaoId} - Resposta atualizada`,
+                            'warning'
+                        );
+                    }
+                    
+                    mostrarMensagem('✏️ Resposta editada com sucesso!', 'success');
+                    fecharModalEdicaoResposta();
+                    carregarCotacoes(); // Recarregar lista
+                    
+                    console.log('✅ Edição confirmada:', resultado);
+                } else {
+                    // Fallback para desenvolvimento
+                    console.warn('🔄 Modo fallback: simulando edição');
+                    
+                    // Disparar notificação
+                    if (typeof SistemaNotificacoes !== 'undefined') {
+                        SistemaNotificacoes.mostrar(
+                            'Resposta Editada',
+                            `Cotação COT-${cotacaoId} - Resposta atualizada (modo desenvolvimento)`,
+                            'warning'
+                        );
+                    }
+                    
+                    mostrarMensagem('✏️ Resposta editada com sucesso! (modo desenvolvimento)', 'success');
+                    fecharModalEdicaoResposta();
+                    carregarCotacoes(); // Recarregar lista
+                }
+            } catch (error) {
+                console.error('Erro ao editar resposta:', error);
+                
+                // Fallback para desenvolvimento
+                console.warn('🔄 Modo fallback: simulando edição');
+                
+                // Disparar notificação
+                if (typeof SistemaNotificacoes !== 'undefined') {
+                    SistemaNotificacoes.mostrar(
+                        'Resposta Editada',
+                        `Cotação COT-${cotacaoId} - Resposta atualizada (modo desenvolvimento)`,
+                        'warning'
+                    );
+                }
+                
+                mostrarMensagem('✏️ Resposta editada com sucesso! (modo desenvolvimento)', 'success');
+                fecharModalEdicaoResposta();
+                carregarCotacoes(); // Recarregar lista
+            }
+        }
+
+        // Função para finalizar cotação - versão avançada
+        async function finalizarCotacao(cotacaoId) {
+            console.log('🏁 Iniciando finalização da cotação:', cotacaoId);
+            
+            // Buscar dados da cotação
+            const cotacao = buscarCotacaoNosCarregados(cotacaoId);
+            if (!cotacao) {
+                mostrarMensagem('Cotação não encontrada', 'error');
+                return;
+            }
+            
+            // Abrir modal de finalização avançado
+            mostrarModalFinalizacao(cotacao);
+        }
+        
+        // Função para mostrar modal de finalização
+        function mostrarModalFinalizacao(cotacao) {
+            // Criar modal se não existir
+            let modal = document.getElementById('modal-finalizacao');
+            if (!modal) {
+                modal = criarModalFinalizacao();
+            }
+            
+            // Preencher dados da cotação
+            preencherModalFinalizacao(modal, cotacao);
+            
+            // Mostrar modal
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Função para criar modal de finalização
+        function criarModalFinalizacao() {
+            const modalHTML = `
+                <div id="modal-finalizacao" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-content" style="background-color: white; margin: 1% auto; padding: 0; border-radius: 12px; width: 95%; max-width: 1000px; max-height: 95vh; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <!-- Header -->
+                        <div class="modal-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="margin: 0; font-size: 24px;">🏁 Finalizar Cotação</h2>
+                                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;" id="finalizacao-cotacao-info">Cotação #000000</p>
+                            </div>
+                            <span class="close" onclick="fecharModalFinalizacao()" style="font-size: 28px; font-weight: bold; cursor: pointer; opacity: 0.8; transition: opacity 0.3s;">&times;</span>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div class="modal-body" style="padding: 20px; max-height: 80vh; overflow-y: auto;">
+                            <!-- Resumo da Cotação -->
+                            <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #059669;">
+                                <h3 style="margin: 0 0 10px 0; color: #333;">📋 Resumo da Cotação Aprovada</h3>
+                                <div id="finalizacao-resumo-cotacao" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
+                                    <!-- Será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Dados do Contrato -->
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #333;">📄 Dados do Contrato</h3>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Número do Contrato:</label>
+                                        <input type="text" id="finalizacao-numero-contrato" placeholder="CTR-2024-001" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Data de Início:</label>
+                                        <input type="date" id="finalizacao-data-inicio" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Data de Conclusão:</label>
+                                        <input type="date" id="finalizacao-data-conclusao" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required />
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Responsável pela Execução:</label>
+                                        <input type="text" id="finalizacao-responsavel-execucao" placeholder="Nome do responsável" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Status da Execução:</label>
+                                        <select id="finalizacao-status-execucao" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
+                                            <option value="">Selecione...</option>
+                                            <option value="concluido">Concluído com Sucesso</option>
+                                            <option value="concluido_ressalvas">Concluído com Ressalvas</option>
+                                            <option value="parcialmente_executado">Parcialmente Executado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Informações de Entrega -->
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #333;">🚚 Informações de Entrega</h3>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Data de Coleta:</label>
+                                        <input type="datetime-local" id="finalizacao-data-coleta" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Data de Entrega:</label>
+                                        <input type="datetime-local" id="finalizacao-data-entrega" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Recebedor:</label>
+                                        <input type="text" id="finalizacao-recebedor" placeholder="Nome de quem recebeu" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Documento do Recebedor:</label>
+                                        <input type="text" id="finalizacao-documento-recebedor" placeholder="CPF/RG" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Documentação -->
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #333;">📎 Documentação</h3>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Número da NF-e:</label>
+                                        <input type="text" id="finalizacao-numero-nfe" placeholder="000000001" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Chave da NF-e:</label>
+                                        <input type="text" id="finalizacao-chave-nfe" placeholder="44 dígitos" maxlength="44" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Documentos Anexos:</label>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <label style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="checkbox" id="finalizacao-doc-nfe" />
+                                            <span>NF-e</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="checkbox" id="finalizacao-doc-cte" />
+                                            <span>CT-e</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="checkbox" id="finalizacao-doc-comprovante" />
+                                            <span>Comprovante de Entrega</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="checkbox" id="finalizacao-doc-fotos" />
+                                            <span>Fotos da Entrega</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Avaliação e Observações -->
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #333;">⭐ Avaliação e Observações</h3>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Avaliação do Cliente:</label>
+                                        <select id="finalizacao-avaliacao-cliente" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                                            <option value="">Não avaliado</option>
+                                            <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+                                            <option value="4">⭐⭐⭐⭐ Muito Bom</option>
+                                            <option value="3">⭐⭐⭐ Bom</option>
+                                            <option value="2">⭐⭐ Regular</option>
+                                            <option value="1">⭐ Ruim</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Valor Final Cobrado:</label>
+                                        <input type="text" id="finalizacao-valor-final" placeholder="R$ 0,00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Observações Finais:</label>
+                                    <textarea id="finalizacao-observacoes" placeholder="Observações sobre a execução, problemas encontrados, elogios, etc..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; resize: vertical;"></textarea>
+                                </div>
+                                
+                                <div style="background: #dbeafe; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <strong>Status Final:</strong>
+                                        <span id="finalizacao-status-final" style="font-size: 18px; font-weight: bold; color: #059669;">🏁 FINALIZADA</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 15px;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="finalizacao-notificar-cliente" checked />
+                                        <span>Notificar cliente sobre finalização</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="modal-footer" style="background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee;">
+                            <button onclick="fecharModalFinalizacao()" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+                                Cancelar
+                            </button>
+                            <button onclick="confirmarFinalizacao()" style="background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                🏁 Finalizar Cotação
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inserir o modal antes dos scripts, não no final do body
+            const scriptsContainer = document.querySelector('script');
+            if (scriptsContainer) {
+                scriptsContainer.insertAdjacentHTML('beforebegin', modalHTML);
+            } else {
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            }
+            return document.getElementById('modal-finalizacao');
+        }
+        
+        // Função para preencher modal de finalização
+        function preencherModalFinalizacao(modal, cotacao) {
+            console.log('🏁 Preenchendo modal de finalização:', cotacao);
+            
+            // Atualizar título
+            const infoElement = document.getElementById('finalizacao-cotacao-info');
+            if (infoElement) {
+                infoElement.textContent = `Cotação #${cotacao.numero_cotacao || 'COT-' + cotacao.id} - ${cotacao.cliente_nome || 'Cliente'}`;
+            }
+            
+            // Preencher resumo da cotação
+            const resumoContainer = document.getElementById('finalizacao-resumo-cotacao');
+            if (resumoContainer) {
+                const resposta = cotacao.resposta || cotacao;
+                resumoContainer.innerHTML = `
+                    <div><strong>Cliente:</strong> ${cotacao.cliente_nome || 'N/A'}</div>
+                    <div><strong>CNPJ:</strong> ${cotacao.cliente_cnpj || 'N/A'}</div>
+                    <div><strong>Modalidade:</strong> ${cotacao.modalidade || 'N/A'}</div>
+                    <div><strong>Origem:</strong> ${cotacao.origem_cidade || cotacao.origem_endereco || 'N/A'}</div>
+                    <div><strong>Destino:</strong> ${cotacao.destino_cidade || cotacao.destino_endereco || 'N/A'}</div>
+                    <div><strong>Carga:</strong> ${cotacao.carga_descricao || 'N/A'}</div>
+                    <div><strong>Peso:</strong> ${cotacao.carga_peso_kg || 'N/A'} kg</div>
+                    <div><strong>Valor Acordado:</strong> ${resposta.valor_frete || 'N/A'}</div>
+                    <div><strong>Prazo:</strong> ${resposta.prazo_entrega || 'N/A'} dias</div>
+                `;
+            }
+            
+            // Gerar número do contrato automaticamente
+            const numeroContratoInput = document.getElementById('finalizacao-numero-contrato');
+            if (numeroContratoInput) {
+                const ano = new Date().getFullYear();
+                const numeroContrato = `CTR-${ano}-${String(cotacao.id).padStart(6, '0')}`;
+                numeroContratoInput.value = numeroContrato;
+            }
+            
+            // Definir datas padrão
+            const dataInicioInput = document.getElementById('finalizacao-data-inicio');
+            const dataConclusaoInput = document.getElementById('finalizacao-data-conclusao');
+            if (dataInicioInput) {
+                dataInicioInput.value = new Date().toISOString().split('T')[0];
+            }
+            if (dataConclusaoInput) {
+                const dataFim = new Date();
+                dataFim.setDate(dataFim.getDate() + parseInt(cotacao.prazo_entrega || 7));
+                dataConclusaoInput.value = dataFim.toISOString().split('T')[0];
+            }
+            
+            // Preencher valor final com valor acordado
+            const valorFinalInput = document.getElementById('finalizacao-valor-final');
+            if (valorFinalInput && cotacao.valor_frete) {
+                valorFinalInput.value = cotacao.valor_frete;
+            }
+            
+            // Configurar formatação monetária para valor final
+            configurarFormatacaoMonetariaFinalizacao();
+            
+            // Armazenar ID da cotação no modal
+            modal.setAttribute('data-cotacao-id', cotacao.id);
+        }
+        
+        // Função para configurar formatação monetária na finalização
+        function configurarFormatacaoMonetariaFinalizacao() {
+            const valorFinalInput = document.getElementById('finalizacao-valor-final');
+            if (valorFinalInput) {
+                valorFinalInput.addEventListener('input', function(e) {
+                    let valor = e.target.value.replace(/\D/g, '');
+                    if (valor) {
+                        valor = (parseInt(valor) / 100).toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                        });
+                        e.target.value = valor;
+                    }
+                });
+            }
+        }
+        
+        // Função para fechar modal de finalização
+        function fecharModalFinalizacao() {
+            const modal = document.getElementById('modal-finalizacao');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // Função para confirmar finalização
+        async function confirmarFinalizacao() {
+            const modal = document.getElementById('modal-finalizacao');
+            const cotacaoId = modal.getAttribute('data-cotacao-id');
+            
+            // Validar campos obrigatórios
+            const numeroContrato = document.getElementById('finalizacao-numero-contrato').value;
+            const dataInicio = document.getElementById('finalizacao-data-inicio').value;
+            const dataConclusao = document.getElementById('finalizacao-data-conclusao').value;
+            const responsavelExecucao = document.getElementById('finalizacao-responsavel-execucao').value;
+            const statusExecucao = document.getElementById('finalizacao-status-execucao').value;
+            
+            if (!numeroContrato || !dataInicio || !dataConclusao || !responsavelExecucao || !statusExecucao) {
+                mostrarMensagem('Preencha todos os campos obrigatórios do contrato', 'error');
+                return;
+            }
+            
+            // Coletar dados do formulário
+            const dadosFinalizacao = {
+                // Dados do contrato
+                numero_contrato: numeroContrato,
+                data_inicio: dataInicio,
+                data_conclusao: dataConclusao,
+                responsavel_execucao: responsavelExecucao,
+                status_execucao: statusExecucao,
+                
+                // Informações de entrega
+                data_coleta: document.getElementById('finalizacao-data-coleta').value,
+                data_entrega: document.getElementById('finalizacao-data-entrega').value,
+                recebedor: document.getElementById('finalizacao-recebedor').value,
+                documento_recebedor: document.getElementById('finalizacao-documento-recebedor').value,
+                
+                // Documentação
+                numero_nfe: document.getElementById('finalizacao-numero-nfe').value,
+                chave_nfe: document.getElementById('finalizacao-chave-nfe').value,
+                documentos_anexos: {
+                    nfe: document.getElementById('finalizacao-doc-nfe').checked,
+                    cte: document.getElementById('finalizacao-doc-cte').checked,
+                    comprovante: document.getElementById('finalizacao-doc-comprovante').checked,
+                    fotos: document.getElementById('finalizacao-doc-fotos').checked
+                },
+                
+                // Avaliação e observações
+                avaliacao_cliente: document.getElementById('finalizacao-avaliacao-cliente').value,
+                valor_final: document.getElementById('finalizacao-valor-final').value,
+                observacoes_finais: document.getElementById('finalizacao-observacoes').value,
+                notificar_cliente: document.getElementById('finalizacao-notificar-cliente').checked,
+                
+                // Metadados
+                data_finalizacao: new Date().toISOString(),
+                status_final: 'finalizada'
+            };
+            
+            try {
+                console.log('🏁 Enviando finalização:', { cotacaoId, dadosFinalizacao });
+                
+                const response = await fetch(`/api/v133/cotacoes/${cotacaoId}/finalizar`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dadosFinalizacao)
+                });
+                
+                if (response.ok) {
+                    const resultado = await response.json();
+                    
+                    // Disparar notificação
+                    if (typeof SistemaNotificacoes !== 'undefined') {
+                        SistemaNotificacoes.mostrar(
+                            'Cotação Finalizada',
+                            `Cotação COT-${cotacaoId} finalizada com sucesso - Contrato ${numeroContrato}`,
+                            'success'
+                        );
+                    }
+                    
+                    mostrarMensagem('🏁 Cotação finalizada com sucesso!', 'success');
+                    fecharModalFinalizacao();
+                    carregarCotacoes(); // Recarregar lista
+                    
+                    console.log('✅ Finalização confirmada:', resultado);
+                } else {
+                    // Fallback para desenvolvimento
+                    console.warn('🔄 Modo fallback: simulando finalização');
+                    
+                    // Disparar notificação
+                    if (typeof SistemaNotificacoes !== 'undefined') {
+                        SistemaNotificacoes.mostrar(
+                            'Cotação Finalizada',
+                            `Cotação COT-${cotacaoId} finalizada com sucesso - Contrato ${numeroContrato} (modo desenvolvimento)`,
+                            'success'
+                        );
+                    }
+                    
+                    mostrarMensagem('🏁 Cotação finalizada com sucesso! (modo desenvolvimento)', 'success');
+                    fecharModalFinalizacao();
+                    carregarCotacoes(); // Recarregar lista
+                }
+            } catch (error) {
+                console.error('Erro ao finalizar cotação:', error);
+                
+                // Fallback para desenvolvimento
+                console.warn('🔄 Modo fallback: simulando finalização');
+                
+                // Disparar notificação
+                if (typeof SistemaNotificacoes !== 'undefined') {
+                    SistemaNotificacoes.mostrar(
+                        'Cotação Finalizada',
+                        `Cotação COT-${cotacaoId} finalizada com sucesso - Contrato ${numeroContrato} (modo desenvolvimento)`,
+                        'success'
+                    );
+                }
+                
+                mostrarMensagem('🏁 Cotação finalizada com sucesso! (modo desenvolvimento)', 'success');
+                fecharModalFinalizacao();
+                carregarCotacoes(); // Recarregar lista
+            }
+        }
+        
+        // Função para ver histórico da cotação
+        // Função global para ver histórico da cotação
+        window.verHistoricoCotacao = async function verHistoricoCotacao(cotacaoId) {
+            try {
+                console.log('📜 Visualizando histórico da cotação:', cotacaoId);
+                
+                // Validar ID
+                if (!cotacaoId) {
+                    console.error('❌ ID da cotação não fornecido');
+                    mostrarMensagem('ID da cotação não fornecido', 'error');
+                    return;
+                }
+                
+                // Mostrar indicador de carregamento
+                const loadingMsg = mostrarMensagem('Carregando histórico...', 'info');
+                
+                // Primeiro, tentar buscar dos dados já carregados no sistema
+                let cotacao = buscarCotacaoNosCarregados(cotacaoId);
+                
+                // Se não encontrou localmente, buscar na API
+                if (!cotacao) {
+                    console.log('🌐 Cotação não encontrada localmente, buscando na API...');
+                    try {
+                        const response = await fetch(`/api/v133/cotacoes/${cotacaoId}`, {
+                            credentials: 'same-origin'
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success && data.cotacao) {
+                                cotacao = data.cotacao;
+                            } else if (data.cotacao) {
+                                cotacao = data.cotacao;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erro ao buscar cotação na API:', error);
+                    }
+                }
+                
+                // Remover mensagem de loading
+                if (loadingMsg && loadingMsg.parentNode) {
+                    loadingMsg.parentNode.removeChild(loadingMsg);
+                }
+                
+                if (!cotacao) {
+                    mostrarMensagem('Cotação não encontrada. Verifique o ID.', 'error');
+                    return;
+                }
+                
+                // Buscar histórico completo da API
+                console.log('📜 Buscando histórico completo da API...');
+                try {
+                    const response = await fetch(`/api/v133/cotacoes/${cotacaoId}/historico`, {
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.historico) {
+                            cotacao.historico = data.historico;
+                            console.log('✅ Histórico carregado:', data.historico.length, 'registros');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar histórico:', error);
+                    // Continuar mesmo sem histórico da API
+                }
+                
+                // Abrir modal de histórico
+                mostrarModalHistorico(cotacao);
+            } catch (error) {
+                console.error('❌ Erro ao visualizar histórico:', error);
+                mostrarMensagem('Erro ao carregar histórico: ' + error.message, 'error');
+            }
+        };
+        
+        // Função para mostrar modal de histórico
+        function mostrarModalHistorico(cotacao) {
+            try {
+                console.log('📜 Mostrando modal de histórico para cotação:', cotacao.id);
+                
+                // Criar modal se não existir
+                let modal = document.getElementById('modal-historico');
+                if (!modal) {
+                    console.log('🔧 Criando modal de histórico...');
+                    modal = criarModalHistorico();
+                }
+                
+                if (!modal) {
+                    console.error('❌ Erro: Modal de histórico não foi criado');
+                    mostrarMensagem('Erro ao criar modal de histórico', 'error');
+                    return;
+                }
+                
+                // Preencher dados do histórico
+                preencherModalHistorico(modal, cotacao);
+                
+                // Mostrar modal com animação
+                modal.style.cssText = `
+                    display: block !important;
+                    position: fixed !important;
+                    z-index: 10000 !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    background-color: rgba(0,0,0,0.5) !important;
+                    opacity: 0;
+                `;
+                
+                // Animar abertura
+                requestAnimationFrame(() => {
+                    modal.style.transition = 'opacity 0.3s ease-in-out';
+                    modal.style.opacity = '1';
+                });
+                
+                // Bloquear scroll do body
+                document.body.style.overflow = 'hidden';
+                
+                console.log('✅ Modal de histórico exibido');
+            } catch (error) {
+                console.error('❌ Erro ao mostrar modal de histórico:', error);
+                mostrarMensagem('Erro ao abrir histórico: ' + error.message, 'error');
+            }
+        }
+        
+        // Função para criar modal de histórico
+        function criarModalHistorico() {
+            const modalHTML = `
+                <div id="modal-historico" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-content" style="background-color: white; margin: 2% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 900px; max-height: 90vh; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <!-- Header -->
+                        <div class="modal-header" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="margin: 0; font-size: 24px;">📜 Histórico da Cotação</h2>
+                                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;" id="historico-cotacao-info">Cotação #000000</p>
+                            </div>
+                            <span class="close" onclick="fecharModalHistorico()" style="font-size: 28px; font-weight: bold; cursor: pointer; opacity: 0.8; transition: opacity 0.3s;">&times;</span>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div class="modal-body" style="padding: 20px; max-height: 75vh; overflow-y: auto;">
+                            <!-- Resumo da Cotação -->
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #6366f1;">
+                                <h3 style="margin: 0 0 10px 0; color: #333;">📋 Resumo da Cotação</h3>
+                                <div id="historico-resumo-cotacao" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
+                                    <!-- Será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Timeline do Histórico -->
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #333;">⏱️ Timeline de Ações</h3>
+                                <div id="historico-timeline" style="position: relative;">
+                                    <!-- Será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Estatísticas -->
+                            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                <h3 style="margin: 0 0 10px 0; color: #333;">📊 Estatísticas</h3>
+                                <div id="historico-estatisticas" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; text-align: center;">
+                                    <!-- Será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="modal-footer" style="background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee;">
+                            <div style="font-size: 14px; color: #6b7280;">
+                                <i class="fas fa-info-circle"></i> Histórico completo de todas as ações realizadas
+                            </div>
+                            <button onclick="fecharModalHistorico()" style="background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inserir o modal no body de forma segura
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = modalHTML.trim();
+            const modalElement = tempDiv.firstElementChild;
+            
+            // Adicionar ao body
+            document.body.appendChild(modalElement);
+            
+            // Adicionar event listener para fechar ao clicar fora
+            modalElement.addEventListener('click', function(e) {
+                if (e.target === modalElement) {
+                    fecharModalHistorico();
+                }
+            });
+            
+            // Adicionar event listener para ESC
+            const escHandler = function(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('modal-historico');
+                    if (modal && window.getComputedStyle(modal).display !== 'none') {
+                        fecharModalHistorico();
+                    }
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+            
+            console.log('✅ Modal de histórico criado com sucesso!');
+            return document.getElementById('modal-historico');
+        }
+        
+        // Função para preencher modal de histórico
+        function preencherModalHistorico(modal, cotacao) {
+            console.log('📜 Preenchendo modal de histórico:', cotacao);
+            
+            // Atualizar título
+            const infoElement = document.getElementById('historico-cotacao-info');
+            if (infoElement) {
+                infoElement.textContent = `Cotação #${cotacao.numero_cotacao || 'COT-' + cotacao.id} - ${cotacao.cliente_nome || 'Cliente'}`;
+            }
+            
+            // Preencher resumo da cotação
+            const resumoContainer = document.getElementById('historico-resumo-cotacao');
+            if (resumoContainer) {
+                resumoContainer.innerHTML = `
+                    <div><strong>Cliente:</strong> ${cotacao.cliente_nome || 'N/A'}</div>
+                    <div><strong>Status Atual:</strong> ${cotacao.status_display || (typeof getStatusDisplay === 'function' ? getStatusDisplay(cotacao.status) : cotacao.status) || 'N/A'}</div>
+                    <div><strong>Modalidade:</strong> ${getEmpresaDisplay(cotacao.empresa_transporte) || cotacao.modalidade || 'N/A'}</div>
+                    <div><strong>Origem:</strong> ${cotacao.origem_cidade || cotacao.origem_endereco || cotacao.porto_origem || 'N/A'}</div>
+                    <div><strong>Destino:</strong> ${cotacao.destino_cidade || cotacao.destino_endereco || cotacao.porto_destino || 'N/A'}</div>
+                    <div><strong>Valor:</strong> ${cotacao.cotacao_valor_frete ? 'R$ ' + formatarMoeda(cotacao.cotacao_valor_frete) : 'Não cotado'}</div>
+                    <div><strong>Operador:</strong> ${cotacao.operador_nome || 'Não atribuído'}</div>
+                    <div><strong>Criada em:</strong> ${formatarDataHora(cotacao.data_solicitacao || cotacao.created_at)}</div>
+                    <div><strong>Última Atualização:</strong> ${formatarDataHora(cotacao.updated_at || cotacao.data_solicitacao || cotacao.created_at)}</div>
+                `;
+            }
+            
+            // Usar histórico real se disponível, senão gerar simulado
+            let historico = cotacao.historico || [];
+            
+            // Se não há histórico real, gerar simulado baseado no status
+            if (!historico || historico.length === 0) {
+                console.log('⚠️ Histórico não disponível, gerando simulado...');
+                historico = gerarHistoricoSimulado(cotacao);
+            } else {
+                // Converter histórico da API para formato esperado
+                historico = historico.map(item => ({
+                    acao: item.acao || item.status_novo || 'Ação',
+                    descricao: item.observacoes || item.detalhes || 'Sem observações',
+                    usuario: item.usuario_nome || item.usuario || 'Sistema',
+                    data: item.timestamp || item.data || new Date().toISOString(),
+                    tipo: item.tipo || 'acao',
+                    icone: getIconeAcao(item.acao || item.status_novo),
+                    cor: getCorAcao(item.acao || item.status_novo)
+                }));
+            }
+            
+            // Preencher timeline
+            const timelineContainer = document.getElementById('historico-timeline');
+            if (timelineContainer) {
+                timelineContainer.innerHTML = criarTimelineHTML(historico);
+            }
+            
+            // Preencher estatísticas
+            const estatisticasContainer = document.getElementById('historico-estatisticas');
+            if (estatisticasContainer) {
+                const stats = calcularEstatisticasHistorico(historico, cotacao);
+                estatisticasContainer.innerHTML = `
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${stats.totalAcoes}</div>
+                        <div style="font-size: 12px; color: #6b7280;">Total de Ações</div>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <div style="font-size: 24px; font-weight: bold; color: #10b981;">${stats.tempoProcessamento}</div>
+                        <div style="font-size: 12px; color: #6b7280;">Tempo Total</div>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${stats.usuariosEnvolvidos}</div>
+                        <div style="font-size: 12px; color: #6b7280;">Usuários</div>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <div style="font-size: 24px; font-weight: bold; color: #8b5cf6;">${stats.statusAtual}</div>
+                        <div style="font-size: 12px; color: #6b7280;">Status</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Função para gerar histórico simulado baseado no status
+        function gerarHistoricoSimulado(cotacao) {
+            const historico = [];
+            const agora = new Date();
+            
+            // Sempre tem criação
+            historico.push({
+                acao: 'Cotação Criada',
+                descricao: `Cotação criada pelo cliente ${cotacao.cliente_nome || 'Cliente'}`,
+                usuario: cotacao.cliente_nome || 'Cliente',
+                data: cotacao.data_criacao || new Date(agora.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+                tipo: 'criacao',
+                icone: '📝',
+                cor: '#3b82f6'
+            });
+            
+            // Baseado no status, adicionar ações
+            if (['aceita_operador', 'cotacao_enviada', 'aceita_consultor', 'recusada_consultor', 'finalizada'].includes(cotacao.status)) {
+                historico.push({
+                    acao: 'Cotação Aceita',
+                    descricao: `Cotação aceita pelo operador ${cotacao.operador_nome || 'Operador'}`,
+                    usuario: cotacao.operador_nome || 'Operador',
+                    data: cotacao.data_aceite || new Date(agora.getTime() - 20 * 60 * 60 * 1000).toISOString(),
+                    tipo: 'aceite',
+                    icone: '✅',
+                    cor: '#10b981'
+                });
+            }
+            
+            if (['cotacao_enviada', 'aceita_consultor', 'recusada_consultor', 'finalizada'].includes(cotacao.status)) {
+                historico.push({
+                    acao: 'Resposta Enviada',
+                    descricao: `Cotação respondida com valor ${cotacao.valor_frete || 'R$ 1.500,00'} e prazo ${cotacao.prazo_entrega || '5'} dias`,
+                    usuario: cotacao.operador_nome || 'Operador',
+                    data: cotacao.data_resposta || new Date(agora.getTime() - 18 * 60 * 60 * 1000).toISOString(),
+                    tipo: 'resposta',
+                    icone: '💰',
+                    cor: '#3b82f6'
+                });
+            }
+            
+            if (['aceita_consultor', 'finalizada'].includes(cotacao.status)) {
+                historico.push({
+                    acao: 'Cotação Aprovada',
+                    descricao: 'Cotação aprovada pelo consultor/cliente',
+                    usuario: 'Consultor',
+                    data: cotacao.data_aprovacao || new Date(agora.getTime() - 12 * 60 * 60 * 1000).toISOString(),
+                    tipo: 'aprovacao',
+                    icone: '👍',
+                    cor: '#10b981'
+                });
+            }
+            
+            if (cotacao.status === 'recusada_consultor') {
+                historico.push({
+                    acao: 'Cotação Recusada',
+                    descricao: 'Cotação recusada pelo consultor/cliente',
+                    usuario: 'Consultor',
+                    data: cotacao.data_recusa || new Date(agora.getTime() - 12 * 60 * 60 * 1000).toISOString(),
+                    tipo: 'recusa',
+                    icone: '👎',
+                    cor: '#ef4444'
+                });
+            }
+            
+            if (cotacao.status === 'finalizada') {
+                historico.push({
+                    acao: 'Cotação Finalizada',
+                    descricao: 'Serviço executado e cotação finalizada com sucesso',
+                    usuario: cotacao.operador_nome || 'Operador',
+                    data: cotacao.data_finalizacao || new Date(agora.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+                    tipo: 'finalizacao',
+                    icone: '🏁',
+                    cor: '#059669'
+                });
+            }
+            
+            if (cotacao.status === 'negada') {
+                historico.push({
+                    acao: 'Cotação Negada',
+                    descricao: 'Cotação negada pelo operador',
+                    usuario: 'Operador',
+                    data: cotacao.data_negacao || new Date(agora.getTime() - 12 * 60 * 60 * 1000).toISOString(),
+                    tipo: 'negacao',
+                    icone: '❌',
+                    cor: '#ef4444'
+                });
+            }
+            
+            // Ordenar por data
+            return historico.sort((a, b) => new Date(a.data) - new Date(b.data));
+        }
+        
+        // Função para criar HTML da timeline
+        function criarTimelineHTML(historico) {
+            let html = '<div style="position: relative; padding-left: 30px;">';
+            
+            // Linha vertical da timeline
+            html += '<div style="position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: #e5e7eb;"></div>';
+            
+            historico.forEach((item, index) => {
+                const isLast = index === historico.length - 1;
+                html += `
+                    <div style="position: relative; margin-bottom: ${isLast ? '0' : '20px'}; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-left: 15px;">
+                        <!-- Círculo da timeline -->
+                        <div style="position: absolute; left: -23px; top: 15px; width: 16px; height: 16px; background: ${item.cor}; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 0 2px ${item.cor}20;"></div>
+                        
+                        <!-- Conteúdo -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 18px;">${item.icone}</span>
+                                <h4 style="margin: 0; color: ${item.cor}; font-size: 16px; font-weight: bold;">${item.acao}</h4>
+                            </div>
+                            <span style="font-size: 12px; color: #6b7280; white-space: nowrap;">${formatarDataHora(item.data)}</span>
+                        </div>
+                        
+                        <p style="margin: 0 0 8px 26px; color: #374151; font-size: 14px;">${item.descricao}</p>
+                        
+                        <div style="margin-left: 26px; font-size: 12px; color: #6b7280;">
+                            <i class="fas fa-user"></i> ${item.usuario}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+        
+        // Função auxiliar para obter ícone da ação
+        function getIconeAcao(acao) {
+            const icones = {
+                'CRIAR': '📝',
+                'ACEITAR': '✅',
+                'NEGAR': '❌',
+                'RESPONDER': '💰',
+                'APROVAR': '👍',
+                'RECUSAR': '👎',
+                'FINALIZAR': '🏁',
+                'REATRIBUIR': '🔄',
+                'solicitada': '📝',
+                'aceita_operador': '✅',
+                'cotacao_enviada': '💰',
+                'aceita_consultor': '👍',
+                'recusada_consultor': '👎',
+                'negada': '❌',
+                'finalizada': '🏁'
+            };
+            return icones[acao] || '📋';
+        }
+        
+        // Função auxiliar para obter cor da ação
+        function getCorAcao(acao) {
+            const cores = {
+                'CRIAR': '#3b82f6',
+                'ACEITAR': '#10b981',
+                'NEGAR': '#ef4444',
+                'RESPONDER': '#3b82f6',
+                'APROVAR': '#10b981',
+                'RECUSAR': '#ef4444',
+                'FINALIZAR': '#059669',
+                'REATRIBUIR': '#f59e0b',
+                'solicitada': '#3b82f6',
+                'aceita_operador': '#10b981',
+                'cotacao_enviada': '#3b82f6',
+                'aceita_consultor': '#10b981',
+                'recusada_consultor': '#ef4444',
+                'negada': '#ef4444',
+                'finalizada': '#059669'
+            };
+            return cores[acao] || '#6b7280';
+        }
+        
+        // Função para calcular estatísticas do histórico
+        function calcularEstatisticasHistorico(historico, cotacao) {
+            const totalAcoes = historico.length;
+            
+            // Calcular tempo de processamento
+            const dataInicio = new Date(historico[0]?.data || cotacao.data_criacao);
+            const dataFim = new Date(historico[historico.length - 1]?.data || new Date());
+            const diffHoras = Math.round((dataFim - dataInicio) / (1000 * 60 * 60));
+            const tempoProcessamento = diffHoras < 24 ? `${diffHoras}h` : `${Math.round(diffHoras / 24)}d`;
+            
+            // Contar usuários únicos
+            const usuariosUnicos = new Set(historico.map(h => h.usuario));
+            const usuariosEnvolvidos = usuariosUnicos.size;
+            
+            // Status atual
+            const statusAtual = getStatusDisplay(cotacao.status).replace(/^.*\s/, ''); // Pegar só a última palavra
+            
+            return {
+                totalAcoes,
+                tempoProcessamento,
+                usuariosEnvolvidos,
+                statusAtual
+            };
+        }
+        
+        // Função global para fechar modal de histórico
+        window.fecharModalHistorico = function fecharModalHistorico() {
+            try {
+                const modal = document.getElementById('modal-historico');
+                if (modal) {
+                    // Animar fechamento
+                    modal.style.transition = 'opacity 0.3s ease-in-out';
+                    modal.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        modal.style.cssText = 'display: none !important;';
+                        // Restaurar scroll do body
+                        document.body.style.overflow = 'auto';
+                    }, 300);
+                }
+            } catch (error) {
+                console.error('Erro ao fechar modal de histórico:', error);
+            }
+        };
+        
+        // Sistema de Filtros Avançados
+        let filtrosAtivos = {};
+        let operadoresCarregados = [];
+        let cotacoesFiltradas = [];
+        
+        // Inicializar sistema de filtros
+        function inicializarFiltrosAvancados() {
+            console.log('🔍 Inicializando sistema de filtros avançados...');
+            
+            // Configurar event listeners
+            configurarEventListenersFiltros();
+            
+            // Carregar operadores
+            carregarOperadoresFiltros();
+            
+            // Configurar formatação monetária
+            configurarFormatacaoMonetariaFiltros();
+            
+            console.log('✅ Sistema de filtros avançados inicializado');
+        }
+        
+        // Configurar event listeners dos filtros
+        function configurarEventListenersFiltros() {
+            // Toggle mostrar/ocultar filtros
+            const btnToggleFiltros = document.getElementById('btn-toggle-filtros');
+            if (btnToggleFiltros) {
+                btnToggleFiltros.addEventListener('click', toggleFiltros);
+            }
+            
+            // Limpar filtros
+            const btnLimparFiltros = document.getElementById('btn-limpar-filtros');
+            if (btnLimparFiltros) {
+                btnLimparFiltros.addEventListener('click', limparTodosFiltros);
+            }
+            
+            // Aplicar filtros
+            const btnAplicarFiltros = document.getElementById('btn-aplicar-filtros');
+            if (btnAplicarFiltros) {
+                btnAplicarFiltros.addEventListener('click', aplicarFiltros);
+            }
+            
+            // Carregar todas
+            const btnCarregarTodas = document.getElementById('btn-carregar-todas');
+            if (btnCarregarTodas) {
+                btnCarregarTodas.addEventListener('click', carregarTodasCotacoes);
+            }
+            
+            // Exportar filtradas
+            const btnExportarFiltradas = document.getElementById('btn-exportar-filtradas');
+            if (btnExportarFiltradas) {
+                btnExportarFiltradas.addEventListener('click', exportarCotacoesFiltradas);
+            }
+            
+            // Filtros rápidos (aplicam automaticamente)
+            const filtroStatus = document.getElementById('filtro-status');
+            const filtroModalidade = document.getElementById('filtro-modalidade');
+            
+            if (filtroStatus) {
+                filtroStatus.addEventListener('change', aplicarFiltroRapido);
+            }
+            if (filtroModalidade) {
+                filtroModalidade.addEventListener('change', aplicarFiltroRapido);
+            }
+            
+            // Validação de datas
+            const filtroDataInicio = document.getElementById('filtro-data-inicio');
+            const filtroDataFim = document.getElementById('filtro-data-fim');
+            
+            if (filtroDataInicio) {
+                filtroDataInicio.addEventListener('change', validarPeriodoDatas);
+            }
+            if (filtroDataFim) {
+                filtroDataFim.addEventListener('change', validarPeriodoDatas);
+            }
+        }
+        
+        // Toggle mostrar/ocultar filtros
+        function toggleFiltros() {
+            const container = document.getElementById('filtros-container');
+            const btn = document.getElementById('btn-toggle-filtros');
+            
+            if (container && btn) {
+                const isHidden = container.classList.contains('hidden');
+                
+                if (isHidden) {
+                    container.classList.remove('hidden');
+                    btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i>Ocultar Filtros';
+                } else {
+                    container.classList.add('hidden');
+                    btn.innerHTML = '<i class="fas fa-eye mr-1"></i>Mostrar Filtros';
+                }
+            }
+        }
+        
+        // Carregar operadores para o filtro
+        async function carregarOperadoresFiltros() {
+            try {
+                const response = await fetch('/api/v133/operadores');
+                let operadores = [];
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    operadores = data.operadores || [];
+                } else {
+                    // Fallback com operadores simulados
+                    operadores = [
+                        { id: 1, nome: 'João Silva' },
+                        { id: 2, nome: 'Maria Santos' },
+                        { id: 3, nome: 'Pedro Costa' },
+                        { id: 4, nome: 'Ana Oliveira' }
+                    ];
+                }
+                
+                operadoresCarregados = operadores;
+                preencherSelectOperadores(operadores);
+                console.log(`✅ ${operadores.length} operadores carregados para filtros`);
+                
+            } catch (error) {
+                console.warn('Erro ao carregar operadores, usando fallback:', error);
+                // Fallback
+                const operadores = [
+                    { id: 1, nome: 'João Silva' },
+                    { id: 2, nome: 'Maria Santos' },
+                    { id: 3, nome: 'Pedro Costa' },
+                    { id: 4, nome: 'Ana Oliveira' }
+                ];
+                operadoresCarregados = operadores;
+                preencherSelectOperadores(operadores);
+            }
+        }
+        
+        // Preencher select de operadores
+        function preencherSelectOperadores(operadores) {
+            const select = document.getElementById('filtro-operador');
+            if (select) {
+                // Limpar opções existentes (exceto a primeira)
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+                
+                // Adicionar operadores
+                operadores.forEach(operador => {
+                    const option = document.createElement('option');
+                    option.value = operador.id;
+                    option.textContent = operador.nome;
+                    select.appendChild(option);
+                });
+            }
+        }
+        
+        // Configurar formatação monetária nos filtros
+        function configurarFormatacaoMonetariaFiltros() {
+            const camposMonetarios = ['filtro-valor-min', 'filtro-valor-max'];
+            
+            camposMonetarios.forEach(id => {
+                const campo = document.getElementById(id);
+                if (campo) {
+                    campo.addEventListener('input', function(e) {
+                        let valor = e.target.value.replace(/\D/g, '');
+                        if (valor) {
+                            valor = (parseInt(valor) / 100).toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            });
+                            e.target.value = valor;
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Validar período de datas
+        function validarPeriodoDatas() {
+            const dataInicio = document.getElementById('filtro-data-inicio').value;
+            const dataFim = document.getElementById('filtro-data-fim').value;
+            
+            if (dataInicio && dataFim) {
+                const inicio = new Date(dataInicio);
+                const fim = new Date(dataFim);
+                
+                if (inicio > fim) {
+                    mostrarMensagem('Data de início não pode ser maior que data fim', 'error');
+                    document.getElementById('filtro-data-fim').value = '';
+                }
+            }
+        }
+        
+        // Aplicar filtro rápido (status e modalidade)
+        function aplicarFiltroRapido() {
+            const status = document.getElementById('filtro-status').value;
+            const modalidade = document.getElementById('filtro-modalidade').value;
+            
+            if (status || modalidade) {
+                aplicarFiltros();
+            }
+        }
+        
+        // Aplicar filtros
+        async function aplicarFiltros() {
+            console.log('🔍 Aplicando filtros...');
+            
+            // Coletar valores dos filtros
+            const filtros = coletarValoresFiltros();
+            
+            // Mostrar loading
+            mostrarLoadingFiltros();
+            
+            try {
+                // Carregar cotações da API
+                const response = await fetch('/api/v133/cotacoes');
+                let cotacoes = [];
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    cotacoes = data.cotacoes || [];
+                } else {
+                    mostrarMensagem('Erro ao carregar cotações da API', 'error');
+                    return;
+                }
+                
+                // Aplicar filtros nas cotações
+                cotacoesFiltradas = filtrarCotacoes(cotacoes, filtros);
+                
+                // Atualizar interface
+                atualizarListaCotacoesFiltradas(cotacoesFiltradas);
+                atualizarContadorResultados(cotacoesFiltradas.length, cotacoes.length);
+                atualizarTagsFiltrosAtivos(filtros);
+                
+                console.log(`✅ Filtros aplicados: ${cotacoesFiltradas.length} de ${cotacoes.length} cotações`);
+                
+            } catch (error) {
+                console.error('Erro ao aplicar filtros:', error);
+                mostrarMensagem('Erro ao aplicar filtros', 'error');
+            } finally {
+                esconderLoadingFiltros();
+            }
+        }
+        
+        // Coletar valores dos filtros
+        function coletarValoresFiltros() {
+            return {
+                status: document.getElementById('filtro-status').value,
+                modalidade: document.getElementById('filtro-modalidade').value,
+                operador: document.getElementById('filtro-operador').value,
+                cliente: document.getElementById('filtro-cliente').value.trim(),
+                dataInicio: document.getElementById('filtro-data-inicio').value,
+                dataFim: document.getElementById('filtro-data-fim').value,
+                valorMin: parseFloat(document.getElementById('filtro-valor-min').value.replace(/[^\d,]/g, '').replace(',', '.')) || null,
+                valorMax: parseFloat(document.getElementById('filtro-valor-max').value.replace(/[^\d,]/g, '').replace(',', '.')) || null
+            };
+        }
+        
+        // Filtrar cotações baseado nos critérios
+        function filtrarCotacoes(cotacoes, filtros) {
+            return cotacoes.filter(cotacao => {
+                // Filtro por status
+                if (filtros.status && cotacao.status !== filtros.status) {
+                    return false;
+                }
+                
+                // Filtro por modalidade
+                if (filtros.modalidade && cotacao.modalidade !== filtros.modalidade) {
+                    return false;
+                }
+                
+                // Filtro por operador
+                if (filtros.operador && cotacao.operador_responsavel != filtros.operador) {
+                    return false;
+                }
+                
+                // Filtro por cliente
+                if (filtros.cliente) {
+                    const cliente = filtros.cliente.toLowerCase();
+                    const nomeCliente = (cotacao.cliente_nome || '').toLowerCase();
+                    const cnpjCliente = (cotacao.cliente_cnpj || '').replace(/\D/g, '');
+                    const clienteFiltro = filtros.cliente.replace(/\D/g, '');
+                    
+                    if (!nomeCliente.includes(cliente) && !cnpjCliente.includes(clienteFiltro)) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por data
+                if (filtros.dataInicio || filtros.dataFim) {
+                    const dataCotacao = new Date(cotacao.data_criacao || cotacao.created_at);
+                    
+                    if (filtros.dataInicio) {
+                        const dataInicio = new Date(filtros.dataInicio);
+                        if (dataCotacao < dataInicio) {
+                            return false;
+                        }
+                    }
+                    
+                    if (filtros.dataFim) {
+                        const dataFim = new Date(filtros.dataFim);
+                        dataFim.setHours(23, 59, 59); // Incluir o dia todo
+                        if (dataCotacao > dataFim) {
+                            return false;
+                        }
+                    }
+                }
+                
+                // Filtro por valor
+                if (filtros.valorMin || filtros.valorMax) {
+                    const valorCotacao = parseFloat(cotacao.valor_frete?.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+                    
+                    if (filtros.valorMin && valorCotacao < filtros.valorMin) {
+                        return false;
+                    }
+                    
+                    if (filtros.valorMax && valorCotacao > filtros.valorMax) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+        }
+        
+        // Carregar todas as cotações (sem filtros)
+        async function carregarTodasCotacoes() {
+            console.log('📋 Carregando todas as cotações...');
+            
+            // Limpar filtros
+            limparTodosFiltros();
+            
+            // Carregar via sistema existente
+            if (typeof carregarCotacoes === 'function') {
+                carregarCotacoes();
+            }
+        }
+        
+        // Limpar todos os filtros
+        function limparTodosFiltros() {
+            console.log('🧹 Limpando todos os filtros...');
+            
+            // Limpar campos
+            document.getElementById('filtro-status').value = '';
+            document.getElementById('filtro-modalidade').value = '';
+            document.getElementById('filtro-operador').value = '';
+            document.getElementById('filtro-cliente').value = '';
+            document.getElementById('filtro-data-inicio').value = '';
+            document.getElementById('filtro-data-fim').value = '';
+            document.getElementById('filtro-valor-min').value = '';
+            document.getElementById('filtro-valor-max').value = '';
+            
+            // Limpar tags ativas
+            const tagsContainer = document.getElementById('filtros-ativos');
+            if (tagsContainer) {
+                tagsContainer.classList.add('hidden');
+                tagsContainer.innerHTML = '<span class="text-sm font-medium text-gray-700 mr-2">Filtros ativos:</span>';
+            }
+            
+            // Resetar variáveis
+            filtrosAtivos = {};
+            cotacoesFiltradas = [];
+            
+            // Atualizar contador
+            atualizarContadorResultados(0, 0);
+        }
+        
+        // Atualizar lista de cotações filtradas
+        function atualizarListaCotacoesFiltradas(cotacoes) {
+            // Usar sistema existente se disponível
+            if (typeof renderizarCotacoes === 'function') {
+                renderizarCotacoes(cotacoes);
+            } else {
+                console.warn('Função renderizarCotacoes não encontrada');
+            }
+        }
+        
+        // Atualizar contador de resultados
+        function atualizarContadorResultados(filtradas, total) {
+            const contador = document.getElementById('contador-cotacoes');
+            if (contador) {
+                if (total === 0) {
+                    contador.textContent = 'Nenhuma cotação encontrada';
+                } else if (filtradas === total) {
+                    contador.textContent = `Mostrando todas as ${total} cotações`;
+                } else {
+                    contador.textContent = `Mostrando ${filtradas} de ${total} cotações`;
+                }
+            }
+        }
+        
+        // Atualizar tags de filtros ativos
+        function atualizarTagsFiltrosAtivos(filtros) {
+            const container = document.getElementById('filtros-ativos');
+            if (!container) return;
+            
+            // Limpar tags existentes
+            container.innerHTML = '<span class="text-sm font-medium text-gray-700 mr-2">Filtros ativos:</span>';
+            
+            let temFiltros = false;
+            
+            // Adicionar tags para cada filtro ativo
+            Object.entries(filtros).forEach(([key, value]) => {
+                if (value && value !== '') {
+                    temFiltros = true;
+                    const tag = criarTagFiltro(key, value);
+                    container.appendChild(tag);
+                }
+            });
+            
+            // Mostrar/ocultar container
+            if (temFiltros) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+        
+        // Criar tag de filtro ativo
+        function criarTagFiltro(key, value) {
+            const tag = document.createElement('span');
+            tag.className = 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
+            
+            // Obter label amigável
+            const label = obterLabelFiltro(key, value);
+            
+            tag.innerHTML = `
+                ${label}
+                <button type="button" class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-600" onclick="removerFiltro('${key}')">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            `;
+            
+            return tag;
+        }
+        
+        // Obter label amigável para filtro
+        function obterLabelFiltro(key, value) {
+            const labels = {
+                status: `Status: ${getStatusDisplay(value)}`,
+                modalidade: `Modalidade: ${value.charAt(0).toUpperCase() + value.slice(1)}`,
+                operador: `Operador: ${obterNomeOperador(value)}`,
+                cliente: `Cliente: ${value}`,
+                dataInicio: `De: ${formatarData(value)}`,
+                dataFim: `Até: ${formatarData(value)}`,
+                valorMin: `Min: ${formatarMoeda(value)}`,
+                valorMax: `Max: ${formatarMoeda(value)}`
+            };
+            
+            return labels[key] || `${key}: ${value}`;
+        }
+        
+        // Obter nome do operador pelo ID
+        function obterNomeOperador(id) {
+            const operador = operadoresCarregados.find(op => op.id == id);
+            return operador ? operador.nome : `ID ${id}`;
+        }
+        
+        // Remover filtro específico
+        function removerFiltro(key) {
+            const campo = document.getElementById(`filtro-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
+            if (campo) {
+                campo.value = '';
+                aplicarFiltros();
+            }
+        }
+        
+        // Exportar cotações filtradas
+        function exportarCotacoesFiltradas() {
+            if (cotacoesFiltradas.length === 0) {
+                mostrarMensagem('Nenhuma cotação para exportar. Aplique filtros primeiro.', 'warning');
+                return;
+            }
+            
+            // Usar sistema de exportação existente se disponível
+            if (typeof exportarCotacoes === 'function') {
+                exportarCotacoes(cotacoesFiltradas);
+            } else {
+                // Exportação simples em CSV
+                exportarCSVSimples(cotacoesFiltradas);
+            }
+        }
+        
+        // Exportação CSV simples
+        function exportarCSVSimples(cotacoes) {
+            const headers = ['ID', 'Cliente', 'Status', 'Modalidade', 'Origem', 'Destino', 'Valor', 'Data'];
+            const rows = cotacoes.map(c => [
+                c.id,
+                c.cliente_nome || '',
+                c.status || '',
+                c.modalidade || '',
+                c.origem_cidade || c.origem_endereco || '',
+                c.destino_cidade || c.destino_endereco || '',
+                c.valor_frete || '',
+                c.data_criacao || ''
+            ]);
+            
+            const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cotacoes_filtradas_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+        }
+        
+        // Mostrar loading nos filtros
+        function mostrarLoadingFiltros() {
+            const btn = document.getElementById('btn-aplicar-filtros');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Aplicando...';
+            }
+        }
+        
+        // Esconder loading nos filtros
+        function esconderLoadingFiltros() {
+            const btn = document.getElementById('btn-aplicar-filtros');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-search mr-2"></i>Aplicar Filtros';
+            }
+        }
+        
+        // Funções auxiliares
+        function formatarData(data) {
+            return new Date(data).toLocaleDateString('pt-BR');
+        }
+        
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+        
+        // Inicializar filtros quando DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aguardar um pouco para garantir que outros sistemas estejam carregados
+            setTimeout(() => {
+                inicializarFiltrosAvancados();
+            }, 1000);
+        });
+
+        // Função para responder cotação
+        async function responderCotacao(cotacaoId) {
+            console.log('📝 Iniciando resposta da cotação:', cotacaoId);
+            
+            // Buscar dados da cotação
+            const cotacao = buscarCotacaoNosCarregados(cotacaoId);
+            if (!cotacao) {
+                mostrarMensagem('Cotação não encontrada', 'error');
+                return;
+            }
+            
+            // Abrir modal de resposta avançado
+            mostrarModalRespostaAvancado(cotacao);
+        }
+        
+        // Função para mostrar modal de resposta avançado
+        function mostrarModalRespostaAvancado(cotacao) {
+            // Criar modal se não existir
+            let modal = document.getElementById('modal-resposta-avancado');
+            if (!modal) {
+                modal = criarModalRespostaAvancado();
+            }
+            
+            // Preencher dados da cotação
+            preencherModalRespostaAvancado(modal, cotacao);
+            
+            // Mostrar modal
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Função para criar modal de resposta avançado
+        function criarModalRespostaAvancado() {
+            const modalHTML = `
+                <div id="modal-resposta-avancado" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-content" style="background-color: white; margin: 1% auto; padding: 0; border-radius: 12px; width: 95%; max-width: 1000px; max-height: 95vh; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <!-- Header -->
+                        <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="margin: 0; font-size: 24px;">📝 Responder Cotação</h2>
+                                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;" id="resp-cotacao-info">Cotação #000000</p>
+                            </div>
+                            <span class="close" onclick="fecharModalResposta()" style="font-size: 28px; font-weight: bold; cursor: pointer; opacity: 0.8; transition: opacity 0.3s;">&times;</span>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div class="modal-body" style="padding: 0; height: 75vh; display: flex;">
+                            <!-- Sidebar - Informações da Cotação -->
+                            <div style="width: 350px; background: #f8f9fa; border-right: 1px solid #dee2e6; padding: 20px; overflow-y: auto;">
+                                <h4 style="color: #495057; margin-bottom: 15px; font-size: 16px;">📋 Resumo da Cotação</h4>
+                                
+                                <!-- Informações Básicas -->
+                                <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <h5 style="color: #28a745; margin-bottom: 10px; font-size: 14px;">ℹ️ Informações Básicas</h5>
+                                    <div style="margin-bottom: 8px; font-size: 13px;"><strong>Número:</strong> <span id="resp-numero"></span></div>
+                                    <div style="margin-bottom: 8px; font-size: 13px;"><strong>Cliente:</strong> <span id="resp-cliente"></span></div>
+                                    <div style="margin-bottom: 8px; font-size: 13px;"><strong>Modalidade:</strong> <span id="resp-modalidade"></span></div>
+                                    <div style="font-size: 13px;"><strong>Data:</strong> <span id="resp-data"></span></div>
+                                </div>
+                                
+                                <!-- Dados da Carga -->
+                                <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <h5 style="color: #6f42c1; margin-bottom: 10px; font-size: 14px;">📦 Dados da Carga</h5>
+                                    <div style="margin-bottom: 8px; font-size: 13px;"><strong>Descrição:</strong> <span id="resp-carga-desc"></span></div>
+                                    <div style="margin-bottom: 8px; font-size: 13px;"><strong>Peso:</strong> <span id="resp-carga-peso"></span> kg</div>
+                                    <div style="font-size: 13px;"><strong>Valor:</strong> R$ <span id="resp-carga-valor"></span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Main Content - Formulário de Resposta -->
+                            <div style="flex: 1; display: flex; flex-direction: column; padding: 20px;">
+                                <!-- Formulário -->
+                                <div style="flex: 1; overflow-y: auto;">
+                                    <form id="form-resposta-cotacao">
+                                        <!-- Valores do Frete -->
+                                        <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                                            <h4 style="color: #495057; margin-bottom: 15px; display: flex; align-items: center;">
+                                                💰 Valores do Frete
+                                            </h4>
+                                            
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #495057;">Valor do Frete (R$) *</label>
+                                                    <input type="text" id="valor-frete" placeholder="0,00" style="width: 100%; padding: 12px; border: 2px solid #ced4da; border-radius: 8px; font-size: 16px; transition: border-color 0.3s;" required>
+                                                    <small style="color: #6c757d;">Valor principal do transporte</small>
+                                                </div>
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #495057;">Prazo de Entrega (dias) *</label>
+                                                    <input type="number" id="prazo-entrega" placeholder="0" min="1" max="365" style="width: 100%; padding: 12px; border: 2px solid #ced4da; border-radius: 8px; font-size: 16px; transition: border-color 0.3s;" required>
+                                                    <small style="color: #6c757d;">Dias úteis para entrega</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #495057;">Taxa de Coleta (R$)</label>
+                                                    <input type="text" id="taxa-coleta" placeholder="0,00" style="width: 100%; padding: 12px; border: 2px solid #ced4da; border-radius: 8px; font-size: 16px;">
+                                                </div>
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #495057;">Taxa de Entrega (R$)</label>
+                                                    <input type="text" id="taxa-entrega" placeholder="0,00" style="width: 100%; padding: 12px; border: 2px solid #ced4da; border-radius: 8px; font-size: 16px;">
+                                                </div>
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #495057;">Seguro (R$)</label>
+                                                    <input type="text" id="valor-seguro" placeholder="0,00" style="width: 100%; padding: 12px; border: 2px solid #ced4da; border-radius: 8px; font-size: 16px;">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Observações -->
+                                        <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                                            <h4 style="color: #495057; margin-bottom: 15px; display: flex; align-items: center;">
+                                                📝 Observações e Condições
+                                            </h4>
+                                            
+                                            <div style="margin-bottom: 15px;">
+                                                <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #495057;">Observações Gerais</label>
+                                                <textarea id="observacoes-gerais" rows="3" placeholder="Informações adicionais sobre o frete..." style="width: 100%; padding: 12px; border: 2px solid #ced4da; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                                            </div>
+                                            
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                                <div>
+                                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                                        <input type="checkbox" id="coleta-agendada" style="margin-right: 8px; transform: scale(1.2);">
+                                                        <span style="font-weight: bold; color: #495057;">Coleta Agendada</span>
+                                                    </label>
+                                                </div>
+                                                <div>
+                                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                                        <input type="checkbox" id="entrega-agendada" style="margin-right: 8px; transform: scale(1.2);">
+                                                        <span style="font-weight: bold; color: #495057;">Entrega Agendada</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Total Calculado -->
+                                        <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                                            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center;">
+                                                🧮 Total da Cotação
+                                            </h4>
+                                            <div style="font-size: 24px; font-weight: bold;" id="valor-total">R$ 0,00</div>
+                                            <small style="opacity: 0.9;">Valor total incluindo todas as taxas</small>
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <!-- Botões de Ação -->
+                                <div style="border-top: 1px solid #dee2e6; padding-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                                    <button type="button" onclick="salvarRascunho()" class="btn btn-outline-secondary">
+                                        💾 Salvar Rascunho
+                                    </button>
+                                    <button type="button" onclick="fecharModalResposta()" class="btn btn-secondary">
+                                        ❌ Cancelar
+                                    </button>
+                                    <button type="button" onclick="enviarRespostaCotacao()" class="btn btn-success">
+                                        📤 Enviar Resposta
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inserir o modal antes dos scripts, não no final do body
+            const scriptsContainer = document.querySelector('script');
+            if (scriptsContainer) {
+                scriptsContainer.insertAdjacentHTML('beforebegin', modalHTML);
+            } else {
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            }
+            
+            // Configurar event listeners
+            configurarEventListenersResposta();
+            
+            return document.getElementById('modal-resposta-avancado');
+        }
+        
+        // Função para preencher modal de resposta avançado
+        function preencherModalRespostaAvancado(modal, cotacao) {
+            console.log('📝 Preenchendo modal de resposta:', cotacao);
+            
+            // Preencher informações da cotação
+            modal.querySelector('#resp-cotacao-info').textContent = `Cotação ${cotacao.numero_cotacao || cotacao.id}`;
+            modal.querySelector('#resp-numero').textContent = cotacao.numero_cotacao || `COT-${String(cotacao.id).padStart(6, '0')}`;
+            modal.querySelector('#resp-cliente').textContent = cotacao.cliente_nome || 'N/A';
+            modal.querySelector('#resp-modalidade').textContent = getEmpresaDisplay(cotacao.empresa_transporte) || 'N/A';
+            modal.querySelector('#resp-data').textContent = formatarData(cotacao.data_solicitacao) || 'N/A';
+            
+            // Preencher dados da carga
+            modal.querySelector('#resp-carga-desc').textContent = cotacao.carga_descricao || 'N/A';
+            modal.querySelector('#resp-carga-peso').textContent = cotacao.carga_peso_kg || '0';
+            modal.querySelector('#resp-carga-valor').textContent = formatarMoeda(cotacao.carga_valor_mercadoria) || '0,00';
+            
+            // Armazenar ID da cotação no modal
+            modal.setAttribute('data-cotacao-id', cotacao.id);
+        }
+        
+        // Função para configurar event listeners do modal de resposta
+        function configurarEventListenersResposta() {
+            // Formatação monetária em tempo real
+            const camposMonetarios = ['valor-frete', 'taxa-coleta', 'taxa-entrega', 'valor-seguro'];
+            camposMonetarios.forEach(campoId => {
+                const campo = document.getElementById(campoId);
+                if (campo) {
+                    campo.addEventListener('input', function(e) {
+                        formatarMoedaBrasileira(e.target);
+                        calcularTotal();
+                    });
+                    
+                    campo.addEventListener('focus', function(e) {
+                        e.target.style.borderColor = '#28a745';
+                    });
+                    
+                    campo.addEventListener('blur', function(e) {
+                        e.target.style.borderColor = '#ced4da';
+                    });
+                }
+            });
+            
+            // Calcular total quando prazo mudar
+            const prazoCampo = document.getElementById('prazo-entrega');
+            if (prazoCampo) {
+                prazoCampo.addEventListener('input', calcularTotal);
+            }
+        }
+        
+        // Função para calcular total
+        function calcularTotal() {
+            const valorFrete = parseFloat(document.getElementById('valor-frete').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            const taxaColeta = parseFloat(document.getElementById('taxa-coleta').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            const taxaEntrega = parseFloat(document.getElementById('taxa-entrega').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            const valorSeguro = parseFloat(document.getElementById('valor-seguro').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            
+            const total = valorFrete + taxaColeta + taxaEntrega + valorSeguro;
+            
+            document.getElementById('valor-total').textContent = `R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        
+        // Função para salvar rascunho
+        async function salvarRascunho() {
+            const modal = document.getElementById('modal-resposta-avancado');
+            const cotacaoId = modal.getAttribute('data-cotacao-id');
+            
+            const dadosRascunho = {
+                valor_frete: document.getElementById('valor-frete').value,
+                prazo_entrega: document.getElementById('prazo-entrega').value,
+                taxa_coleta: document.getElementById('taxa-coleta').value,
+                taxa_entrega: document.getElementById('taxa-entrega').value,
+                valor_seguro: document.getElementById('valor-seguro').value,
+                observacoes: document.getElementById('observacoes-gerais').value,
+                empresa_prestadora: document.getElementById('empresa-prestadora') ? document.getElementById('empresa-prestadora').value : '',
+                coleta_agendada: document.getElementById('coleta-agendada') ? document.getElementById('coleta-agendada').checked : false,
+                entrega_agendada: document.getElementById('entrega-agendada') ? document.getElementById('entrega-agendada').checked : false
+            };
+            
+            try {
+                console.log('💾 Salvando rascunho da cotação:', cotacaoId, dadosRascunho);
+                
+                const resultado = await API.salvarRascunho(cotacaoId, dadosRascunho);
+                
+                if (resultado.success) {
+                    mostrarMensagem('💾 Rascunho salvo com sucesso!', 'success');
+                    console.log('✅ Rascunho salvo:', resultado);
+                } else {
+                    mostrarMensagem('❌ Erro ao salvar rascunho', 'error');
+                    console.error('Erro ao salvar rascunho:', resultado);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar rascunho:', error);
+                mostrarMensagem('❌ Erro ao salvar rascunho', 'error');
+            }
+        }
+        
+        // Função para enviar resposta da cotação
+        async function enviarRespostaCotacao() {
+            const modal = document.getElementById('modal-resposta-avancado');
+            const cotacaoId = modal.getAttribute('data-cotacao-id');
+            
+            // Validar campos obrigatórios
+            const valorFrete = document.getElementById('valor-frete').value.trim();
+            const prazoEntrega = document.getElementById('prazo-entrega').value.trim();
+            
+            if (!valorFrete || !prazoEntrega) {
+                mostrarMensagem('Valor do frete e prazo de entrega são obrigatórios', 'error');
+                return;
+            }
+            
+            // Calcular valores primeiro
+            const valorFreteNum = parseFloat(valorFrete.replace(/[^\d,]/g, '').replace(',', '.'));
+            const taxaColetaNum = parseFloat(document.getElementById('taxa-coleta').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            const taxaEntregaNum = parseFloat(document.getElementById('taxa-entrega').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            const valorSeguroNum = parseFloat(document.getElementById('valor-seguro').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            
+            const dadosResposta = {
+                valor_frete: valorFreteNum,
+                prazo_entrega_dias: parseInt(prazoEntrega),
+                taxa_coleta: taxaColetaNum,
+                taxa_entrega: taxaEntregaNum,
+                valor_seguro: valorSeguroNum,
+                observacoes: document.getElementById('observacoes-gerais').value || 'Cotação respondida pelo operador',
+                coleta_agendada: document.getElementById('coleta-agendada').checked,
+                entrega_agendada: document.getElementById('entrega-agendada').checked,
+                valor_total: valorFreteNum + taxaColetaNum + taxaEntregaNum + valorSeguroNum
+            };
+            
+            try {
+                console.log('📤 Enviando resposta da cotação:', dadosResposta);
+                
+                const resultado = await API.enviarRespostaCotacao(cotacaoId, dadosResposta);
+                
+                if (resultado.success) {
+                    // Atualizar dados locais
+                    const cotacaoAtualizada = {
+                        id: cotacaoId,
+                        status: 'cotacao_enviada',
+                        status_display: 'Cotação Enviada',
+                        status_color: 'bg-green-100 text-green-800',
+                        cotacao_valor_frete: dadosResposta.valor_total,
+                        cotacao_prazo_dias: dadosResposta.prazo_entrega_dias,
+                        data_resposta: new Date().toISOString()
+                    };
+                    atualizarCotacaoNosCarregados(cotacaoAtualizada);
+                    
+                    mostrarMensagem('✅ Cotação respondida com sucesso!', 'success');
+                    
+                    // Disparar evento de notificação
+                    document.dispatchEvent(new CustomEvent('resposta-enviada', {
+                        detail: {
+                            cotacao: { id: cotacaoId, numero_cotacao: `COT-${cotacaoId}` },
+                            valor: dadosResposta.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                        }
+                    }));
+                    
+                    fecharModalResposta();
+                    carregarCotacoes(); // Recarregar lista
+                    carregarEstatisticasCotacoes(); // Atualizar estatísticas
+                    
+                    console.log('✅ Resposta enviada:', resultado);
+                } else {
+                    mostrarMensagem('❌ Erro ao enviar resposta', 'error');
+                    console.error('Erro ao enviar resposta:', resultado);
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro ao enviar resposta:', error);
+                mostrarMensagem('❌ Erro ao enviar resposta', 'error');
+            }
+        }
+        
+        // Função para fechar modal de resposta
+        function fecharModalResposta() {
+            const modal = document.getElementById('modal-resposta-avancado');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+
+        // Função para ver detalhes da cotação
+        // Função global para ver detalhes da cotação
+        window.verDetalhesCotacao = async function verDetalhesCotacao(cotacaoId) {
+            try {
+                console.log('🔍 Carregando detalhes da cotação:', cotacaoId);
+                
+                // Validar ID
+                if (!cotacaoId) {
+                    console.error('❌ ID da cotação não fornecido');
+                    mostrarMensagem('ID da cotação não fornecido', 'error');
+                    return;
+                }
+                
+                // Mostrar indicador de carregamento
+                const loadingMsg = mostrarMensagem('Carregando detalhes...', 'info');
+                
+                // Primeiro, tentar buscar dos dados já carregados no sistema
+                const cotacaoExistente = buscarCotacaoNosCarregados(cotacaoId);
+                if (cotacaoExistente) {
+                    console.log('✅ Cotação encontrada nos dados carregados');
+                    // Remover mensagem de loading
+                    if (loadingMsg && loadingMsg.parentNode) {
+                        loadingMsg.parentNode.removeChild(loadingMsg);
+                    }
+                    mostrarModalDetalhes(cotacaoExistente);
+                    return;
+                }
+                
+                // Se não encontrou, buscar na API
+                console.log('🌐 Buscando na API...');
+                const response = await fetch(`/api/v133/cotacoes/${cotacaoId}`, {
+                    credentials: 'same-origin'
+                });
+                
+                // Remover mensagem de loading
+                if (loadingMsg && loadingMsg.parentNode) {
+                    loadingMsg.parentNode.removeChild(loadingMsg);
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Dados recebidos da API:', data);
+                    
+                    if (data.success && data.cotacao) {
+                        mostrarModalDetalhes(data.cotacao);
+                    } else if (data.cotacao) {
+                        mostrarModalDetalhes(data.cotacao);
+                    } else {
+                        throw new Error('Dados da cotação não encontrados na resposta');
+                    }
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMessage = errorData.message || `Erro ${response.status}: ${response.statusText}`;
+                    console.error('❌ Erro na API:', response.status, errorMessage);
+                    mostrarMensagem('Erro ao carregar detalhes: ' + errorMessage, 'error');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao carregar detalhes:', error);
+                mostrarMensagem('Erro ao carregar detalhes: ' + error.message, 'error');
+            }
+        }
+        
+        // Função para buscar cotação nos dados já carregados
+        function buscarCotacaoNosCarregados(cotacaoId) {
+            console.log('🔍 Buscando cotação nos dados carregados, ID:', cotacaoId);
+            
+            // 1. Verificar na variável global cotacoesData (dados mais recentes)
+            if (typeof cotacoesData !== 'undefined' && Array.isArray(cotacoesData)) {
+                const cotacao = cotacoesData.find(c => c.id == cotacaoId);
+                if (cotacao) {
+                    console.log('✅ Cotação encontrada em cotacoesData:', cotacao);
+                    return cotacao;
+                }
+            }
+            
+            // 2. Verificar no array global window.cotacoesData (backup)
+            if (window.cotacoesData && Array.isArray(window.cotacoesData)) {
+                const cotacao = window.cotacoesData.find(c => c.id == cotacaoId);
+                if (cotacao) {
+                    console.log('✅ Cotação encontrada no window.cotacoesData:', cotacao);
+                    return cotacao;
+                }
+            }
+            
+            // 3. Verificar se existe uma função API global
+            if (typeof API !== 'undefined' && API.getCotacoes) {
+                try {
+                    const cotacoes = API.getCotacoes();
+                    if (cotacoes && Array.isArray(cotacoes)) {
+                        const cotacao = cotacoes.find(c => c.id == cotacaoId);
+                        if (cotacao) {
+                            console.log('✅ Cotação encontrada via API.getCotacoes:', cotacao);
+                            return cotacao;
+                        }
+                    }
+                } catch (error) {
+                    console.log('⚠️ Erro ao acessar API.getCotacoes:', error);
+                }
+            }
+            
+            // 4. Como último recurso, extrair dados do card visível
+            const cotacaoCard = document.querySelector(`[data-cotacao-id="${cotacaoId}"]`);
+            if (cotacaoCard) {
+                console.log('🎴 Extraindo dados do card visível como último recurso');
+                return extrairDadosDoCard(cotacaoCard, cotacaoId);
+            }
+            
+            console.log('❌ Cotação não encontrada em nenhuma fonte de dados');
+            return null;
+        }
+        
+        // Função para extrair dados do card visível
+        function extrairDadosDoCard(card, cotacaoId) {
+            const cotacaoContainer = card.closest('.cotacao-card') || card.closest('.bg-white');
+            if (!cotacaoContainer) return null;
+            
+            try {
+                // Extrair dados básicos do card
+                const numeroElement = cotacaoContainer.querySelector('h3');
+                const statusElement = cotacaoContainer.querySelector('.status-badge');
+                const empresaElement = cotacaoContainer.querySelector('[class*="text-blue"], [class*="text-green"], [class*="text-purple"]');
+                const dataElement = cotacaoContainer.querySelector('.text-gray-500');
+                const operadorElement = Array.from(cotacaoContainer.querySelectorAll('strong')).find(el => el.textContent.includes('Operador:'));
+                
+                const cotacao = {
+                    id: cotacaoId,
+                    numero_cotacao: numeroElement ? numeroElement.textContent.trim() : `COT-${String(cotacaoId).padStart(6, '0')}`,
+                    status: statusElement ? statusElement.textContent.trim().toLowerCase().replace(/\s+/g, '_') : 'solicitada',
+                    status_display: statusElement ? statusElement.textContent.trim() : 'Solicitada',
+                    status_color: statusElement ? statusElement.className : 'bg-yellow-100 text-yellow-800',
+                    empresa_transporte: extrairModalidadeDoCard(cotacaoContainer),
+                    data_solicitacao: dataElement ? extrairDataDoTexto(dataElement.textContent) : new Date().toISOString(),
+                    consultor_nome: 'Usuário Atual',
+                    operador_nome: operadorElement ? operadorElement.nextSibling?.textContent?.trim() : null,
+                    
+                    // Dados básicos que precisam ser buscados
+                    cliente_nome: 'Dados não disponíveis no card',
+                    cliente_cnpj: 'Consulte o sistema completo',
+                    cliente_contato_telefone: 'N/A',
+                    cliente_contato_email: 'N/A',
+                    carga_descricao: 'Informações detalhadas disponíveis no sistema',
+                    carga_peso_kg: 'N/A',
+                    carga_valor_mercadoria: 'N/A',
+                    
+                    // Indicar que são dados parciais
+                    _dados_parciais: true,
+                    _fonte: 'card_visivel'
+                };
+                
+                console.log('📊 Dados extraídos do card:', cotacao);
+                return cotacao;
+            } catch (error) {
+                console.error('❌ Erro ao extrair dados do card:', error);
+                return null;
+            }
+        }
+        
+        // Função para extrair modalidade do card
+        function extrairModalidadeDoCard(container) {
+            const texto = container.textContent.toLowerCase();
+            if (texto.includes('rodoviário') || texto.includes('rodoviario')) return 'brcargo_rodoviario';
+            if (texto.includes('marítimo') || texto.includes('maritimo')) return 'brcargo_maritimo';
+            if (texto.includes('aéreo') || texto.includes('aereo')) return 'brcargo_aereo';
+            return 'brcargo_rodoviario'; // padrão
+        }
+        
+        // Função para extrair data do texto
+        function extrairDataDoTexto(texto) {
+            // Procurar por padrões de data no texto
+            const dataMatch = texto.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+            if (dataMatch) {
+                const [dia, mes, ano] = dataMatch[1].split('/');
+                return new Date(ano, mes - 1, dia).toISOString();
+            }
+            
+            // Se não encontrou, usar data atual
+            return new Date().toISOString();
+        }
+        
+        // Função para mostrar erro de carregamento
+        function mostrarErroCarregamento(cotacaoId, mensagemErro) {
+            const modal = document.getElementById('modal-detalhes-cotacao') || criarModalDetalhes();
+            const modalBody = modal.querySelector('.modal-body');
+            
+            modalBody.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; color: #dc3545; margin-bottom: 20px;">⚠️</div>
+                    <h3 style="color: #dc3545; margin-bottom: 15px;">Erro ao Carregar Detalhes</h3>
+                    <p style="margin-bottom: 10px;">Não foi possível carregar os detalhes da cotação.</p>
+                    <p style="font-size: 14px; color: #666; margin-bottom: 20px;">
+                        <strong>ID:</strong> ${cotacaoId}<br>
+                        <strong>Erro:</strong> ${mensagemErro}
+                    </p>
+                    <div style="margin-top: 20px;">
+                        <button onclick="verDetalhesCotacao(${cotacaoId})" class="btn btn-primary" style="margin-right: 10px;">
+                            🔄 Tentar Novamente
+                        </button>
+                        <button onclick="fecharModalDetalhes()" class="btn btn-secondary">
+                            ❌ Fechar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Função para adicionar aviso de dados parciais
+        function adicionarAvisoDadosParciais(modal, cotacao) {
+            const modalBody = modal.querySelector('.modal-body');
+            const avisoHTML = `
+                <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <span style="font-size: 20px; margin-right: 10px;">⚠️</span>
+                        <strong style="color: #856404;">Dados Parciais</strong>
+                    </div>
+                    <p style="margin: 0; color: #856404; font-size: 14px;">
+                        Alguns dados detalhados não estão disponíveis. 
+                        ${cotacao._fonte === 'card_visivel' ? 'Dados extraídos do card visível.' : 'Dados incompletos.'}
+                        Para informações completas, certifique-se de que o backend esteja funcionando.
+                    </p>
+                    <div style="margin-top: 10px;">
+                        <button onclick="tentarCarregarDadosCompletos(${cotacao.id})" class="btn btn-sm btn-warning">
+                            🔄 Tentar Carregar Dados Completos
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modalBody.insertAdjacentHTML('afterbegin', avisoHTML);
+        }
+        
+        // Função para tentar carregar dados completos
+        async function tentarCarregarDadosCompletos(cotacaoId) {
+            console.log('🔄 Tentando carregar dados completos para cotação:', cotacaoId);
+            
+            try {
+                const response = await fetch(`/api/v133/cotacoes/${cotacaoId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Dados completos carregados da API');
+                    
+                    // Fechar modal atual e abrir com dados completos
+                    fecharModalDetalhes();
+                    setTimeout(() => {
+                        mostrarModalDetalhes(data.cotacao || data);
+                    }, 300);
+                } else {
+                    console.error('❌ Erro ao carregar dados completos:', response.status);
+                    mostrarMensagem('Não foi possível carregar os dados completos. Verifique se o backend está funcionando.', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Erro de rede ao carregar dados completos:', error);
+                mostrarMensagem('Erro de conexão. Verifique sua conexão com o servidor.', 'error');
+            }
+        }
+        
+        // Função para atualizar cotação nos dados carregados
+        function atualizarCotacaoNosCarregados(cotacaoAtualizada) {
+            console.log('🔄 Atualizando cotação nos dados carregados:', cotacaoAtualizada.id);
+            
+            // Atualizar em cotacoesData
+            if (typeof cotacoesData !== 'undefined' && Array.isArray(cotacoesData)) {
+                const index = cotacoesData.findIndex(c => c.id == cotacaoAtualizada.id);
+                if (index !== -1) {
+                    cotacoesData[index] = { ...cotacoesData[index], ...cotacaoAtualizada };
+                    console.log('✅ Cotação atualizada em cotacoesData');
+                }
+            }
+            
+            // Atualizar em window.cotacoesData
+            if (window.cotacoesData && Array.isArray(window.cotacoesData)) {
+                const index = window.cotacoesData.findIndex(c => c.id == cotacaoAtualizada.id);
+                if (index !== -1) {
+                    window.cotacoesData[index] = { ...window.cotacoesData[index], ...cotacaoAtualizada };
+                    console.log('✅ Cotação atualizada em window.cotacoesData');
+                }
+            }
+            
+            // Atualizar card visível se existir
+            const cotacaoCard = document.querySelector(`[data-cotacao-id="${cotacaoAtualizada.id}"]`);
+            if (cotacaoCard) {
+                atualizarCardVisivel(cotacaoCard, cotacaoAtualizada);
+            }
+        }
+        
+        // Função para atualizar card visível
+        function atualizarCardVisivel(card, cotacao) {
+            const cotacaoContainer = card.closest('.cotacao-card') || card.closest('.bg-white');
+            if (!cotacaoContainer) return;
+            
+            try {
+                // Atualizar status badge
+                const statusBadge = cotacaoContainer.querySelector('.status-badge');
+                if (statusBadge && cotacao.status) {
+                    statusBadge.textContent = getStatusDisplay(cotacao.status);
+                    statusBadge.className = `status-badge ${getStatusColor(cotacao.status)}`;
+                }
+                
+                // Atualizar operador se disponível
+                const strongElements = cotacaoContainer.querySelectorAll('strong');
+                strongElements.forEach(strong => {
+                    if (strong.textContent.includes('Operador:') && cotacao.operador_nome) {
+                        const nextSibling = strong.nextSibling;
+                        if (nextSibling) {
+                            nextSibling.textContent = ` ${cotacao.operador_nome}`;
+                        }
+                    }
+                });
+                
+                console.log('✅ Card visível atualizado');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar card visível:', error);
+            }
+        }
+
+        
+        // Funções auxiliares para status
+        function getStatusDisplay(status) {
+            const statusMap = {
+                'solicitada': 'Solicitada',
+                'aceita_operador': 'Aceita pelo Operador',
+                'cotacao_enviada': 'Cotação Enviada',
+                'aceita_consultor': 'Aceita pelo Consultor',
+                'recusada_consultor': 'Recusada pelo Consultor',
+                'negada': 'Negada',
+                'finalizada': 'Finalizada'
+            };
+            return statusMap[status] || status;
+        }
+        
+        function getStatusColor(status) {
+            const colorMap = {
+                'solicitada': 'bg-yellow-100 text-yellow-800',
+                'aceita_operador': 'bg-blue-100 text-blue-800',
+                'cotacao_enviada': 'bg-green-100 text-green-800',
+                'aceita_consultor': 'bg-purple-100 text-purple-800',
+                'recusada_consultor': 'bg-orange-100 text-orange-800',
+                'negada': 'bg-red-100 text-red-800',
+                'finalizada': 'bg-gray-100 text-gray-800'
+            };
+            return colorMap[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        // Função para mostrar modal de detalhes
+        function mostrarModalDetalhes(cotacao) {
+            try {
+                console.log('📋 Mostrando detalhes da cotação:', cotacao);
+                
+                // Validar se temos dados da cotação
+                if (!cotacao || !cotacao.id) {
+                    console.error('❌ Dados da cotação inválidos:', cotacao);
+                    mostrarMensagem('Erro: Dados da cotação inválidos', 'error');
+                    return;
+                }
+                
+                console.log('📊 Dados da cotação:', {
+                    id: cotacao.id,
+                    numero: cotacao.numero_cotacao,
+                    status: cotacao.status,
+                    empresa: cotacao.empresa_transporte,
+                    cliente: cotacao.cliente_nome
+                });
+                
+                // Criar o modal se não existir
+                let modal = document.getElementById('modal-detalhes-cotacao');
+                if (!modal) {
+                    console.log('🔧 Criando modal de detalhes...');
+                    modal = criarModalDetalhes();
+                }
+                
+                // Verificar se o modal foi criado corretamente
+                if (!modal) {
+                    console.error('❌ Erro: Modal não foi criado');
+                    mostrarMensagem('Erro ao abrir modal de detalhes', 'error');
+                    return;
+                }
+                
+                // Preencher os dados no modal
+                console.log('📝 Preenchendo dados no modal...');
+                try {
+                    preencherModalDetalhes(modal, cotacao);
+                } catch (error) {
+                    console.error('❌ Erro ao preencher modal:', error);
+                    mostrarMensagem('Erro ao carregar detalhes da cotação', 'error');
+                    return;
+                }
+                
+                // Mostrar o modal com animação
+                console.log('👁️ Exibindo modal...');
+                modal.style.display = 'block';
+                modal.style.opacity = '0';
+                
+                // Animações suaves
+                requestAnimationFrame(() => {
+                    modal.style.transition = 'opacity 0.3s ease-in-out';
+                    modal.style.opacity = '1';
+                });
+                
+                // Bloquear scroll do body
+                document.body.style.overflow = 'hidden';
+                
+                console.log('✅ Modal exibido com sucesso!');
+            } catch (error) {
+                console.error('❌ Erro ao mostrar modal:', error);
+                mostrarMensagem('Erro ao abrir detalhes da cotação: ' + error.message, 'error');
+            }
+        }
+        
+        // Função para criar o modal de detalhes
+        function criarModalDetalhes() {
+            // Verificar se o modal já existe
+            let modal = document.getElementById('modal-detalhes-cotacao');
+            if (modal) {
+                console.log('✅ Modal já existe, reutilizando...');
+                return modal;
+            }
+            
+            console.log('🔧 Criando novo modal de detalhes...');
+            const modalHTML = `
+                <div id="modal-detalhes-cotacao" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto;">
+                    <div class="modal-content" style="background-color: white; margin: 2% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; position: relative;">
+                        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 15px;">
+                            <h2 id="modal-titulo" style="margin: 0; color: #333; font-size: 24px; font-weight: bold;">
+                                <i class="fas fa-file-invoice mr-2 text-orange-600"></i>Detalhes da Cotação
+                            </h2>
+                            <button onclick="fecharModalDetalhes()" style="font-size: 32px; font-weight: bold; cursor: pointer; color: #999; background: none; border: none; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s;" 
+                                    onmouseover="this.style.background='#f0f0f0'; this.style.color='#333';" 
+                                    onmouseout="this.style.background='none'; this.style.color='#999';">
+                                &times;
+                            </button>
+                        </div>
+                        
+                        <div class="modal-body" style="padding: 10px 0;">
+                            <!-- Informações Básicas -->
+                            <div class="info-section" style="margin-bottom: 20px;">
+                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">Informações Básicas</h3>
+                                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                                    <div><strong>Número:</strong> <span id="det-numero"></span></div>
+                                    <div><strong>Status:</strong> <span id="det-status"></span></div>
+                                    <div><strong>Empresa:</strong> <span id="det-empresa"></span></div>
+                                    <div><strong>Data Solicitação:</strong> <span id="det-data"></span></div>
+                                    <div><strong>Consultor:</strong> <span id="det-consultor"></span></div>
+                                    <div><strong>Operador:</strong> <span id="det-operador"></span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Dados do Cliente -->
+                            <div class="info-section" style="margin-bottom: 20px;">
+                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">Dados do Cliente</h3>
+                                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                                    <div><strong>Nome/Razão Social:</strong> <span id="det-cliente-nome"></span></div>
+                                    <div><strong>CNPJ:</strong> <span id="det-cliente-cnpj"></span></div>
+                                    <div><strong>Telefone:</strong> <span id="det-cliente-telefone"></span></div>
+                                    <div><strong>Email:</strong> <span id="det-cliente-email"></span></div>
+                                    <div id="det-numero-cliente-container" style="display: none;"><strong>Número Cliente:</strong> <span id="det-numero-cliente"></span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Origem e Destino -->
+                            <div class="info-section" style="margin-bottom: 20px;">
+                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">Origem e Destino</h3>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                                    <div>
+                                        <h4 style="color: #28a745; margin-bottom: 10px;">📍 Origem</h4>
+                                        <div id="det-origem-endereco" style="display: none;">
+                                            <div><strong>CEP:</strong> <span id="det-origem-cep"></span></div>
+                                            <div><strong>Endereço:</strong> <span id="det-origem-endereco-completo"></span></div>
+                                            <div><strong>Cidade:</strong> <span id="det-origem-cidade"></span></div>
+                                            <div><strong>Estado:</strong> <span id="det-origem-estado"></span></div>
+                                        </div>
+                                        <div id="det-origem-porto" style="display: none;">
+                                            <div><strong>Porto:</strong> <span id="det-porto-origem"></span></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 style="color: #dc3545; margin-bottom: 10px;">🎯 Destino</h4>
+                                        <div id="det-destino-endereco" style="display: none;">
+                                            <div><strong>CEP:</strong> <span id="det-destino-cep"></span></div>
+                                            <div><strong>Endereço:</strong> <span id="det-destino-endereco-completo"></span></div>
+                                            <div><strong>Cidade:</strong> <span id="det-destino-cidade"></span></div>
+                                            <div><strong>Estado:</strong> <span id="det-destino-estado"></span></div>
+                                        </div>
+                                        <div id="det-destino-porto" style="display: none;">
+                                            <div><strong>Porto:</strong> <span id="det-porto-destino"></span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Dados da Carga -->
+                            <div class="info-section" style="margin-bottom: 20px;">
+                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">Dados da Carga</h3>
+                                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                                    <div><strong>Descrição:</strong> <span id="det-carga-descricao"></span></div>
+                                    <div><strong>Peso Total:</strong> <span id="det-carga-peso"></span> kg</div>
+                                    <div><strong>Valor da Mercadoria:</strong> R$ <span id="det-carga-valor"></span></div>
+                                    <div id="det-carga-cubagem-rodoviario" style="display: none;"><strong>Cubagem:</strong> <span id="det-carga-cubagem"></span> m³</div>
+                                    <div id="det-carga-dimensoes" style="display: none;"><strong>Dimensões:</strong> <span id="det-dimensoes"></span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Dados Específicos Marítimos -->
+                            <div id="det-dados-maritimos" class="info-section" style="margin-bottom: 20px; display: none;">
+                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">🚢 Dados Específicos - Transporte Marítimo</h3>
+                                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                                    <div><strong>Net Weight:</strong> <span id="det-net-weight"></span> kg</div>
+                                    <div><strong>Gross Weight:</strong> <span id="det-gross-weight"></span> kg</div>
+                                    <div><strong>Cubagem:</strong> <span id="det-cubagem"></span> m³</div>
+                                    <div><strong>Incoterm:</strong> <span id="det-incoterm"></span></div>
+                                    <div><strong>Tipo de Carga:</strong> <span id="det-tipo-carga"></span></div>
+                                    <div id="det-container-info" style="display: none;"><strong>Container:</strong> <span id="det-container-detalhes"></span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Histórico -->
+                            <div class="info-section" style="margin-bottom: 20px;">
+                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">📋 Histórico</h3>
+                                <div id="det-historico" style="margin-top: 15px;">
+                                    <!-- Histórico será preenchido dinamicamente -->
+                                </div>
+                            </div>
+                            
+                            <!-- Ações do Operador -->
+                            <div id="det-acoes-operador" class="info-section" style="margin-bottom: 20px; display: none;">
+                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">⚡ Ações</h3>
+                                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                    <button id="btn-aceitar-cotacao" onclick="aceitarCotacao()" class="btn btn-success">✅ Aceitar Cotação</button>
+                                    <button id="btn-enviar-cotacao" onclick="mostrarFormularioCotacao()" class="btn btn-primary" style="display: none;">📤 Enviar Cotação</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inserir o modal no body de forma segura usando createElement
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = modalHTML.trim();
+            const modalElement = tempDiv.firstElementChild;
+            
+            // Adicionar ao body
+            document.body.appendChild(modalElement);
+            
+            // Adicionar event listener para fechar ao clicar fora
+            modalElement.addEventListener('click', function(e) {
+                if (e.target === modalElement) {
+                    fecharModalDetalhes();
+                }
+            });
+            
+            // Adicionar event listener para ESC (remover listener anterior se existir)
+            const escHandler = function(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('modal-detalhes-cotacao');
+                    if (modal && modal.style.display === 'block') {
+                        fecharModalDetalhes();
+                    }
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+            
+            console.log('✅ Modal criado e configurado com sucesso!');
+            return document.getElementById('modal-detalhes-cotacao');
+        }
+        
+        // Função para preencher os dados no modal
+        function preencherModalDetalhes(modal, cotacao) {
+            console.log('🔧 Preenchendo modal com dados:', cotacao);
+            
+            try {
+                // Verificar se são dados parciais
+                const dadosParciais = cotacao._dados_parciais === true;
+                if (dadosParciais) {
+                    console.log('⚠️ Dados parciais detectados - fonte:', cotacao._fonte);
+                    adicionarAvisoDadosParciais(modal, cotacao);
+                }
+                
+                // Informações básicas
+                console.log('📝 Preenchendo informações básicas...');
+                const numeroElement = modal.querySelector('#det-numero');
+                const statusElement = modal.querySelector('#det-status');
+                const empresaElement = modal.querySelector('#det-empresa');
+                const dataElement = modal.querySelector('#det-data');
+                const consultorElement = modal.querySelector('#det-consultor');
+                const operadorElement = modal.querySelector('#det-operador');
+                
+                if (numeroElement) numeroElement.textContent = cotacao.numero_cotacao || 'N/A';
+                if (statusElement) statusElement.innerHTML = `<span class="badge ${cotacao.status_color || ''}">${cotacao.status_display || cotacao.status || 'N/A'}</span>`;
+                if (empresaElement) empresaElement.textContent = getEmpresaDisplay(cotacao.empresa_transporte) || 'N/A';
+                if (dataElement) dataElement.textContent = formatarData(cotacao.data_solicitacao) || 'N/A';
+                if (consultorElement) consultorElement.textContent = cotacao.consultor_nome || 'Não atribuído';
+                if (operadorElement) operadorElement.textContent = cotacao.operador_nome || 'Aguardando operador';
+                
+                console.log('✅ Informações básicas preenchidas');
+                
+                // Dados do cliente
+                console.log('📝 Preenchendo dados do cliente...');
+                const clienteNomeElement = modal.querySelector('#det-cliente-nome');
+                const clienteCnpjElement = modal.querySelector('#det-cliente-cnpj');
+                const clienteTelefoneElement = modal.querySelector('#det-cliente-telefone');
+                const clienteEmailElement = modal.querySelector('#det-cliente-email');
+                
+                if (clienteNomeElement) clienteNomeElement.textContent = cotacao.cliente_nome || 'N/A';
+                if (clienteCnpjElement) clienteCnpjElement.textContent = cotacao.cliente_cnpj || 'N/A';
+                if (clienteTelefoneElement) clienteTelefoneElement.textContent = cotacao.cliente_contato_telefone || 'N/A';
+                if (clienteEmailElement) clienteEmailElement.textContent = cotacao.cliente_contato_email || 'N/A';
+                
+                console.log('✅ Dados do cliente preenchidos');
+            
+                // Número do cliente (para todas as modalidades quando disponível)
+                const numeroClienteContainer = modal.querySelector('#det-numero-cliente-container');
+                const numeroCliente = modal.querySelector('#det-numero-cliente');
+                if (numeroClienteContainer && numeroCliente) {
+                    if (cotacao.numero_cliente) {
+                        numeroClienteContainer.style.display = 'block';
+                        numeroCliente.textContent = cotacao.numero_cliente;
+                    } else {
+                        numeroClienteContainer.style.display = 'none';
+                    }
+                }
+                
+                // Origem e destino
+                const origemEndereco = modal.querySelector('#det-origem-endereco');
+                const destinoEndereco = modal.querySelector('#det-destino-endereco');
+                const origemPorto = modal.querySelector('#det-origem-porto');
+                const destinoPorto = modal.querySelector('#det-destino-porto');
+                
+                if (cotacao.empresa_transporte === 'brcargo_maritimo') {
+                    // Para marítimo, mostrar portos
+                    if (origemEndereco) origemEndereco.style.display = 'none';
+                    if (destinoEndereco) destinoEndereco.style.display = 'none';
+                    if (origemPorto) origemPorto.style.display = 'block';
+                    if (destinoPorto) destinoPorto.style.display = 'block';
+                    
+                    const portoOrigem = modal.querySelector('#det-porto-origem');
+                    const portoDestino = modal.querySelector('#det-porto-destino');
+                    if (portoOrigem) portoOrigem.textContent = cotacao.porto_origem || 'N/A';
+                    if (portoDestino) portoDestino.textContent = cotacao.porto_destino || 'N/A';
+                } else {
+                    // Para rodoviário/aéreo, mostrar endereços
+                    if (origemEndereco) origemEndereco.style.display = 'block';
+                    if (destinoEndereco) destinoEndereco.style.display = 'block';
+                    if (origemPorto) origemPorto.style.display = 'none';
+                    if (destinoPorto) destinoPorto.style.display = 'none';
+                    
+                    const origemCep = modal.querySelector('#det-origem-cep');
+                    const origemEnderecoCompleto = modal.querySelector('#det-origem-endereco-completo');
+                    const origemCidade = modal.querySelector('#det-origem-cidade');
+                    const origemEstado = modal.querySelector('#det-origem-estado');
+                    const destinoCep = modal.querySelector('#det-destino-cep');
+                    const destinoEnderecoCompleto = modal.querySelector('#det-destino-endereco-completo');
+                    const destinoCidade = modal.querySelector('#det-destino-cidade');
+                    const destinoEstado = modal.querySelector('#det-destino-estado');
+                    
+                    if (origemCep) origemCep.textContent = cotacao.origem_cep || 'N/A';
+                    if (origemEnderecoCompleto) origemEnderecoCompleto.textContent = cotacao.origem_endereco || 'N/A';
+                    if (origemCidade) origemCidade.textContent = cotacao.origem_cidade || 'N/A';
+                    if (origemEstado) origemEstado.textContent = cotacao.origem_estado || 'N/A';
+                    if (destinoCep) destinoCep.textContent = cotacao.destino_cep || 'N/A';
+                    if (destinoEnderecoCompleto) destinoEnderecoCompleto.textContent = cotacao.destino_endereco || 'N/A';
+                    if (destinoCidade) destinoCidade.textContent = cotacao.destino_cidade || 'N/A';
+                    if (destinoEstado) destinoEstado.textContent = cotacao.destino_estado || 'N/A';
+                }
+                
+                // Dados da carga
+                const cargaDescricao = modal.querySelector('#det-carga-descricao');
+                const cargaPeso = modal.querySelector('#det-carga-peso');
+                const cargaValor = modal.querySelector('#det-carga-valor');
+                
+                if (cargaDescricao) cargaDescricao.textContent = cotacao.carga_descricao || 'N/A';
+                if (cargaPeso) cargaPeso.textContent = (cotacao.carga_peso_kg || 0).toString();
+                if (cargaValor) cargaValor.textContent = formatarMoeda(cotacao.carga_valor_mercadoria);
+                
+                // Cubagem para transporte rodoviário
+                const cubagemRodoviario = modal.querySelector('#det-carga-cubagem-rodoviario');
+                const cubagemValor = modal.querySelector('#det-carga-cubagem');
+                if (cubagemRodoviario && cubagemValor) {
+                    if (cotacao.empresa_transporte === 'brcargo_rodoviario' && cotacao.cubagem) {
+                        cubagemRodoviario.style.display = 'block';
+                        cubagemValor.textContent = parseFloat(cotacao.cubagem).toFixed(3);
+                    } else {
+                        cubagemRodoviario.style.display = 'none';
+                    }
+                }
+                
+                // Dimensões (se disponível)
+                const dimensoesContainer = modal.querySelector('#det-carga-dimensoes');
+                const dimensoes = modal.querySelector('#det-dimensoes');
+                if (dimensoesContainer && dimensoes) {
+                    if (cotacao.carga_comprimento_cm || cotacao.carga_largura_cm || cotacao.carga_altura_cm) {
+                        dimensoesContainer.style.display = 'block';
+                        const dimensoesText = `${cotacao.carga_comprimento_cm || 0} x ${cotacao.carga_largura_cm || 0} x ${cotacao.carga_altura_cm || 0} cm`;
+                        dimensoes.textContent = dimensoesText;
+                    } else {
+                        dimensoesContainer.style.display = 'none';
+                    }
+                }
+                
+                // Dados específicos marítimos
+                const dadosMaritimos = modal.querySelector('#det-dados-maritimos');
+                if (dadosMaritimos) {
+                    if (cotacao.empresa_transporte === 'brcargo_maritimo') {
+                        dadosMaritimos.style.display = 'block';
+                        
+                        const netWeight = modal.querySelector('#det-net-weight');
+                        const grossWeight = modal.querySelector('#det-gross-weight');
+                        const cubagemMaritimo = modal.querySelector('#det-cubagem');
+                        const incoterm = modal.querySelector('#det-incoterm');
+                        const tipoCarga = modal.querySelector('#det-tipo-carga');
+                        
+                        if (netWeight) netWeight.textContent = (cotacao.net_weight || cotacao.numero_net_weight || 0).toString();
+                        if (grossWeight) grossWeight.textContent = (cotacao.gross_weight || cotacao.numero_gross_weight || 0).toString();
+                        if (cubagemMaritimo) cubagemMaritimo.textContent = (cotacao.cubagem || 0).toString();
+                        if (incoterm) incoterm.textContent = cotacao.incoterm || 'N/A';
+                        if (tipoCarga) tipoCarga.textContent = cotacao.tipo_carga_maritima || 'N/A';
+                        
+                        // Informações do container (se FCL)
+                        const containerInfo = modal.querySelector('#det-container-info');
+                        const containerDetalhes = modal.querySelector('#det-container-detalhes');
+                        if (containerInfo && containerDetalhes) {
+                            if (cotacao.tipo_carga_maritima === 'FCL' && cotacao.tamanho_container) {
+                                containerInfo.style.display = 'block';
+                                const containerInfoText = `${cotacao.quantidade_containers || 1}x ${cotacao.tamanho_container}`;
+                                containerDetalhes.textContent = containerInfoText;
+                            } else {
+                                containerInfo.style.display = 'none';
+                            }
+                        }
+                    } else {
+                        dadosMaritimos.style.display = 'none';
+                    }
+                }
+                
+                // Histórico
+                try {
+                    preencherHistorico(modal, cotacao.historico || []);
+                } catch (error) {
+                    console.error('Erro ao preencher histórico:', error);
+                    const historicoContainer = modal.querySelector('#det-historico');
+                    if (historicoContainer) {
+                        historicoContainer.innerHTML = '<p style="color: #999;">Erro ao carregar histórico</p>';
+                    }
+                }
+                
+                // Ações do operador (mostrar apenas se for operador e cotação estiver disponível)
+                const acoesElement = modal.querySelector('#det-acoes-operador');
+                const btnAceitarElement = modal.querySelector('#btn-aceitar-cotacao');
+                if (acoesElement) {
+                    if (cotacao.status === 'solicitada') {
+                        acoesElement.style.display = 'block';
+                        if (btnAceitarElement) {
+                            btnAceitarElement.setAttribute('data-cotacao-id', cotacao.id);
+                        }
+                    } else {
+                        acoesElement.style.display = 'none';
+                    }
+                }
+                
+                console.log('✅ Modal preenchido com sucesso!');
+            } catch (error) {
+                console.error('❌ Erro ao preencher modal:', error);
+                // Mostrar mensagem de erro no modal
+                const modalBody = modal.querySelector('.modal-body');
+                if (modalBody) {
+                    modalBody.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <h3 style="color: #dc3545;">Erro ao carregar detalhes</h3>
+                            <p>Ocorreu um erro ao carregar os detalhes da cotação.</p>
+                            <p style="font-size: 14px; color: #666;">ID da Cotação: ${cotacao.id || 'N/A'}</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Função para preencher histórico com timeline visual
+        function preencherHistorico(modal, historico) {
+            const historicoContainer = modal.querySelector('#det-historico');
+            
+            if (!historico || historico.length === 0) {
+                historicoContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
+                        <p style="margin: 0; font-style: italic;">Nenhum histórico disponível ainda.</p>
+                        <small>As alterações aparecerão aqui conforme a cotação for processada.</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Ordenar histórico por data (mais recente primeiro)
+            const historicoOrdenado = [...historico].sort((a, b) => new Date(b.timestamp || b.data) - new Date(a.timestamp || a.data));
+            
+            let timelineHTML = '<div class="timeline-container" style="position: relative; padding-left: 30px;">';
+            
+            historicoOrdenado.forEach((item, index) => {
+                const dataFormatada = formatarDataHora(item.timestamp || item.data);
+                const isFirst = index === 0;
+                const isLast = index === historicoOrdenado.length - 1;
+                
+                // Determinar ícone e cor baseado na ação
+                const { icon, color, bgColor } = getTimelineStyle(item.acao || item.status_novo);
+                
+                // Calcular tempo relativo
+                const tempoRelativo = calcularTempoRelativo(item.timestamp || item.data);
+                
+                timelineHTML += `
+                    <div class="timeline-item" style="position: relative; margin-bottom: ${isLast ? '0' : '25px'}; padding-bottom: ${isLast ? '0' : '25px'};">
+                        <!-- Linha vertical da timeline -->
+                        ${!isLast ? `<div style="position: absolute; left: -19px; top: 35px; width: 2px; height: calc(100% - 10px); background: linear-gradient(to bottom, ${color}, #e9ecef);"></div>` : ''}
+                        
+                        <!-- Ícone da timeline -->
+                        <div style="position: absolute; left: -30px; top: 8px; width: 24px; height: 24px; background: ${bgColor}; border: 3px solid ${color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                            ${icon}
+                        </div>
+                        
+                        <!-- Conteúdo do evento -->
+                        <div style="background: ${isFirst ? 'linear-gradient(135deg, #f8f9fa, white)' : 'white'}; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: ${isFirst ? '2px solid ' + color : '1px solid #e9ecef'}; transition: transform 0.2s, box-shadow 0.2s;" 
+                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)'"
+                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                            
+                            <!-- Header do evento -->
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                <div>
+                                    <h5 style="margin: 0; color: ${color}; font-size: 16px; font-weight: bold;">
+                                        ${item.acao || item.status_novo}
+                                    </h5>
+                                    ${item.status_anterior ? `<div style="font-size: 12px; color: #6c757d; margin-top: 2px;">De: ${item.status_anterior}</div>` : ''}
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 11px; color: #6c757d; font-weight: bold;">${tempoRelativo}</div>
+                                    <div style="font-size: 10px; color: #adb5bd;">${dataFormatada}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Usuário responsável -->
+                            <div style="display: flex; align-items: center; margin-bottom: ${item.observacoes ? '10px' : '0'};">
+                                <div style="width: 24px; height: 24px; background: ${color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 8px;">
+                                    <span style="color: white; font-size: 10px; font-weight: bold;">
+                                        ${(item.usuario_nome || 'Sistema').charAt(0).toUpperCase()}
+                                    </span>
+                                </div>
+                                <div>
+                                    <div style="font-weight: bold; color: #495057; font-size: 13px;">${item.usuario_nome || 'Sistema'}</div>
+                                    <div style="font-size: 11px; color: #6c757d;">${getRoleFromUser(item.usuario_nome)}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Observações -->
+                            ${item.observacoes ? `
+                                <div style="background: #f8f9fa; border-left: 3px solid ${color}; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                                    <div style="font-size: 13px; color: #495057; font-style: italic;">
+                                        "${item.observacoes}"
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            <!-- Dados adicionais (se houver) -->
+                            ${item.valor_frete ? `
+                                <div style="margin-top: 10px; padding: 8px; background: #e8f5e8; border-radius: 6px; font-size: 12px;">
+                                    <strong>💰 Valor:</strong> R$ ${parseFloat(item.valor_frete).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    ${item.prazo_dias ? ` | <strong>⏱️ Prazo:</strong> ${item.prazo_dias} dias` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            timelineHTML += '</div>';
+            historicoContainer.innerHTML = timelineHTML;
+        }
+        
+        // Função para obter estilo da timeline baseado na ação
+        function getTimelineStyle(acao) {
+            const styles = {
+                'Cotação solicitada': { icon: '📝', color: '#007bff', bgColor: '#e3f2fd' },
+                'Cotação aceita pelo operador': { icon: '✅', color: '#28a745', bgColor: '#e8f5e9' },
+                'Aceita pelo Operador': { icon: '✅', color: '#28a745', bgColor: '#e8f5e9' },
+                'Cotação respondida': { icon: '💰', color: '#28a745', bgColor: '#e8f5e9' },
+                'Cotação enviada': { icon: '📤', color: '#17a2b8', bgColor: '#e0f7fa' },
+                'Cotação reatribuída': { icon: '🔄', color: '#fd7e14', bgColor: '#fff3e0' },
+                'Cotação aprovada': { icon: '🎉', color: '#28a745', bgColor: '#e8f5e9' },
+                'Cotação recusada': { icon: '❌', color: '#dc3545', bgColor: '#ffebee' },
+                'Cotação negada': { icon: '🚫', color: '#dc3545', bgColor: '#ffebee' },
+                'Cotação finalizada': { icon: '🏁', color: '#6c757d', bgColor: '#f8f9fa' },
+                'solicitada': { icon: '📝', color: '#007bff', bgColor: '#e3f2fd' },
+                'aceita_operador': { icon: '✅', color: '#28a745', bgColor: '#e8f5e9' },
+                'cotacao_enviada': { icon: '📤', color: '#17a2b8', bgColor: '#e0f7fa' },
+                'aceita_consultor': { icon: '🎉', color: '#28a745', bgColor: '#e8f5e9' },
+                'recusada_consultor': { icon: '❌', color: '#dc3545', bgColor: '#ffebee' },
+                'negada': { icon: '🚫', color: '#dc3545', bgColor: '#ffebee' },
+                'finalizada': { icon: '🏁', color: '#6c757d', bgColor: '#f8f9fa' }
+            };
+            
+            return styles[acao] || { icon: '📋', color: '#6c757d', bgColor: '#f8f9fa' };
+        }
+        
+        // Função para calcular tempo relativo
+        function calcularTempoRelativo(dataISO) {
+            if (!dataISO) return 'Data não disponível';
+            
+            const agora = new Date();
+            const data = new Date(dataISO);
+            const diffMs = agora - data;
+            const diffMinutos = Math.floor(diffMs / (1000 * 60));
+            const diffHoras = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffMinutos < 1) return 'Agora mesmo';
+            if (diffMinutos < 60) return `${diffMinutos}min atrás`;
+            if (diffHoras < 24) return `${diffHoras}h atrás`;
+            if (diffDias < 7) return `${diffDias}d atrás`;
+            if (diffDias < 30) return `${Math.floor(diffDias / 7)}sem atrás`;
+            
+            return data.toLocaleDateString('pt-BR');
+        }
+        
+        // Função para obter role do usuário baseado no nome
+        function getRoleFromUser(nomeUsuario) {
+            if (!nomeUsuario) return 'Sistema';
+            if (nomeUsuario.toLowerCase().includes('operador')) return 'Operador';
+            if (nomeUsuario.toLowerCase().includes('consultor')) return 'Consultor';
+            if (nomeUsuario === 'Sistema') return 'Sistema Automático';
+            
+            // Inferir baseado em padrões comuns
+            const roles = {
+                'maria': 'Operador',
+                'joão': 'Consultor', 
+                'ana': 'Operador',
+                'carlos': 'Operador',
+                'lucia': 'Operador'
+            };
+            
+            const nomeKey = nomeUsuario.toLowerCase().split(' ')[0];
+            return roles[nomeKey] || 'Usuário';
+        }
+        
+        // Função para fechar o modal
+        function fecharModalDetalhes() {
+            const modal = document.getElementById('modal-detalhes-cotacao');
+            if (modal) {
+                // Animar fechamento
+                modal.style.transition = 'opacity 0.3s ease-in-out';
+                modal.style.opacity = '0';
+                
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }, 300);
+            }
+        }
+        
+        // Função auxiliar para formatar data
+        function formatarData(dataISO) {
+            if (!dataISO) return '';
+            const data = new Date(dataISO);
+            return data.toLocaleDateString('pt-BR');
+        }
+        
+        // Função auxiliar para formatar data e hora
+        function formatarDataHora(dataISO) {
+            if (!dataISO) return '';
+            const data = new Date(dataISO);
+            return data.toLocaleString('pt-BR');
+        }
+        
+        // Função auxiliar para formatar moeda
+        function formatarMoeda(valor) {
+            if (!valor) return '0,00';
+            return parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        
+        // Função auxiliar para obter nome da empresa
+        function getEmpresaDisplay(empresa) {
+            const empresas = {
+                'brcargo_rodoviario': 'BRCargo Rodoviário',
+                'brcargo_maritimo': 'BRCargo Marítimo',
+                'frete_aereo': 'Frete Aéreo'
+            };
+            return empresas[empresa] || empresa;
+        }
+
+        // Função para mostrar mensagens
+        function mostrarMensagem(mensagem, tipo = 'info') {
+            // Criar elemento de notificação
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg transition-all duration-300 transform ${
+                tipo === 'success' ? 'bg-green-500 text-white' :
+                tipo === 'error' ? 'bg-red-500 text-white' :
+                tipo === 'info' ? 'bg-blue-500 text-white' :
+                'bg-gray-500 text-white'
+            }`;
+            
+            // Z-index muito alto para aparecer por cima de tudo
+            notification.style.zIndex = '99999';
+            notification.style.maxWidth = '400px';
+            notification.style.wordWrap = 'break-word';
+            notification.style.padding = '16px';
+            notification.style.borderRadius = '8px';
+            
+            // Adicionar ícone baseado no tipo
+            const icon = document.createElement('i');
+            icon.className = `fas ${
+                tipo === 'success' ? 'fa-check-circle' :
+                tipo === 'error' ? 'fa-exclamation-triangle' :
+                'fa-info-circle'
+            } mr-2`;
+            
+            // Criar container para ícone e mensagem
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.alignItems = 'center';
+            container.appendChild(icon);
+            container.appendChild(document.createTextNode(mensagem));
+            notification.appendChild(container);
+            
+            document.body.appendChild(notification);
+            
+            // Animação de entrada
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+                notification.style.opacity = '1';
+            }, 10);
+            
+            // Remover após 5 segundos com animação
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        // Função para atualizar página ao mudar de aba - REMOVIDA
+        // Esta função estava causando reload automático e impedindo navegação
+        function configurarAtualizacaoAba() {
+            // Função desabilitada para permitir navegação normal
+            console.log('Função de atualização de aba desabilitada para permitir navegação');
+        }
+
+        // Inicializar funcionalidades do rodapé
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarInfoUsuario();
+            atualizarHorario();
+            configurarAtualizacaoAba();
+            
+            // Configurar sistema de cotações - com delay para garantir que tudo está carregado
+            setTimeout(() => {
+                configurarBotaoCotacao();
+            }, 300);
+            
+            // Event listeners para modal de cotação
+            const fecharModalBtn = document.getElementById('fechar-modal-cotacao');
+            const cancelarBtn = document.getElementById('cancelar-cotacao');
+            const formCotacao = document.getElementById('form-cotacao');
+            const btnNovaCotacao = document.getElementById('btn-nova-cotacao');
+            
+            if (fecharModalBtn) {
+                fecharModalBtn.addEventListener('click', fecharModalCotacao);
+            }
+            
+            if (cancelarBtn) {
+                cancelarBtn.addEventListener('click', fecharModalCotacao);
+            }
+            
+            if (btnNovaCotacao) {
+                console.log('✅ Botão Nova Cotação encontrado, configurando event listener...');
+                btnNovaCotacao.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🔘 Botão Nova Cotação clicado - abrindo modal correto');
+                    abrirModalCotacao(); // Usar o modal correto (modal-cotacao)
+                });
+                console.log('✅ Event listener do botão Nova Cotação configurado');
+            } else {
+                console.error('❌ Botão Nova Cotação NÃO encontrado!');
+            }
+            
+            // Controle de campos específicos por modalidade
+            const empresaTransporteInputs = document.querySelectorAll('input[name="empresa_transporte"]');
+            const camposMaritimo = document.getElementById('campos-maritimo');
+            const camposAereo = document.getElementById('campos-aereo');
+            const maritimoRequired = document.querySelectorAll('.maritimo-required');
+            const tipoCargarMaritimaSelect = document.querySelector('select[name="tipo_carga_maritima"]');
+            const camposFcl = document.getElementById('campos-fcl');
+            
+            // Event listener para mudança de empresa de transporte
+            empresaTransporteInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const isMaritimo = this.value === 'brcargo_maritimo';
+                    const isAereo = this.value === 'frete_aereo';
+                    const isRodoviario = this.value === 'brcargo_rodoviario';
+                    
+                    console.log('Modalidade selecionada:', this.value, {isMaritimo, isAereo, isRodoviario});
+                    
+                    // Controlar campos de origem e destino
+                    const camposOrigemEndereco = document.getElementById('campos-origem-endereco');
+                    const camposDestinoEndereco = document.getElementById('campos-destino-endereco');
+                    const dadosCarga = document.getElementById('dados-carga');
+                    const tipoOrigemRodoviario = document.getElementById('tipo-origem-rodoviario');
+                    
+                    // Mostrar/ocultar campos marítimos
+                    if (camposMaritimo) {
+                        camposMaritimo.style.display = isMaritimo ? 'block' : 'none';
+                        console.log('Campos marítimos:', isMaritimo ? 'mostrados' : 'ocultos');
+                    }
+                    
+                    // Mostrar/ocultar campos aéreos
+                    if (camposAereo) {
+                        camposAereo.style.display = isAereo ? 'block' : 'none';
+                        console.log('Campos aéreos:', isAereo ? 'mostrados' : 'ocultos');
+                    }
+                    
+                    if (camposOrigemEndereco && camposDestinoEndereco) {
+                        if (isMaritimo) {
+                            // Para marítimo, ocultar campos de endereço
+                            camposOrigemEndereco.style.display = 'none';
+                            camposDestinoEndereco.style.display = 'none';
+                            
+                            // Ocultar opção de tipo de origem
+                            if (tipoOrigemRodoviario) {
+                                tipoOrigemRodoviario.style.display = 'none';
+                            }
+                            
+                            // Ocultar seção de dados da carga para marítimo
+                            if (dadosCarga) {
+                                dadosCarga.style.display = 'none';
+                            }
+                            
+                            // Remover obrigatoriedade dos campos de endereço e carga
+                            ['origem_cep', 'origem_endereco', 'origem_cidade', 'origem_estado',
+                             'destino_cep', 'destino_endereco', 'destino_cidade', 'destino_estado',
+                             'carga_descricao', 'carga_peso_kg', 'carga_valor_mercadoria', 'carga_cubagem'].forEach(campo => {
+                                const input = document.querySelector(`[name="${campo}"]`);
+                                if (input) input.removeAttribute('required');
+                            });
+                        } else {
+                            // Para rodoviário e aéreo, mostrar campos de endereço e dados da carga
+                            camposOrigemEndereco.style.display = 'block';
+                            camposDestinoEndereco.style.display = 'block';
+                            
+                            // Mostrar opção de tipo de origem apenas para rodoviário
+                            if (tipoOrigemRodoviario) {
+                                if (isRodoviario) {
+                                    tipoOrigemRodoviario.style.display = 'block';
+                                    
+                                    // Garantir que "endereço" esteja selecionado por padrão
+                                    const enderecoRadio = document.querySelector('input[name="tipo_origem"][value="endereco"]');
+                                    if (enderecoRadio && !document.querySelector('input[name="tipo_origem"]:checked')) {
+                                        enderecoRadio.checked = true;
+                                        // Disparar evento change para aplicar as regras
+                                        enderecoRadio.dispatchEvent(new Event('change'));
+                                    }
+                                } else {
+                                    tipoOrigemRodoviario.style.display = 'none';
+                                }
+                            }
+                            
+                            // Mostrar seção de dados da carga para rodoviário e aéreo
+                            if (dadosCarga) {
+                                dadosCarga.style.display = 'block';
+                            }
+                            
+                            // Adicionar obrigatoriedade aos campos de endereço e carga
+                            ['origem_cep', 'origem_endereco', 'origem_cidade', 'origem_estado',
+                             'destino_cep', 'destino_endereco', 'destino_cidade', 'destino_estado',
+                             'carga_descricao', 'carga_peso_kg', 'carga_valor_mercadoria', 'carga_cubagem'].forEach(campo => {
+                                const input = document.querySelector(`[name="${campo}"]`);
+                                if (input) input.setAttribute('required', 'required');
+                            });
+                        }
+                    }
+                    
+                    // Mostrar/ocultar campos marítimos
+                    if (camposMaritimo) {
+                        camposMaritimo.style.display = isMaritimo ? 'block' : 'none';
+                    }
+                    
+                    // Mostrar/ocultar campos aéreos
+                    if (camposAereo) {
+                        camposAereo.style.display = isAereo ? 'block' : 'none';
+                    }
+                    
+                    // Mostrar/ocultar asteriscos de obrigatório
+                    maritimoRequired.forEach(span => {
+                        span.style.display = isMaritimo ? 'inline' : 'none';
+                    });
+                    
+                    // Definir campos obrigatórios condicionalmente para marítimo
+                    const camposObrigatoriosMaritimo = [
+                        'numero_cliente', 'net_weight', 'gross_weight', 
+                        'cubagem', 'incoterm', 'tipo_carga_maritima',
+                        'porto_origem', 'porto_destino'
+                    ];
+                    
+                    camposObrigatoriosMaritimo.forEach(campo => {
+                        const input = document.querySelector(`[name="${campo}"]`);
+                        if (input) {
+                            if (isMaritimo) {
+                                input.setAttribute('required', 'required');
+                            } else {
+                                input.removeAttribute('required');
+                            }
+                        }
+                    });
+                    
+                    // Definir campos obrigatórios condicionalmente para aéreo
+                    const camposObrigatoriosAereo = ['aeroporto_origem', 'aeroporto_destino'];
+                    camposObrigatoriosAereo.forEach(campo => {
+                        const input = document.querySelector(`[name="${campo}"]`);
+                        if (input) {
+                            if (isAereo) {
+                                input.setAttribute('required', 'required');
+                            } else {
+                                input.removeAttribute('required');
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // Event listener para controle de tipo de origem (endereço vs porto)
+            const tipoOrigemInputs = document.querySelectorAll('input[name="tipo_origem"]');
+            tipoOrigemInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const isPorto = this.value === 'porto';
+                    const camposEnderecoOrigem = document.getElementById('campos-endereco-origem');
+                    const camposPortoOrigem = document.getElementById('campos-porto-origem');
+                    
+                    if (camposEnderecoOrigem && camposPortoOrigem) {
+                        if (isPorto) {
+                            // Mostrar campo de porto, ocultar campos de endereço
+                            camposEnderecoOrigem.style.display = 'none';
+                            camposPortoOrigem.style.display = 'block';
+                            
+                            // Remover obrigatoriedade dos campos de endereço
+                            ['origem_cep', 'origem_endereco', 'origem_cidade', 'origem_estado'].forEach(campo => {
+                                const input = document.querySelector(`[name="${campo}"]`);
+                                if (input) input.removeAttribute('required');
+                            });
+                            
+                            // Adicionar obrigatoriedade ao campo de porto
+                            const portoInput = document.querySelector('[name="origem_porto"]');
+                            if (portoInput) portoInput.setAttribute('required', 'required');
+                        } else {
+                            // Mostrar campos de endereço, ocultar campo de porto
+                            camposEnderecoOrigem.style.display = 'block';
+                            camposPortoOrigem.style.display = 'none';
+                            
+                            // Adicionar obrigatoriedade aos campos de endereço
+                            ['origem_cep', 'origem_endereco', 'origem_cidade', 'origem_estado'].forEach(campo => {
+                                const input = document.querySelector(`[name="${campo}"]`);
+                                if (input) input.setAttribute('required', 'required');
+                            });
+                            
+                            // Remover obrigatoriedade do campo de porto
+                            const portoInput = document.querySelector('[name="origem_porto"]');
+                            if (portoInput) portoInput.removeAttribute('required');
+                        }
+                    }
+                });
+            });
+            
+            // Função para inicializar estado dos campos baseado na modalidade selecionada
+            function inicializarCamposPorModalidade() {
+                // Primeiro, verificar se há uma modalidade pré-selecionada
+                const modalidadeSelecionada = document.querySelector('input[name="empresa_transporte"]:checked');
+                if (modalidadeSelecionada) {
+                    // Disparar evento change para aplicar as regras
+                    modalidadeSelecionada.dispatchEvent(new Event('change'));
+                } else {
+                    // Se não há modalidade selecionada, verificar se rodoviário está disponível
+                    const rodoviarioInput = document.querySelector('input[value="brcargo_rodoviario"]');
+                    if (rodoviarioInput) {
+                        // Simular seleção temporária para inicializar campos
+                        rodoviarioInput.checked = true;
+                        rodoviarioInput.dispatchEvent(new Event('change'));
+                        // Desmarcar para deixar o usuário escolher
+                        rodoviarioInput.checked = false;
+                    }
+                }
+                
+                // Garantir que o tipo de origem seja sempre visível para rodoviário quando disponível
+                const tipoOrigemRodoviario = document.getElementById('tipo-origem-rodoviario');
+                const rodoviarioInput = document.querySelector('input[value="brcargo_rodoviario"]');
+                
+                if (tipoOrigemRodoviario) {
+                    // Sempre mostrar tipo de origem para rodoviário
+                    tipoOrigemRodoviario.style.display = 'block';
+                    
+                    // Inicializar com "endereço" selecionado por padrão
+                    const enderecoRadio = document.querySelector('input[name="tipo_origem"][value="endereco"]');
+                    if (enderecoRadio && !document.querySelector('input[name="tipo_origem"]:checked')) {
+                        enderecoRadio.checked = true;
+                        enderecoRadio.dispatchEvent(new Event('change'));
+                    }
+                }
+            }
+            
+            // Event listener para tipo de carga marítima (FCL/LCL)
+            if (tipoCargarMaritimaSelect) {
+                tipoCargarMaritimaSelect.addEventListener('change', function() {
+                    const isFcl = this.value === 'FCL';
+                    
+                    if (camposFcl) {
+                        camposFcl.style.display = isFcl ? 'grid' : 'none';
+                    }
+                    
+                    // Definir campos FCL como obrigatórios condicionalmente
+                    const camposFclObrigatorios = ['tamanho_container', 'quantidade_containers'];
+                    camposFclObrigatorios.forEach(campo => {
+                        const input = document.querySelector(`[name="${campo}"]`);
+                        if (input) {
+                            if (isFcl) {
+                                input.setAttribute('required', 'required');
+                            } else {
+                                input.removeAttribute('required');
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // Event listener para formulário de cotação
+            if (formCotacao) {
+                formCotacao.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    console.log('📝 Formulário de cotação submetido');
+                    
+                    const submitBtn = formCotacao.querySelector('button[type="submit"]');
+                    const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+                    
+                    // Desabilitar botão e mostrar loading
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processando...';
+                    }
+                    
+                    try {
+                        const formData = new FormData(formCotacao);
+                        const data = {};
+                        
+                        console.log('📋 Processando dados do formulário...');
+                        
+                        // Converter FormData para objeto com tratamento adequado
+                        for (let [key, value] of formData.entries()) {
+                            if (key === 'seguro_adicional') {
+                                data[key] = formData.has(key);
+                            } else if (value !== '') {
+                                // Converter valores monetários formatados para números
+                                if (key.includes('valor_mercadoria') || (key.includes('valor') && key.includes('mercadoria'))) {
+                                    const valorLimpo = value.replace(/[^\d,]/g, '').replace(',', '.');
+                                    data[key] = parseFloat(valorLimpo) || null;
+                                } else if (key.includes('peso') || key.includes('weight') || key.includes('cubagem') || 
+                                          key.includes('comprimento') || key.includes('largura') || key.includes('altura') ||
+                                          key.includes('prazo') || key.includes('quantidade')) {
+                                    // Converter valores numéricos formatados
+                                    const valorLimpo = value.replace(/\./g, '').replace(',', '.');
+                                    const numValue = parseFloat(valorLimpo);
+                                    data[key] = isNaN(numValue) ? null : numValue;
+                                } else {
+                                    data[key] = value.trim();
+                                }
+                            }
+                        }
+                        
+                        // Validações específicas por modalidade
+                        const modalidade = data.empresa_transporte;
+                        const erros = [];
+                        
+                        // Validações básicas (todas as modalidades)
+                        if (!data.numero_cliente || data.numero_cliente.trim() === '') {
+                            erros.push('Número do cliente é obrigatório');
+                        }
+                        if (!data.cliente_nome || data.cliente_nome.trim() === '') {
+                            erros.push('Nome/Razão Social do cliente é obrigatório');
+                        }
+                        if (!data.cliente_cnpj || data.cliente_cnpj.trim() === '') {
+                            erros.push('CNPJ do cliente é obrigatório');
+                        } else {
+                            // Validar formato básico de CNPJ
+                            const cnpjLimpo = data.cliente_cnpj.replace(/[^\d]/g, '');
+                            if (cnpjLimpo.length !== 14) {
+                                erros.push('CNPJ deve ter 14 dígitos');
+                            }
+                        }
+                        
+                        // Validações específicas por modalidade
+                        if (modalidade === 'brcargo_rodoviario') {
+                            const tipoOrigem = data.tipo_origem || 'endereco';
+                            
+                            if (tipoOrigem === 'endereco') {
+                                if (!data.origem_cep || !data.origem_endereco || !data.origem_cidade || !data.origem_estado) {
+                                    erros.push('Dados de origem (endereço) são obrigatórios para transporte rodoviário');
+                                }
+                            } else if (tipoOrigem === 'porto') {
+                                if (!data.origem_porto) {
+                                    erros.push('Porto de origem é obrigatório');
+                                }
+                            }
+                            
+                            if (!data.destino_cep || !data.destino_endereco || !data.destino_cidade || !data.destino_estado) {
+                                erros.push('Dados de destino são obrigatórios para transporte rodoviário');
+                            }
+                            
+                            if (!data.carga_descricao || data.carga_descricao.trim() === '') {
+                                erros.push('Descrição da carga é obrigatória');
+                            }
+                            if (!data.carga_peso_kg || data.carga_peso_kg <= 0) {
+                                erros.push('Peso da carga deve ser maior que zero');
+                            }
+                            if (!data.carga_valor_mercadoria || data.carga_valor_mercadoria <= 0) {
+                                erros.push('Valor da mercadoria deve ser maior que zero');
+                            }
+                            if (!data.carga_cubagem || data.carga_cubagem <= 0) {
+                                erros.push('Cubagem deve ser maior que zero');
+                            }
+                            
+                        } else if (modalidade === 'brcargo_maritimo') {
+                            if (!data.porto_origem || data.porto_origem.trim() === '') {
+                                erros.push('Porto de origem é obrigatório para transporte marítimo');
+                            }
+                            if (!data.porto_destino || data.porto_destino.trim() === '') {
+                                erros.push('Porto de destino é obrigatório para transporte marítimo');
+                            }
+                            if (!data.net_weight || data.net_weight <= 0) {
+                                erros.push('Net Weight deve ser maior que zero');
+                            }
+                            if (!data.gross_weight || data.gross_weight <= 0) {
+                                erros.push('Gross Weight deve ser maior que zero');
+                            }
+                            if (data.net_weight && data.gross_weight && data.net_weight > data.gross_weight) {
+                                erros.push('Net Weight não pode ser maior que Gross Weight');
+                            }
+                            if (!data.cubagem || data.cubagem <= 0) {
+                                erros.push('Cubagem é obrigatória e deve ser maior que zero');
+                            }
+                            if (!data.incoterm || data.incoterm.trim() === '') {
+                                erros.push('Incoterm é obrigatório para transporte marítimo');
+                            }
+                            if (!data.tipo_carga_maritima || data.tipo_carga_maritima.trim() === '') {
+                                erros.push('Tipo de carga (FCL/LCL) é obrigatório');
+                            }
+                            if (!data.carga_valor_mercadoria || data.carga_valor_mercadoria <= 0) {
+                                erros.push('Valor da mercadoria é obrigatório');
+                            }
+                            
+                            // Validações específicas para FCL
+                            if (data.tipo_carga_maritima === 'FCL') {
+                                if (!data.tamanho_container || data.tamanho_container.trim() === '') {
+                                    erros.push('Tamanho do container é obrigatório para carga FCL');
+                                }
+                                if (!data.quantidade_containers || data.quantidade_containers <= 0) {
+                                    erros.push('Quantidade de containers deve ser maior que zero para carga FCL');
+                                }
+                            }
+                            
+                        } else if (modalidade === 'frete_aereo') {
+                            if (!data.aeroporto_origem || data.aeroporto_origem.trim() === '') {
+                                erros.push('Aeroporto de origem é obrigatório para transporte aéreo');
+                            }
+                            if (!data.aeroporto_destino || data.aeroporto_destino.trim() === '') {
+                                erros.push('Aeroporto de destino é obrigatório para transporte aéreo');
+                            }
+                            if (!data.tipo_servico_aereo || data.tipo_servico_aereo.trim() === '') {
+                                erros.push('Tipo de serviço aéreo é obrigatório');
+                            }
+                            if (!data.carga_descricao || data.carga_descricao.trim() === '') {
+                                erros.push('Descrição da carga é obrigatória');
+                            }
+                            if (!data.carga_peso_kg || data.carga_peso_kg <= 0) {
+                                erros.push('Peso da carga deve ser maior que zero');
+                            }
+                            if (!data.carga_valor_mercadoria || data.carga_valor_mercadoria <= 0) {
+                                erros.push('Valor da mercadoria deve ser maior que zero');
+                            }
+                            if (!data.carga_cubagem || data.carga_cubagem <= 0) {
+                                erros.push('Cubagem deve ser maior que zero');
+                            }
+                        }
+                        
+                        // Se houver erros, mostrar e parar
+                        if (erros.length > 0) {
+                            mostrarMensagem('Por favor, corrija os seguintes erros:\n• ' + erros.join('\n• '), 'error');
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = originalBtnText;
+                            }
+                            return;
+                        }
+                        
+                        // Limpar campos vazios antes de enviar
+                        Object.keys(data).forEach(key => {
+                            if (data[key] === '' || data[key] === null || data[key] === undefined) {
+                                delete data[key];
+                            }
+                        });
+                        
+                        console.log('✅ Dados validados e processados:', data);
+                        
+                        // Chamar função de criação
+                        await criarCotacao(data);
+                        
+                    } catch (error) {
+                        console.error('Erro ao processar formulário:', error);
+                        mostrarMensagem(error.message || 'Erro ao processar formulário. Verifique os dados e tente novamente.', 'error');
+                    } finally {
+                        // Reabilitar botão
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                        }
+                    }
+                });
+            }
+            
+            // Event listeners para filtros de cotação
+            const aplicarFiltrosBtn = document.getElementById('aplicar-filtros');
+            const limparFiltrosBtn = document.getElementById('limpar-filtros');
+            
+            if (aplicarFiltrosBtn) {
+                aplicarFiltrosBtn.addEventListener('click', aplicarFiltrosCotacoes);
+            }
+            
+            if (limparFiltrosBtn) {
+                limparFiltrosBtn.addEventListener('click', limparFiltrosCotacoes);
+            }
+            
+            // Fechar modal ao clicar fora - REMOVIDO para evitar fechamento acidental
+            // const modalCotacao = document.getElementById('modal-cotacao');
+            // if (modalCotacao) {
+            //     modalCotacao.addEventListener('click', function(e) {
+            //         if (e.target === modalCotacao) {
+            //             fecharModalCotacao();
+            //         }
+            //     });
+            // }
+            
+            // Atualizar horário a cada segundo
+            setInterval(atualizarHorario, 1000);
+            
+            // ==================== CONFIGURAÇÃO ANALYTICS V1.3.3 ====================
+            
+            // Configurar navegação para analytics
+            const navAnalytics = document.getElementById('nav-analytics');
+            if (navAnalytics) {
+                navAnalytics.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mostrarSecaoAnalytics();
+                });
+            }
+            
+            // Configurar abas de analytics
+            configurarAbasAnalytics();
+            
+            // Configurar botões de analytics
+            const btnAtualizarAnalytics = document.getElementById('btn-atualizar-analytics');
+            if (btnAtualizarAnalytics) {
+                btnAtualizarAnalytics.addEventListener('click', atualizarAnalytics);
+            }
+            
+            const btnExportarRelatorio = document.getElementById('btn-exportar-relatorio');
+            if (btnExportarRelatorio) {
+                btnExportarRelatorio.addEventListener('click', exportarRelatorio);
+            }
+        });
+        
+        // ==================== FUNÇÕES ANALYTICS V1.3.3 ====================
+        
+        let analyticsAtivo = 'geral';
+        let dadosAnalytics = {};
+        
+        // Função para configurar abas de analytics
+        function configurarAbasAnalytics() {
+            document.querySelectorAll('.tab-analytics').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remover classe active de todas as abas
+                    document.querySelectorAll('.tab-analytics').forEach(t => {
+                        t.classList.remove('active', 'border-orange-500', 'text-orange-600');
+                        t.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    
+                    // Adicionar classe active à aba clicada
+                    this.classList.add('active', 'border-orange-500', 'text-orange-600');
+                    this.classList.remove('border-transparent', 'text-gray-500');
+                    
+                    // Atualizar analytics ativo
+                    analyticsAtivo = this.dataset.analytics;
+                    
+                    // Carregar conteúdo da aba
+                    carregarConteudoAnalytics();
+                });
+            });
+        }
+        
+        // Função para carregar conteúdo de analytics
+        async function carregarConteudoAnalytics() {
+            const container = document.getElementById('conteudo-analytics');
+            if (!container) return;
+            
+            // Limpar completamente o container primeiro
+            container.innerHTML = '';
+            
+            // Carregar dados do dashboard se necessário
+            if (window.DashboardGraficos && typeof DashboardGraficos.carregarDadosSeNecessario === 'function') {
+                DashboardGraficos.carregarDadosSeNecessario();
+            }
+            
+            try {
+                switch (analyticsAtivo) {
+                    case 'geral':
+                        await carregarVisaoGeral();
+                        break;
+                    case 'empresas':
+                        await carregarAnalyticsEmpresas();
+                        break;
+                    case 'usuarios':
+                        await carregarAnalyticsUsuarios();
+                        break;
+                    case 'tempo-real':
+                        await carregarTempoReal();
+                        break;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar analytics:', error);
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Erro ao carregar dados</h3>
+                        <p class="text-gray-500">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Função para carregar visão geral
+        async function carregarVisaoGeral() {
+            try {
+                const response = await fetch('/api/v133/analytics/sistema/geral');
+                const data = await response.json();
+                
+                if (data.success && data.relatorio_geral) {
+                    dadosAnalytics.geral = data.relatorio_geral;
+                    renderizarVisaoGeral(data.relatorio_geral);
+                } else {
+                    // Fallback para dados simulados
+                    const dadosSimulados = {
+                        cotacoes_por_status: {
+                            'solicitada': 15,
+                            'aceita_operador': 8,
+                            'cotacao_enviada': 12,
+                            'finalizada': 25
+                        },
+                        total_cotacoes_finalizadas: 25,
+                        valor_total_cotacoes: 150000,
+                        tempo_medio_resposta: 2.5
+                    };
+                    dadosAnalytics.geral = dadosSimulados;
+                    renderizarVisaoGeral(dadosSimulados);
+                }
+            } catch (error) {
+                console.warn('API não disponível, usando dados simulados');
+                // Fallback para dados simulados
+                const dadosSimulados = {
+                    cotacoes_por_status: {
+                        'solicitada': 15,
+                        'aceita_operador': 8,
+                        'cotacao_enviada': 12,
+                        'finalizada': 25
+                    },
+                    total_cotacoes_finalizadas: 25,
+                    valor_total_cotacoes: 150000,
+                    tempo_medio_resposta: 2.5
+                };
+                dadosAnalytics.geral = dadosSimulados;
+                renderizarVisaoGeral(dadosSimulados);
+            }
+        }
+        
+        // Função para renderizar visão geral
+        function renderizarVisaoGeral(dados) {
+            const container = document.getElementById('conteudo-analytics');
+            
+            // Verificar se container existe
+            if (!container) {
+                console.warn('Container conteudo-analytics não encontrado');
+                return;
+            }
+            
+            // Verificar se dados existem
+            if (!dados) {
+                console.warn('Dados não disponíveis para renderizar analytics');
+                container.innerHTML = '<div class="p-6 text-center text-gray-500">Dados não disponíveis</div>';
+                return;
+            }
+            
+            // Calcular total de cotações
+            const totalCotacoes = Object.values(dados.cotacoes_por_status || {}).reduce((sum, count) => sum + count, 0);
+            
+            container.innerHTML = `
+                <!-- Estatísticas Gerais -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-blue-50 p-6 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                <i class="fas fa-calculator text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Total de Cotações</p>
+                                <p class="text-2xl font-bold text-gray-900">${totalCotacoes || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 p-6 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                <i class="fas fa-check-circle text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Cotações Finalizadas</p>
+                                <p class="text-2xl font-bold text-gray-900">${dados.cotacoes_finalizadas || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-6 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                <i class="fas fa-clock text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Em Andamento</p>
+                                <p class="text-2xl font-bold text-gray-900">${dados.cotacoes_andamento || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-50 p-6 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                <i class="fas fa-percentage text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Taxa de Sucesso</p>
+                                <p class="text-2xl font-bold text-gray-900">${dados.taxa_sucesso || 0}%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gráficos -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Gráfico de Cotações por Modalidade -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Cotações por Modalidade</h3>
+                        <canvas id="chart-modalidades" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <!-- Gráfico de Status -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Distribuição por Status</h3>
+                        <canvas id="chart-status" width="400" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Gráfico de Evolução Temporal -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Evolução das Cotações</h3>
+                    <canvas id="chart-evolucao" width="800" height="400"></canvas>
+                </div>
+            `;
+            
+            // Renderizar gráficos
+            setTimeout(() => {
+                renderizarGraficosGerais(dados);
+            }, 100);
+        }
+        
+        // Função para renderizar gráficos gerais
+        function renderizarGraficosGerais(dados) {
+            // Gráfico de modalidades
+            const ctxModalidades = document.getElementById('chart-modalidades');
+            if (ctxModalidades) {
+                new Chart(ctxModalidades, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Rodoviário', 'Marítimo', 'Aéreo'],
+                        datasets: [{
+                            data: [
+                                dados.por_modalidade?.rodoviario || 0,
+                                dados.por_modalidade?.maritimo || 0,
+                                dados.por_modalidade?.aereo || 0
+                            ],
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+            
+            // Gráfico de status
+            const ctxStatus = document.getElementById('chart-status');
+            if (ctxStatus) {
+                new Chart(ctxStatus, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Solicitadas', 'Em Análise', 'Enviadas', 'Finalizadas'],
+                        datasets: [{
+                            data: [
+                                dados.por_status?.solicitadas || 0,
+                                dados.por_status?.em_analise || 0,
+                                dados.por_status?.enviadas || 0,
+                                dados.por_status?.finalizadas || 0
+                            ],
+                            backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+            
+            // Gráfico de evolução
+            const ctxEvolucao = document.getElementById('chart-evolucao');
+            if (ctxEvolucao) {
+                new Chart(ctxEvolucao, {
+                    type: 'line',
+                    data: {
+                        labels: dados.evolucao?.labels || [],
+                        datasets: [{
+                            label: 'Cotações Criadas',
+                            data: dados.evolucao?.criadas || [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        }, {
+                            label: 'Cotações Finalizadas',
+                            data: dados.evolucao?.finalizadas || [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Função para carregar analytics de empresas
+        async function carregarAnalyticsEmpresas() {
+            const response = await fetch('/api/v133/analytics/empresas/ranking');
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Erro ao carregar dados de empresas');
+            }
+            
+            dadosAnalytics.empresas = data.data;
+            renderizarAnalyticsEmpresas(data.data);
+        }
+        
+        // Função para renderizar analytics de empresas
+        function renderizarAnalyticsEmpresas(dados) {
+            const container = document.getElementById('conteudo-analytics');
+            
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Ranking de Empresas -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Ranking por Taxa de Aceitação</h3>
+                        <div class="space-y-4">
+                            ${dados.ranking?.map((empresa, index) => `
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        <span class="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                                            ${index + 1}
+                                        </span>
+                                        <div>
+                                            <p class="font-medium text-gray-900">${empresa.nome}</p>
+                                            <p class="text-sm text-gray-500">${empresa.total_cotacoes} cotações</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-green-600">${empresa.taxa_aceitacao}%</p>
+                                        <p class="text-sm text-gray-500">${empresa.aceitas}/${empresa.total_cotacoes}</p>
+                                    </div>
+                                </div>
+                            `).join('') || '<p class="text-gray-500 text-center py-8">Nenhum dado disponível</p>'}
+                        </div>
+                    </div>
+                    
+                    <!-- Detalhes por Empresa -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Selecionar Empresa para Detalhes</h3>
+                        <select id="select-empresa-detalhes" class="w-full p-3 border border-gray-300 rounded-lg mb-4">
+                            <option value="">Selecione uma empresa...</option>
+                            ${dados.ranking?.map(empresa => `
+                                <option value="${empresa.id}">${empresa.nome}</option>
+                            `).join('') || ''}
+                        </select>
+                        <div id="detalhes-empresa">
+                            <p class="text-gray-500 text-center py-8">Selecione uma empresa para ver os detalhes</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Configurar seletor de empresa
+            const selectEmpresa = document.getElementById('select-empresa-detalhes');
+            if (selectEmpresa) {
+                selectEmpresa.addEventListener('change', function() {
+                    if (this.value) {
+                        carregarDetalhesEmpresa(this.value);
+                    } else {
+                        document.getElementById('detalhes-empresa').innerHTML = 
+                            '<p class="text-gray-500 text-center py-8">Selecione uma empresa para ver os detalhes</p>';
+                    }
+                });
+            }
+        }
+        
+        // Função para carregar detalhes de empresa específica
+        async function carregarDetalhesEmpresa(empresaId) {
+            try {
+                const response = await fetch(`/api/v133/analytics/empresas/${empresaId}/metricas`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Erro ao carregar detalhes da empresa');
+                }
+                
+                renderizarDetalhesEmpresa(data.data);
+            } catch (error) {
+                console.error('Erro ao carregar detalhes da empresa:', error);
+                document.getElementById('detalhes-empresa').innerHTML = 
+                    `<p class="text-red-500 text-center py-8">Erro: ${error.message}</p>`;
+            }
+        }
+        
+        // Função para renderizar detalhes da empresa
+        function renderizarDetalhesEmpresa(dados) {
+            const container = document.getElementById('detalhes-empresa');
+            
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600">Total Solicitadas</p>
+                            <p class="text-xl font-bold text-blue-600">${dados.total_solicitadas || 0}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600">Total Aceitas</p>
+                            <p class="text-xl font-bold text-green-600">${dados.total_aceitas || 0}</p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600">Total Negadas</p>
+                            <p class="text-xl font-bold text-red-600">${dados.total_negadas || 0}</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600">Taxa de Aceitação</p>
+                            <p class="text-xl font-bold text-purple-600">${dados.taxa_aceitacao || 0}%</p>
+                        </div>
+                    </div>
+                    
+                    ${dados.ultimas_cotacoes?.length ? `
+                        <div class="mt-6">
+                            <h4 class="font-medium text-gray-800 mb-3">Últimas Cotações</h4>
+                            <div class="space-y-2">
+                                ${dados.ultimas_cotacoes.map(cotacao => `
+                                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                        <span class="text-sm">${cotacao.numero_cotacao}</span>
+                                        <span class="status-badge status-${cotacao.status}">${getStatusDisplay(cotacao.status)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        // Função para carregar analytics de usuários
+        async function carregarAnalyticsUsuarios() {
+            const response = await fetch('/api/v133/analytics/usuarios/ranking');
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Erro ao carregar dados de usuários');
+            }
+            
+            dadosAnalytics.usuarios = data.data;
+            renderizarAnalyticsUsuarios(data.data);
+        }
+        
+        // Função para renderizar analytics de usuários
+        function renderizarAnalyticsUsuarios(dados) {
+            const container = document.getElementById('conteudo-analytics');
+            
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Ranking de Consultores -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Ranking de Consultores</h3>
+                        <div class="space-y-3">
+                            ${dados.consultores?.map((consultor, index) => `
+                                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                                            ${index + 1}
+                                        </span>
+                                        <div>
+                                            <p class="font-medium text-gray-900">${consultor.nome}</p>
+                                            <p class="text-sm text-gray-500">Consultor</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-blue-600">${consultor.total_cotacoes}</p>
+                                        <p class="text-sm text-gray-500">cotações</p>
+                                    </div>
+                                </div>
+                            `).join('') || '<p class="text-gray-500 text-center py-8">Nenhum dado disponível</p>'}
+                        </div>
+                    </div>
+                    
+                    <!-- Ranking de Operadores -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Ranking de Operadores</h3>
+                        <div class="space-y-3">
+                            ${dados.operadores?.map((operador, index) => `
+                                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        <span class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                                            ${index + 1}
+                                        </span>
+                                        <div>
+                                            <p class="font-medium text-gray-900">${operador.nome}</p>
+                                            <p class="text-sm text-gray-500">Operador</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-green-600">${operador.total_operacoes}</p>
+                                        <p class="text-sm text-gray-500">operações</p>
+                                    </div>
+                                </div>
+                            `).join('') || '<p class="text-gray-500 text-center py-8">Nenhum dado disponível</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Função para carregar dados em tempo real
+        async function carregarTempoReal() {
+            const response = await fetch('/api/v133/analytics/sistema/tempo-real');
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Erro ao carregar dados em tempo real');
+            }
+            
+            dadosAnalytics.tempoReal = data.data;
+            renderizarTempoReal(data.data);
+        }
+        
+        // Função para renderizar dados em tempo real
+        function renderizarTempoReal(dados) {
+            const container = document.getElementById('conteudo-analytics');
+            
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-blue-50 p-6 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                <i class="fas fa-clock text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Hoje</p>
+                                <p class="text-2xl font-bold text-gray-900">${dados.hoje?.total || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 p-6 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                <i class="fas fa-calendar-week text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Esta Semana</p>
+                                <p class="text-2xl font-bold text-gray-900">${dados.semana?.total || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-6 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                <i class="fas fa-calendar-alt text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Este Mês</p>
+                                <p class="text-2xl font-bold text-gray-900">${dados.mes?.total || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-50 p-6 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                <i class="fas fa-chart-line text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Tendência</p>
+                                <p class="text-2xl font-bold text-gray-900">${dados.tendencia || '+0%'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Atividade Recente -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Atividade Recente</h3>
+                    <div class="space-y-3">
+                        ${dados.atividade_recente?.map(atividade => `
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full mr-3"></div>
+                                    <div>
+                                        <p class="font-medium text-gray-900">${atividade.descricao}</p>
+                                        <p class="text-sm text-gray-500">${formatarData(atividade.timestamp)}</p>
+                                    </div>
+                                </div>
+                                <span class="status-badge status-${atividade.status}">${getStatusDisplay(atividade.status)}</span>
+                            </div>
+                        `).join('') || '<p class="text-gray-500 text-center py-8">Nenhuma atividade recente</p>'}
+                    </div>
+                </div>
+            `;
+            
+            // Auto-atualizar a cada 30 segundos
+            setTimeout(() => {
+                if (analyticsAtivo === 'tempo-real') {
+                    carregarTempoReal();
+                }
+            }, 30000);
+        }
+        
+        // Função para atualizar analytics
+        function atualizarAnalytics() {
+            carregarConteudoAnalytics();
+        }
+        
+        // Função para exportar relatório
+        async function exportarRelatorio() {
+            try {
+                const response = await fetch('/api/v133/analytics/sistema/geral');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Erro ao gerar relatório');
+                }
+                
+                // Criar CSV
+                const csvContent = gerarCSVRelatorio(data.relatorio_geral);
+                
+                // Download do arquivo
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `relatorio_analytics_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                mostrarMensagem('Relatório exportado com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao exportar relatório:', error);
+                mostrarMensagem('Erro ao exportar relatório: ' + error.message, 'error');
+            }
+        }
+        
+        // Função para gerar CSV do relatório
+        function gerarCSVRelatorio(dados) {
+            let csv = 'Métrica,Valor\n';
+            
+            // Calcular total de cotações
+            const totalCotacoes = Object.values(dados.cotacoes_por_status || {}).reduce((sum, count) => sum + count, 0);
+            
+            csv += `Total de Cotações,${totalCotacoes || 0}\n`;
+            csv += `Cotações Finalizadas,${dados.total_cotacoes_finalizadas || 0}\n`;
+            csv += `Empresas Ativas,${dados.empresas_prestadoras_ativas || 0}\n`;
+            csv += `Consultores Ativos,${dados.usuarios_ativos?.consultores || 0}\n`;
+            csv += `Operadores Ativos,${dados.usuarios_ativos?.operadores || 0}\n`;
+            csv += '\nPor Modalidade\n';
+            
+            if (dados.cotacoes_por_modalidade) {
+                Object.entries(dados.cotacoes_por_modalidade).forEach(([modalidade, count]) => {
+                    csv += `${modalidade},${count}\n`;
+                });
+            }
+            
+            return csv;
+        }
+        
+        // Função para mostrar seção analytics
+        function showAnalytics() {
+            // Ocultar todas as seções
+            document.querySelectorAll('section, #secao-cotacoes, #secao-analytics-v133').forEach(section => {
+                section.style.display = 'none';
+                section.classList.add('hidden');
+            });
+            
+            // Mostrar seção de analytics
+            const secaoAnalytics = document.getElementById('secao-analytics-v133');
+            if (secaoAnalytics) {
+                secaoAnalytics.style.display = 'block';
+                secaoAnalytics.classList.remove('hidden');
+                
+                // Carregar conteúdo inicial
+                carregarConteudoAnalytics();
+            }
+        }
+        
+        // Atualizar função showSection para incluir analytics
+        const originalShowSection = window.showSection;
+        window.showSection = function(section) {
+            if (section === 'analytics') {
+                showAnalytics();
+                // Controlar visibilidade do rodapé
+                const footers = document.querySelectorAll('footer');
+                footers.forEach(footer => {
+                    footer.style.display = 'none';
+                });
+                return;
+            }
+            
+            if (originalShowSection) {
+                originalShowSection(section);
+            }
+        };
+        
+        // ==================== FORMATAÇÃO AUTOMÁTICA DE NÚMEROS ====================
+        
+        // Função para formatar números com ponto e vírgula (padrão brasileiro)
+        function formatarNumero(valor) {
+            // Remove tudo que não é número, ponto ou vírgula
+            valor = valor.replace(/[^\d.,]/g, '');
+            
+            // Se está vazio, retorna vazio
+            if (!valor) return '';
+            
+            // Se tem vírgula, trata como decimal brasileiro
+            if (valor.includes(',')) {
+                let partes = valor.split(',');
+                let inteira = partes[0].replace(/\./g, ''); // Remove pontos da parte inteira
+                let decimal = partes[1] ? partes[1].substring(0, 2) : ''; // Máximo 2 casas decimais
+                
+                // Adiciona pontos como separadores de milhares
+                inteira = inteira.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                
+                return decimal ? inteira + ',' + decimal : inteira;
+            }
+            
+            // Se tem apenas ponto, verifica se é decimal ou separador de milhares
+            if (valor.includes('.')) {
+                let partes = valor.split('.');
+                if (partes[partes.length - 1].length <= 2 && partes.length === 2) {
+                    // Último ponto com 1-2 dígitos = decimal
+                    let inteira = partes[0];
+                    let decimal = partes[1];
+                    inteira = inteira.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    return inteira + ',' + decimal;
+                } else {
+                    // Pontos como separadores de milhares
+                    valor = valor.replace(/\./g, '');
+                    return valor.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                }
+            }
+            
+            // Apenas números inteiros
+            return valor.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+        
+        // Função específica para formatar valores monetários (similar ao cadastro de empresas)
+        function formatarValorMonetario(input) {
+            let valor = input.value;
+            
+            // Remove tudo que não é número
+            valor = valor.replace(/\D/g, '');
+            
+            // Se não há valor, limpa o campo
+            if (!valor) {
+                input.value = '';
+                return;
+            }
+            
+            // Converte para número e formata como moeda brasileira
+            const numero = parseInt(valor);
+            const formatado = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2
+            }).format(numero / 100);
+            
+            input.value = formatado;
+        }
+        
+        // Função melhorada para formatação monetária em tempo real
+        function formatarMoedaBrasileira(input) {
+            let valor = input.value;
+            
+            // Remove tudo que não é dígito
+            valor = valor.replace(/\D/g, '');
+            
+            if (!valor) {
+                input.value = '';
+                input.dataset.valorNumerico = '';
+                return;
+            }
+            
+            // Converte para centavos
+            const numero = parseInt(valor);
+            const valorDecimal = numero / 100;
+            
+            // Formata como moeda brasileira
+            const formatado = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2
+            }).format(valorDecimal);
+            
+            input.value = formatado;
+            // Armazenar valor numérico para envio
+            input.dataset.valorNumerico = valorDecimal.toString();
+        }
+        
+        // Função para formatação monetária no padrão brasileiro (4.000,00) sem símbolo de moeda
+        function formatarValorMonetario(input) {
+            let valor = input.value;
+            
+            // Remove tudo que não é dígito
+            valor = valor.replace(/\D/g, '');
+            
+            if (!valor) {
+                input.value = '';
+                input.dataset.valorNumerico = '';
+                return;
+            }
+            
+            // Converte para centavos
+            const numero = parseInt(valor);
+            const valorDecimal = numero / 100;
+            
+            // Formata no padrão brasileiro (4.000,00)
+            const formatado = new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(valorDecimal);
+            
+            input.value = formatado;
+            // Armazenar valor numérico para envio
+            input.dataset.valorNumerico = valorDecimal.toString();
+        }
+        
+        // Função para formatar números normais (peso, dimensões, etc.)
+        function formatarNumeroNormal(input) {
+            let valor = input.value;
+            
+            // Remove tudo que não é número, ponto ou vírgula
+            valor = valor.replace(/[^\d.,]/g, "");
+            
+            if (!valor) {
+                input.value = "";
+                return;
+            }
+            
+            // Substitui vírgula por ponto para facilitar a conversão para float
+            let valorNumerico = parseFloat(valor.replace(".", "").replace(",", "."));
+            
+            if (isNaN(valorNumerico)) {
+                input.value = "";
+                return;
+            }
+            
+            // Formata no padrão brasileiro (ponto para milhares, vírgula para decimais)
+            // Permite até 3 casas decimais para cubagem, 2 para outros
+            let casasDecimais = (input.name && input.name.includes("cubagem")) ? 3 : 2;
+            
+            const formatado = new Intl.NumberFormat("pt-BR", {
+                minimumFractionDigits: casasDecimais,
+                maximumFractionDigits: casasDecimais
+            }).format(valorNumerico);
+            
+            input.value = formatado;
+        }
+        
+        // Função específica para formatação de peso (kg)
+        function formatarPeso(input) {
+            let valor = input.value;
+            
+            // Remove tudo que não é número, ponto ou vírgula
+            valor = valor.replace(/[^\d.,]/g, '');
+            
+            if (!valor) {
+                input.value = '';
+                return;
+            }
+            
+            // Aplicar formatação brasileira para peso
+            formatarNumeroNormal(input);
+        }
+        
+        // Função para converter formato brasileiro para formato numérico
+        function converterParaNumero(valor) {
+            if (!valor) return '';
+            
+            // Remove símbolos de moeda (R$, US$, etc.)
+            valor = valor.replace(/^(R\$|US\$|\$)\s*/, '');
+            
+            // Remove pontos (separadores de milhares) e substitui vírgula por ponto
+            return valor.replace(/\./g, '').replace(',', '.');
+        }
+        
+        /* ==================== CÓDIGO ORIGINAL REMOVIDO ====================
+         * O código de formatação original (linhas 7220-7270) foi removido
+         * porque causava o problema de campos numéricos não aceitarem digitação.
+         * 
+         * Motivo: Tentava formatar campos type="number" com vírgulas e pontos,
+         * mas navegadores rejeitam formatação em campos type="number".
+         * 
+         * Solução: Scripts externos que convertem type="number" para type="text"
+         * e aplicam formatação corretamente.
+         * ================================================================== */

@@ -991,7 +991,7 @@ const API = {
 
     async enviarRespostaCotacao(cotacaoId, dados) {
         try {
-            const response = await fetch(`${this.baseURL}/v133/cotacoes/${cotacaoId}/responder`, {
+            const response = await fetch(`${this.baseURL}/v133/cotacoes/${cotacaoId}/enviar-resposta`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
