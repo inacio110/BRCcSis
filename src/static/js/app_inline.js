@@ -8561,115 +8561,144 @@
             
             console.log('🔧 Criando novo modal de detalhes...');
             const modalHTML = `
-                <div id="modal-detalhes-cotacao" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto;">
-                    <div class="modal-content" style="background-color: white; margin: 2% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; position: relative;">
-                        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 15px;">
-                            <h2 id="modal-titulo" style="margin: 0; color: #333; font-size: 24px; font-weight: bold;">
-                                <i class="fas fa-file-invoice mr-2 text-orange-600"></i>Detalhes da Cotação
+                <div id="modal-detalhes-cotacao" class="modal fixed inset-0 z-[10000] hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm overflow-y-auto pt-10 pb-10">
+                    <div class="modal-content relative mx-auto w-full max-w-4xl rounded-2xl bg-white shadow-2xl transition-all">
+                        <!-- Header -->
+                        <div class="modal-header flex items-center justify-between rounded-t-2xl border-b border-gray-100 bg-gray-50/80 px-6 py-4">
+                            <h2 id="modal-titulo" class="flex items-center text-xl font-bold text-gray-800">
+                                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 mr-3">
+                                    <i class="fas fa-file-invoice text-orange-600"></i>
+                                </span>
+                                Detalhes da Cotação
                             </h2>
-                            <button onclick="fecharModalDetalhes()" style="font-size: 32px; font-weight: bold; cursor: pointer; color: #999; background: none; border: none; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s;" 
-                                    onmouseover="this.style.background='#f0f0f0'; this.style.color='#333';" 
-                                    onmouseout="this.style.background='none'; this.style.color='#999';">
-                                &times;
+                            <button onclick="fecharModalDetalhes()" class="group flex h-8 w-8 items-center justify-center rounded-full bg-gray-200/50 text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-700">
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
                         
-                        <div class="modal-body" style="padding: 10px 0;">
+                        <!-- Body -->
+                        <div class="modal-body p-6 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                            
                             <!-- Informações Básicas -->
-                            <div class="info-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">Informações Básicas</h3>
-                                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
-                                    <div><strong>Número:</strong> <span id="det-numero"></span></div>
-                                    <div><strong>Status:</strong> <span id="det-status"></span></div>
-                                    <div><strong>Empresa:</strong> <span id="det-empresa"></span></div>
-                                    <div><strong>Data Solicitação:</strong> <span id="det-data"></span></div>
-                                    <div><strong>Consultor:</strong> <span id="det-consultor"></span></div>
-                                    <div><strong>Operador:</strong> <span id="det-operador"></span></div>
+                            <div class="info-section">
+                                <h3 class="mb-4 flex items-center text-sm font-bold uppercase tracking-wider text-gray-400">
+                                    <i class="fas fa-info-circle mr-2 text-blue-500"></i>Informações Básicas
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 md:grid-cols-3">
+                                    <div><span class="block text-xs font-medium text-gray-500">Número</span> <strong id="det-numero" class="text-gray-900"></strong></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Status</span> <div id="det-status" class="mt-1"></div></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Modalidade</span> <strong id="det-empresa" class="text-gray-900"></strong></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Data Solicitação</span> <strong id="det-data" class="text-gray-900"></strong></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Consultor</span> <strong id="det-consultor" class="text-gray-900"></strong></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Operador</span> <strong id="det-operador" class="text-gray-900"></strong></div>
                                 </div>
                             </div>
                             
                             <!-- Dados do Cliente -->
-                            <div class="info-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">Dados do Cliente</h3>
-                                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
-                                    <div><strong>Nome/Razão Social:</strong> <span id="det-cliente-nome"></span></div>
-                                    <div><strong>CNPJ:</strong> <span id="det-cliente-cnpj"></span></div>
-                                    <div><strong>Telefone:</strong> <span id="det-cliente-telefone"></span></div>
-                                    <div><strong>Email:</strong> <span id="det-cliente-email"></span></div>
-                                    <div id="det-numero-cliente-container" style="display: none;"><strong>Número Cliente:</strong> <span id="det-numero-cliente"></span></div>
+                            <div class="info-section">
+                                <h3 class="mb-4 flex items-center text-sm font-bold uppercase tracking-wider text-gray-400">
+                                    <i class="fas fa-building mr-2 text-blue-500"></i>Dados do Cliente
+                                </h3>
+                                <div class="grid grid-cols-1 gap-4 rounded-xl border border-gray-100 p-4 md:grid-cols-2">
+                                    <div><span class="block text-xs font-medium text-gray-500">Nome/Razão Social</span> <strong id="det-cliente-nome" class="text-gray-900"></strong></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">CNPJ</span> <strong id="det-cliente-cnpj" class="text-gray-900"></strong></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Telefone</span> <strong id="det-cliente-telefone" class="text-gray-900"></strong></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Email</span> <strong id="det-cliente-email" class="text-gray-900"></strong></div>
+                                    <div id="det-numero-cliente-container" class="hidden"><span class="block text-xs font-medium text-gray-500">Número Cliente</span> <strong id="det-numero-cliente" class="text-gray-900"></strong></div>
                                 </div>
                             </div>
                             
                             <!-- Origem e Destino -->
-                            <div class="info-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">Origem e Destino</h3>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
-                                    <div>
-                                        <h4 style="color: #28a745; margin-bottom: 10px;">📍 Origem</h4>
-                                        <div id="det-origem-endereco" style="display: none;">
-                                            <div><strong>CEP:</strong> <span id="det-origem-cep"></span></div>
-                                            <div><strong>Endereço:</strong> <span id="det-origem-endereco-completo"></span></div>
-                                            <div><strong>Cidade:</strong> <span id="det-origem-cidade"></span></div>
-                                            <div><strong>Estado:</strong> <span id="det-origem-estado"></span></div>
+                            <div class="info-section">
+                                <h3 class="mb-4 flex items-center text-sm font-bold uppercase tracking-wider text-gray-400">
+                                    <i class="fas fa-route mr-2 text-blue-500"></i>Rota e Localização
+                                </h3>
+                                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <!-- Origem -->
+                                    <div class="rounded-xl border border-green-100 bg-green-50/50 p-4 relative overflow-hidden">
+                                        <div class="absolute top-0 left-0 w-1 h-full bg-green-400"></div>
+                                        <h4 class="mb-3 font-semibold text-green-700 flex items-center"><i class="fas fa-map-marker-alt mr-2"></i>Origem</h4>
+                                        <div id="det-origem-endereco" class="hidden space-y-2 text-sm text-gray-700">
+                                            <div><span class="text-gray-500">CEP:</span> <strong id="det-origem-cep"></strong></div>
+                                            <div><span class="text-gray-500">Endereço:</span> <strong id="det-origem-endereco-completo"></strong></div>
+                                            <div class="flex gap-4">
+                                                <div><span class="text-gray-500">Cidade:</span> <strong id="det-origem-cidade"></strong></div>
+                                                <div><span class="text-gray-500">UF:</span> <strong id="det-origem-estado"></strong></div>
+                                            </div>
                                         </div>
-                                        <div id="det-origem-porto" style="display: none;">
-                                            <div><strong>Porto:</strong> <span id="det-porto-origem"></span></div>
+                                        <div id="det-origem-porto" class="hidden space-y-2 text-sm text-gray-700">
+                                            <div><span class="text-gray-500">Porto:</span> <strong id="det-porto-origem"></strong></div>
                                         </div>
                                     </div>
-                                    <div>
-                                        <h4 style="color: #dc3545; margin-bottom: 10px;">🎯 Destino</h4>
-                                        <div id="det-destino-endereco" style="display: none;">
-                                            <div><strong>CEP:</strong> <span id="det-destino-cep"></span></div>
-                                            <div><strong>Endereço:</strong> <span id="det-destino-endereco-completo"></span></div>
-                                            <div><strong>Cidade:</strong> <span id="det-destino-cidade"></span></div>
-                                            <div><strong>Estado:</strong> <span id="det-destino-estado"></span></div>
+                                    
+                                    <!-- Destino -->
+                                    <div class="rounded-xl border border-red-100 bg-red-50/50 p-4 relative overflow-hidden">
+                                        <div class="absolute top-0 left-0 w-1 h-full bg-red-400"></div>
+                                        <h4 class="mb-3 font-semibold text-red-700 flex items-center"><i class="fas fa-flag-checkered mr-2"></i>Destino</h4>
+                                        <div id="det-destino-endereco" class="hidden space-y-2 text-sm text-gray-700">
+                                            <div><span class="text-gray-500">CEP:</span> <strong id="det-destino-cep"></strong></div>
+                                            <div><span class="text-gray-500">Endereço:</span> <strong id="det-destino-endereco-completo"></strong></div>
+                                            <div class="flex gap-4">
+                                                <div><span class="text-gray-500">Cidade:</span> <strong id="det-destino-cidade"></strong></div>
+                                                <div><span class="text-gray-500">UF:</span> <strong id="det-destino-estado"></strong></div>
+                                            </div>
                                         </div>
-                                        <div id="det-destino-porto" style="display: none;">
-                                            <div><strong>Porto:</strong> <span id="det-porto-destino"></span></div>
+                                        <div id="det-destino-porto" class="hidden space-y-2 text-sm text-gray-700">
+                                            <div><span class="text-gray-500">Porto:</span> <strong id="det-porto-destino"></strong></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Dados da Carga -->
-                            <div class="info-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">Dados da Carga</h3>
-                                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
-                                    <div><strong>Descrição:</strong> <span id="det-carga-descricao"></span></div>
-                                    <div><strong>Peso Total:</strong> <span id="det-carga-peso"></span> kg</div>
-                                    <div><strong>Valor da Mercadoria:</strong> R$ <span id="det-carga-valor"></span></div>
-                                    <div id="det-carga-cubagem-rodoviario" style="display: none;"><strong>Cubagem:</strong> <span id="det-carga-cubagem"></span> m³</div>
-                                    <div id="det-carga-dimensoes" style="display: none;"><strong>Dimensões:</strong> <span id="det-dimensoes"></span></div>
+                            <div class="info-section">
+                                <h3 class="mb-4 flex items-center text-sm font-bold uppercase tracking-wider text-gray-400">
+                                    <i class="fas fa-box-open mr-2 text-blue-500"></i>Detalhes da Carga
+                                </h3>
+                                <div class="grid grid-cols-1 gap-4 rounded-xl border border-gray-100 p-4 md:grid-cols-3">
+                                    <div class="md:col-span-3"><span class="block text-xs font-medium text-gray-500">Descrição</span> <strong id="det-carga-descricao" class="text-gray-900"></strong></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Peso Total</span> <strong id="det-carga-peso" class="text-gray-900"></strong> <span class="text-gray-500">kg</span></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Valor Estimado</span> <strong id="det-carga-valor" class="text-gray-900"></strong></div>
+                                    <div id="det-carga-cubagem-rodoviario" class="hidden"><span class="block text-xs font-medium text-gray-500">Cubagem</span> <strong id="det-carga-cubagem" class="text-gray-900"></strong> <span class="text-gray-500">m³</span></div>
+                                    <div id="det-carga-dimensoes" class="hidden md:col-span-3"><span class="block text-xs font-medium text-gray-500">Dimensões (CxLxA)</span> <strong id="det-dimensoes" class="text-gray-900"></strong></div>
                                 </div>
                             </div>
                             
                             <!-- Dados Específicos Marítimos -->
-                            <div id="det-dados-maritimos" class="info-section" style="margin-bottom: 20px; display: none;">
-                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">🚢 Dados Específicos - Transporte Marítimo</h3>
-                                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
-                                    <div><strong>Net Weight:</strong> <span id="det-net-weight"></span> kg</div>
-                                    <div><strong>Gross Weight:</strong> <span id="det-gross-weight"></span> kg</div>
-                                    <div><strong>Cubagem:</strong> <span id="det-cubagem"></span> m³</div>
-                                    <div><strong>Incoterm:</strong> <span id="det-incoterm"></span></div>
-                                    <div><strong>Tipo de Carga:</strong> <span id="det-tipo-carga"></span></div>
-                                    <div id="det-container-info" style="display: none;"><strong>Container:</strong> <span id="det-container-detalhes"></span></div>
+                            <div id="det-dados-maritimos" class="info-section hidden">
+                                <h3 class="mb-4 flex items-center text-sm font-bold uppercase tracking-wider text-gray-400">
+                                    <i class="fas fa-ship mr-2 text-blue-500"></i>Especificações Marítimas
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4 md:grid-cols-3">
+                                    <div><span class="block text-xs font-medium text-gray-500">Net Weight</span> <strong id="det-net-weight" class="text-gray-900"></strong> <span class="text-gray-500">kg</span></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Gross Weight</span> <strong id="det-gross-weight" class="text-gray-900"></strong> <span class="text-gray-500">kg</span></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Cubagem</span> <strong id="det-cubagem" class="text-gray-900"></strong> <span class="text-gray-500">m³</span></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Incoterm</span> <strong id="det-incoterm" class="text-gray-900 font-mono"></strong></div>
+                                    <div><span class="block text-xs font-medium text-gray-500">Tipo de Carga</span> <strong id="det-tipo-carga" class="text-gray-900"></strong></div>
+                                    <div id="det-container-info" class="hidden"><span class="block text-xs font-medium text-gray-500">Container</span> <strong id="det-container-detalhes" class="text-gray-900"></strong></div>
                                 </div>
                             </div>
                             
                             <!-- Histórico -->
-                            <div class="info-section" style="margin-bottom: 20px;">
-                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">📋 Histórico</h3>
-                                <div id="det-historico" style="margin-top: 15px;">
+                            <div class="info-section">
+                                <h3 class="mb-4 flex items-center text-sm font-bold uppercase tracking-wider text-gray-400">
+                                    <i class="fas fa-history mr-2 text-blue-500"></i>Histórico
+                                </h3>
+                                <div id="det-historico" class="rounded-xl border border-gray-100 p-4 max-h-48 overflow-y-auto">
                                     <!-- Histórico será preenchido dinamicamente -->
                                 </div>
                             </div>
                             
                             <!-- Ações do Operador -->
-                            <div id="det-acoes-operador" class="info-section" style="margin-bottom: 20px; display: none;">
-                                <h3 style="color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px;">⚡ Ações</h3>
-                                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                    <button id="btn-aceitar-cotacao" onclick="aceitarCotacao()" class="btn btn-success">✅ Aceitar Cotação</button>
-                                    <button id="btn-enviar-cotacao" onclick="mostrarFormularioCotacao()" class="btn btn-primary" style="display: none;">📤 Enviar Cotação</button>
+                            <div id="det-acoes-operador" class="info-section hidden">
+                                <div class="rounded-xl bg-gray-50 border border-gray-200 p-4 flex flex-wrap gap-3 justify-end items-center mt-6">
+                                    <span class="text-sm text-gray-500 font-medium mr-auto">Ações Disponíveis</span>
+                                    <button id="btn-aceitar-cotacao" onclick="aceitarCotacao()" class="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-sm transition-colors">
+                                        <i class="fas fa-check-circle mr-2"></i>Aceitar Cotação
+                                    </button>
+                                    <button id="btn-enviar-cotacao" onclick="mostrarFormularioCotacao()" class="hidden items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors">
+                                        <i class="fas fa-paper-plane mr-2"></i>Enviar Cotação
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -8729,9 +8758,12 @@
                 const operadorElement = modal.querySelector('#det-operador');
                 
                 if (numeroElement) numeroElement.textContent = cotacao.numero_cotacao || 'N/A';
-                if (statusElement) statusElement.innerHTML = `<span class="badge ${cotacao.status_color || ''}">${cotacao.status_display || cotacao.status || 'N/A'}</span>`;
+                if (statusElement) {
+                    const statusClass = cotacao.status_color ? cotacao.status_color : 'bg-gray-100 text-gray-800';
+                    statusElement.innerHTML = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">${cotacao.status_display || cotacao.status || 'N/A'}</span>`;
+                }
                 if (empresaElement) empresaElement.textContent = getEmpresaDisplay(cotacao.empresa_transporte) || 'N/A';
-                if (dataElement) dataElement.textContent = formatarData(cotacao.data_solicitacao) || 'N/A';
+                if (dataElement) dataElement.textContent = cotacao.data_solicitacao ? formatarData(cotacao.data_solicitacao) : 'N/A';
                 if (consultorElement) consultorElement.textContent = cotacao.consultor_nome || 'Não atribuído';
                 if (operadorElement) operadorElement.textContent = cotacao.operador_nome || 'Aguardando operador';
                 
@@ -8771,10 +8803,10 @@
                 
                 if (cotacao.empresa_transporte === 'brcargo_maritimo') {
                     // Para marítimo, mostrar portos
-                    if (origemEndereco) origemEndereco.style.display = 'none';
-                    if (destinoEndereco) destinoEndereco.style.display = 'none';
-                    if (origemPorto) origemPorto.style.display = 'block';
-                    if (destinoPorto) destinoPorto.style.display = 'block';
+                    if (origemEndereco) origemEndereco.classList.add('hidden');
+                    if (destinoEndereco) destinoEndereco.classList.add('hidden');
+                    if (origemPorto) origemPorto.classList.remove('hidden');
+                    if (destinoPorto) destinoPorto.classList.remove('hidden');
                     
                     const portoOrigem = modal.querySelector('#det-porto-origem');
                     const portoDestino = modal.querySelector('#det-porto-destino');
@@ -8782,10 +8814,10 @@
                     if (portoDestino) portoDestino.textContent = cotacao.porto_destino || 'N/A';
                 } else {
                     // Para rodoviário/aéreo, mostrar endereços
-                    if (origemEndereco) origemEndereco.style.display = 'block';
-                    if (destinoEndereco) destinoEndereco.style.display = 'block';
-                    if (origemPorto) origemPorto.style.display = 'none';
-                    if (destinoPorto) destinoPorto.style.display = 'none';
+                    if (origemEndereco) origemEndereco.classList.remove('hidden');
+                    if (destinoEndereco) destinoEndereco.classList.remove('hidden');
+                    if (origemPorto) origemPorto.classList.add('hidden');
+                    if (destinoPorto) destinoPorto.classList.add('hidden');
                     
                     const origemCep = modal.querySelector('#det-origem-cep');
                     const origemEnderecoCompleto = modal.querySelector('#det-origem-endereco-completo');
